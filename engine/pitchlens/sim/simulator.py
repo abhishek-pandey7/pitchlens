@@ -490,10 +490,10 @@ class MatchSimulator:
             self.ball = end_abs
             return True
 
-        self.emit(kind, team, passer, outcome=Outcome.INCOMPLETE, **common)
         self.last_pass = None
         near_line = end[1] < 6 or end[1] > PITCH_WIDTH - 6 or end[0] > PITCH_LENGTH - 4
         if (aerial and rng.random() < 0.4) or (near_line and rng.random() < 0.6) or rng.random() < 0.08:
+            self.emit(kind, team, passer, outcome=Outcome.OUT, **common)
             self.advance(duration)
             if "cross" in quals:
                 if rng.random() < 0.3:
@@ -510,8 +510,11 @@ class MatchSimulator:
                 self.set_restart("throw_in", self.dfn, self.to_team(team, (end[0], side_y)), 10_000)
             return False
 
+        # Intercepted: like real event feeds, the pass ends where the ball was won, not where it was aimed.
         t = rng.uniform(0.45, 1.0)
         cut = self.to_team(team, (start[0] + (end[0] - start[0]) * t, start[1] + (end[1] - start[1]) * t))
+        common.update(end=cut, duration_ms=int(duration * t))
+        self.emit(kind, team, passer, outcome=Outcome.INCOMPLETE, **common)
         self.advance(duration * t)
         winner = self.nearest(self.dfn, cut)
         if rng.random() < 0.55:
@@ -745,6 +748,7 @@ class MatchSimulator:
         if r < 0.25 and not header:
             blocker = self.nearest(self.dfn, self.ball, exclude=gk.player_id)
             block_at = self.to_team(team, clamp((x + rng.uniform(1, 4), y + rng.gauss(0, 1.5))))
+            common["duration_ms"] = 200
             self.emit(EventType.SHOT, team, shooter, end=block_at, outcome=Outcome.BLOCKED, **common)
             self.advance(200)
             self.emit(EventType.BLOCK, self.dfn, blocker, start=block_at, outcome=Outcome.SUCCESS)
