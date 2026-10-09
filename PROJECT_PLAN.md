@@ -297,7 +297,7 @@ All schemas are versioned (`schema_version: "1.0"`). Coordinates use metres on a
 python -m pitchlens.sim.cli generate --seed 42 --storyline comeback --out data/matches/
 python -m pitchlens.sim.cli replay data/matches/SYN-...jsonl --speed 10 --bus memory
 ```
-**Dataset deliverable:** 50 generated matches (JSONL + tracking parquet) plus `docs/dataset.md` (schema, generation method, known limits, license CC-BY).
+**Dataset deliverable:** 50 generated matches (events JSONL + 5 Hz tracking as compressed numpy `tracking.npz`) plus `docs/dataset.md` (schema, generation method, known limits, license CC-BY).
 
 ---
 
@@ -580,7 +580,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 ### Phase 1: Data & ingest (days 2–5)
 - [x] **T-10 (E)** Rosters: 20 fictional clubs × 25 players, attributes, career stats. *Done when:* YAML/JSON in `data/rosters/`, validated.
 - [x] **T-11 (E)** Simulator core: possession-chain model, event emission. Deps: T-03, T-10. *Done when:* a seeded match produces ~2,300–3,000 valid events (incl. pressures and possession changes) and 50-seed averages match real-football ranges (~25 shots, ~2.8 goals, ~78% pass completion).
-- [ ] **T-12 (E)** Tracking generator (5 Hz) consistent with events. Deps: T-11. *Done when:* ball position matches event locations within 1 m.
+- [x] **T-12 (E)** Tracking generator (5 Hz) consistent with events. Deps: T-11. *Done when:* ball position matches event locations within 1 m. Stored as `tracking.npz` (~3 MB per match).
 - [x] **T-13 (E)** Storylines (5 from §7). Deps: T-11. *Done when:* each storyline's scripted moments appear in output.
 - [ ] **T-14 (E)** Bus protocol + memory bus + replay (1/10/60×, pause/seek). Deps: T-03. *Done when:* replay emits in order at the requested speed.
 - [ ] **T-15 (E)** Dataset: generate 50 matches + `docs/dataset.md` + distribution sanity test. Deps: T-12, T-13.
