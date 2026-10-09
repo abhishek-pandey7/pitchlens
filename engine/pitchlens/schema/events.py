@@ -129,7 +129,10 @@ class MatchEvent(Model):
     seq: int = Field(ge=0)
     type: EventType
     period: int = Field(ge=1, le=4)
-    match_ms: int = Field(ge=0, description="Milliseconds since kick-off, including stoppage time.")
+    match_ms: int = Field(ge=0, description="Continuous elapsed play time since kick-off (ms), monotonic.")
+    clock_ms: int = Field(
+        ge=0, description="Football clock (ms): period 2 starts at 45:00, so stoppage time reads 45+2."
+    )
     team_id: str | None = None
     player_id: str | None = None
     possession_id: int | None = None
@@ -143,6 +146,11 @@ class MatchEvent(Model):
     height: Height | None = None
     qualifiers: list[str] = Field(default_factory=list)
     ball_speed_kmh: float | None = Field(default=None, ge=0)
+    duration_ms: int | None = Field(
+        default=None,
+        ge=0,
+        description="How long the action took (ball travel for passes/shots, run for carries).",
+    )
     related_player_id: str | None = Field(
         default=None, description="Second player involved: tackled player, fouled player, sub coming on."
     )

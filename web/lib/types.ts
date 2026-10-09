@@ -120,9 +120,13 @@ export interface MatchEvent {
   type: EventType;
   period: number;
   /**
-   * Milliseconds since kick-off, including stoppage time.
+   * Continuous elapsed play time since kick-off (ms), monotonic.
    */
   match_ms: number;
+  /**
+   * Football clock (ms): period 2 starts at 45:00, so stoppage time reads 45+2.
+   */
+  clock_ms: number;
   team_id: string | null;
   player_id: string | null;
   possession_id: number | null;
@@ -136,6 +140,10 @@ export interface MatchEvent {
   height: Height | null;
   qualifiers: string[];
   ball_speed_kmh: number | null;
+  /**
+   * How long the action took (ball travel for passes/shots, run for carries).
+   */
+  duration_ms: number | null;
   /**
    * Second player involved: tackled player, fouled player, sub coming on.
    */

@@ -13,6 +13,7 @@ PASS_EVENT = {
     "type": "pass",
     "period": 1,
     "match_ms": 1834200,
+    "clock_ms": 1834200,
     "team_id": "NHR",
     "player_id": "NHR-08",
     "possession_id": 57,

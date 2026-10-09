@@ -126,9 +126,15 @@
       "type": "integer"
     },
     "match_ms": {
-      "description": "Milliseconds since kick-off, including stoppage time.",
+      "description": "Continuous elapsed play time since kick-off (ms), monotonic.",
       "minimum": 0,
       "title": "Match Ms",
+      "type": "integer"
+    },
+    "clock_ms": {
+      "description": "Football clock (ms): period 2 starts at 45:00, so stoppage time reads 45+2.",
+      "minimum": 0,
+      "title": "Clock Ms",
       "type": "integer"
     },
     "team_id": {
@@ -271,6 +277,20 @@
       "default": null,
       "title": "Ball Speed Kmh"
     },
+    "duration_ms": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "How long the action took (ball travel for passes/shots, run for carries).",
+      "title": "Duration Ms"
+    },
     "related_player_id": {
       "anyOf": [
         {
@@ -306,6 +326,7 @@
     "type",
     "period",
     "match_ms",
+    "clock_ms",
     "team_id",
     "player_id",
     "possession_id",
@@ -319,6 +340,7 @@
     "height",
     "qualifiers",
     "ball_speed_kmh",
+    "duration_ms",
     "related_player_id",
     "ts_utc"
   ],
