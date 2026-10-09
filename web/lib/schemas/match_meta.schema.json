@@ -1,0 +1,210 @@
+{
+  "$defs": {
+    "LineupPlayer": {
+      "additionalProperties": false,
+      "properties": {
+        "player_id": {
+          "title": "Player Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "pos": {
+          "$ref": "#/$defs/Position"
+        },
+        "shirt": {
+          "maximum": 99,
+          "minimum": 1,
+          "title": "Shirt",
+          "type": "integer"
+        },
+        "starter": {
+          "default": true,
+          "title": "Starter",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "player_id",
+        "name",
+        "pos",
+        "shirt",
+        "starter"
+      ],
+      "title": "LineupPlayer",
+      "type": "object"
+    },
+    "Position": {
+      "enum": [
+        "GK",
+        "RB",
+        "CB",
+        "LB",
+        "DM",
+        "CM",
+        "AM",
+        "RW",
+        "LW",
+        "ST"
+      ],
+      "title": "Position",
+      "type": "string"
+    },
+    "PreMatch": {
+      "additionalProperties": false,
+      "description": "Expected goals per 90 for each side, used as the win-probability prior.",
+      "properties": {
+        "home_strength": {
+          "exclusiveMinimum": 0,
+          "title": "Home Strength",
+          "type": "number"
+        },
+        "away_strength": {
+          "exclusiveMinimum": 0,
+          "title": "Away Strength",
+          "type": "number"
+        }
+      },
+      "required": [
+        "home_strength",
+        "away_strength"
+      ],
+      "title": "PreMatch",
+      "type": "object"
+    },
+    "TeamInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "club_id": {
+          "title": "Club Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "short_name": {
+          "title": "Short Name",
+          "type": "string"
+        },
+        "colors": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Colors",
+          "type": "array"
+        },
+        "formation": {
+          "title": "Formation",
+          "type": "string"
+        }
+      },
+      "required": [
+        "club_id",
+        "name",
+        "short_name",
+        "colors",
+        "formation"
+      ],
+      "title": "TeamInfo",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "competition": {
+      "title": "Competition",
+      "type": "string"
+    },
+    "venue": {
+      "title": "Venue",
+      "type": "string"
+    },
+    "kickoff_utc": {
+      "format": "date-time",
+      "title": "Kickoff Utc",
+      "type": "string"
+    },
+    "weather": {
+      "title": "Weather",
+      "type": "string"
+    },
+    "referee": {
+      "title": "Referee",
+      "type": "string"
+    },
+    "home": {
+      "$ref": "#/$defs/TeamInfo"
+    },
+    "away": {
+      "$ref": "#/$defs/TeamInfo"
+    },
+    "lineups": {
+      "additionalProperties": {
+        "items": {
+          "$ref": "#/$defs/LineupPlayer"
+        },
+        "type": "array"
+      },
+      "title": "Lineups",
+      "type": "object"
+    },
+    "pre_match": {
+      "$ref": "#/$defs/PreMatch"
+    },
+    "seed": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Seed"
+    },
+    "storyline": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Storyline"
+    }
+  },
+  "required": [
+    "schema_version",
+    "match_id",
+    "competition",
+    "venue",
+    "kickoff_utc",
+    "weather",
+    "referee",
+    "home",
+    "away",
+    "lineups",
+    "pre_match",
+    "seed",
+    "storyline"
+  ],
+  "title": "MatchMeta",
+  "type": "object"
+}

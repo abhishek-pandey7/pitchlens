@@ -1,0 +1,327 @@
+{
+  "$defs": {
+    "BodyPart": {
+      "enum": [
+        "right_foot",
+        "left_foot",
+        "head",
+        "other"
+      ],
+      "title": "BodyPart",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "match_start",
+        "period_start",
+        "period_end",
+        "match_end",
+        "pass",
+        "carry",
+        "dribble",
+        "shot",
+        "save",
+        "goal",
+        "own_goal",
+        "tackle",
+        "interception",
+        "clearance",
+        "block",
+        "ball_recovery",
+        "pressure",
+        "foul",
+        "card",
+        "substitution",
+        "offside",
+        "corner",
+        "free_kick",
+        "throw_in",
+        "goal_kick",
+        "possession_change",
+        "injury_stop",
+        "var_check"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "Height": {
+      "enum": [
+        "ground",
+        "low",
+        "high"
+      ],
+      "title": "Height",
+      "type": "string"
+    },
+    "Outcome": {
+      "enum": [
+        "complete",
+        "incomplete",
+        "out",
+        "offside",
+        "success",
+        "fail",
+        "on_target",
+        "off_target",
+        "blocked",
+        "goal",
+        "yellow",
+        "second_yellow",
+        "red"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "Point": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "maximum": 105.0,
+          "minimum": 0.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 68.0,
+          "minimum": 0.0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Point",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "seq": {
+      "minimum": 0,
+      "title": "Seq",
+      "type": "integer"
+    },
+    "type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "period": {
+      "maximum": 4,
+      "minimum": 1,
+      "title": "Period",
+      "type": "integer"
+    },
+    "match_ms": {
+      "description": "Milliseconds since kick-off, including stoppage time.",
+      "minimum": 0,
+      "title": "Match Ms",
+      "type": "integer"
+    },
+    "team_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Team Id"
+    },
+    "player_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Player Id"
+    },
+    "possession_id": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Possession Id"
+    },
+    "start": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Point"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "end": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Point"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "outcome": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Outcome"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "recipient_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Recipient Id"
+    },
+    "under_pressure": {
+      "default": false,
+      "title": "Under Pressure",
+      "type": "boolean"
+    },
+    "pressure_player_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pressure Player Id"
+    },
+    "body_part": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BodyPart"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "height": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Height"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "qualifiers": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Qualifiers",
+      "type": "array"
+    },
+    "ball_speed_kmh": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ball Speed Kmh"
+    },
+    "related_player_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Second player involved: tackled player, fouled player, sub coming on.",
+      "title": "Related Player Id"
+    },
+    "ts_utc": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Ts Utc"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event_id",
+    "match_id",
+    "seq",
+    "type",
+    "period",
+    "match_ms",
+    "team_id",
+    "player_id",
+    "possession_id",
+    "start",
+    "end",
+    "outcome",
+    "recipient_id",
+    "under_pressure",
+    "pressure_player_id",
+    "body_part",
+    "height",
+    "qualifiers",
+    "ball_speed_kmh",
+    "related_player_id",
+    "ts_utc"
+  ],
+  "title": "MatchEvent",
+  "type": "object"
+}

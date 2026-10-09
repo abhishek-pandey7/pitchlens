@@ -1,0 +1,258 @@
+{
+  "$defs": {
+    "Entities": {
+      "additionalProperties": false,
+      "properties": {
+        "teams": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Teams",
+          "type": "array"
+        },
+        "players": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Players",
+          "type": "array"
+        }
+      },
+      "required": [
+        "teams",
+        "players"
+      ],
+      "title": "Entities",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "description": "One grounded fact. Either a point value or a from\u2192to change.",
+      "properties": {
+        "metric": {
+          "title": "Metric",
+          "type": "string"
+        },
+        "team": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team"
+        },
+        "player": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Value"
+        },
+        "from": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unit"
+        },
+        "window_min": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Window Min"
+        },
+        "source": {
+          "default": "engine",
+          "description": "engine | agent:<name>",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric",
+        "team",
+        "player",
+        "value",
+        "from",
+        "to",
+        "unit",
+        "window_min",
+        "source"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "InsightType": {
+      "enum": [
+        "goal",
+        "big_chance",
+        "xg_swing",
+        "win_prob_swing",
+        "momentum_shift",
+        "pressure_change",
+        "control_chaos_flip",
+        "rhythm_break",
+        "pass_of_note",
+        "shot_speed_record",
+        "sprint_threshold",
+        "distance_milestone",
+        "career_milestone",
+        "player_streak",
+        "tactical_note",
+        "fatigue_alert",
+        "duel",
+        "card"
+      ],
+      "title": "InsightType",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "insight_id": {
+      "title": "Insight Id",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "match_ms": {
+      "minimum": 0,
+      "title": "Match Ms",
+      "type": "integer"
+    },
+    "period": {
+      "maximum": 4,
+      "minimum": 1,
+      "title": "Period",
+      "type": "integer"
+    },
+    "type": {
+      "$ref": "#/$defs/InsightType"
+    },
+    "salience": {
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Salience",
+      "type": "number"
+    },
+    "entities": {
+      "$ref": "#/$defs/Entities"
+    },
+    "headline_key": {
+      "description": "Template key, e.g. 'momentum_shift.press_intensified'.",
+      "title": "Headline Key",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "$ref": "#/$defs/Evidence"
+      },
+      "minItems": 1,
+      "title": "Evidence",
+      "type": "array"
+    },
+    "why_tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Why Tags",
+      "type": "array"
+    },
+    "related_events": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Related Events",
+      "type": "array"
+    },
+    "author": {
+      "default": "engine",
+      "description": "engine | agent:<name>",
+      "title": "Author",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "insight_id",
+    "match_id",
+    "match_ms",
+    "period",
+    "type",
+    "salience",
+    "entities",
+    "headline_key",
+    "evidence",
+    "why_tags",
+    "related_events",
+    "author"
+  ],
+  "title": "Insight",
+  "type": "object"
+}

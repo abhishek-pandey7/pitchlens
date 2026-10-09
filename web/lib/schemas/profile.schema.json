@@ -1,0 +1,164 @@
+{
+  "$defs": {
+    "FocusMetric": {
+      "enum": [
+        "pass_difficulty",
+        "top_speed",
+        "xg",
+        "ppda",
+        "control_chaos"
+      ],
+      "title": "FocusMetric",
+      "type": "string"
+    },
+    "Persona": {
+      "enum": [
+        "casual",
+        "analyst",
+        "tactician",
+        "kids",
+        "fantasy",
+        "accessibility"
+      ],
+      "title": "Persona",
+      "type": "string"
+    },
+    "PlayerFocus": {
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "default": false,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        }
+      },
+      "required": [
+        "enabled",
+        "player_id"
+      ],
+      "title": "PlayerFocus",
+      "type": "object"
+    },
+    "Verbosity": {
+      "enum": [
+        "short",
+        "medium",
+        "long"
+      ],
+      "title": "Verbosity",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "profile_id": {
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "display_name": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Display Name"
+    },
+    "persona": {
+      "$ref": "#/$defs/Persona",
+      "default": "casual"
+    },
+    "language": {
+      "default": "en",
+      "pattern": "^[a-z]{2}$",
+      "title": "Language",
+      "type": "string"
+    },
+    "favorite_clubs": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Favorite Clubs",
+      "type": "array"
+    },
+    "favorite_players": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Favorite Players",
+      "type": "array"
+    },
+    "focus_metric": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FocusMetric"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "player_focus_mode": {
+      "$ref": "#/$defs/PlayerFocus"
+    },
+    "spoiler_safe": {
+      "default": false,
+      "title": "Spoiler Safe",
+      "type": "boolean"
+    },
+    "verbosity": {
+      "$ref": "#/$defs/Verbosity",
+      "default": "short"
+    },
+    "max_overlays_per_min": {
+      "default": 3,
+      "maximum": 20,
+      "minimum": 0,
+      "title": "Max Overlays Per Min",
+      "type": "integer"
+    },
+    "audio_commentary": {
+      "default": false,
+      "title": "Audio Commentary",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema_version",
+    "profile_id",
+    "display_name",
+    "persona",
+    "language",
+    "favorite_clubs",
+    "favorite_players",
+    "focus_metric",
+    "player_focus_mode",
+    "spoiler_safe",
+    "verbosity",
+    "max_overlays_per_min",
+    "audio_commentary"
+  ],
+  "title": "Profile",
+  "type": "object"
+}
