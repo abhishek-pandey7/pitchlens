@@ -1,0 +1,93 @@
+{
+  "$defs": {
+    "Grounding": {
+      "additionalProperties": false,
+      "properties": {
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "numbers_checked": {
+          "default": 0,
+          "title": "Numbers Checked",
+          "type": "integer"
+        },
+        "violations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Violations",
+          "type": "array"
+        }
+      },
+      "required": [
+        "passed",
+        "numbers_checked",
+        "violations"
+      ],
+      "title": "Grounding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "narration_id": {
+      "title": "Narration Id",
+      "type": "string"
+    },
+    "insight_id": {
+      "title": "Insight Id",
+      "type": "string"
+    },
+    "profile_id": {
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "lang": {
+      "title": "Lang",
+      "type": "string"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    },
+    "source": {
+      "description": "template | llm",
+      "title": "Source",
+      "type": "string"
+    },
+    "grounding": {
+      "$ref": "#/$defs/Grounding"
+    },
+    "latency_ms": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Latency Ms"
+    }
+  },
+  "required": [
+    "schema_version",
+    "narration_id",
+    "insight_id",
+    "profile_id",
+    "lang",
+    "text",
+    "source",
+    "grounding",
+    "latency_ms"
+  ],
+  "title": "Narration",
+  "type": "object"
+}

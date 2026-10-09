@@ -1,0 +1,199 @@
+{
+  "$defs": {
+    "CueAnchor": {
+      "additionalProperties": false,
+      "properties": {
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        }
+      },
+      "required": [
+        "player_id"
+      ],
+      "title": "CueAnchor",
+      "type": "object"
+    },
+    "CueTemplate": {
+      "enum": [
+        "pass_card",
+        "shot_speed",
+        "player_tag",
+        "momentum_bar",
+        "lower_third",
+        "chaos_meter",
+        "wp_swing",
+        "what_if"
+      ],
+      "title": "CueTemplate",
+      "type": "string"
+    },
+    "CueText": {
+      "additionalProperties": false,
+      "properties": {
+        "lang": {
+          "title": "Lang",
+          "type": "string"
+        },
+        "headline": {
+          "title": "Headline",
+          "type": "string"
+        },
+        "body": {
+          "default": "",
+          "title": "Body",
+          "type": "string"
+        },
+        "source": {
+          "default": "template",
+          "description": "template | llm",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "lang",
+        "headline",
+        "body",
+        "source"
+      ],
+      "title": "CueText",
+      "type": "object"
+    },
+    "CueTransitions": {
+      "additionalProperties": false,
+      "properties": {
+        "in": {
+          "default": "slide_up",
+          "title": "In",
+          "type": "string"
+        },
+        "out": {
+          "default": "fade",
+          "title": "Out",
+          "type": "string"
+        }
+      },
+      "required": [
+        "in",
+        "out"
+      ],
+      "title": "CueTransitions",
+      "type": "object"
+    },
+    "Region": {
+      "enum": [
+        "lower_third",
+        "top_left",
+        "top_right",
+        "player_anchor",
+        "full_bar"
+      ],
+      "title": "Region",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "cue_id": {
+      "title": "Cue Id",
+      "type": "string"
+    },
+    "insight_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Insight Id"
+    },
+    "profile_id": {
+      "title": "Profile Id",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "start_ms": {
+      "description": "Match clock (ms) at which the cue should appear.",
+      "minimum": 0,
+      "title": "Start Ms",
+      "type": "integer"
+    },
+    "duration_ms": {
+      "exclusiveMinimum": 0,
+      "title": "Duration Ms",
+      "type": "integer"
+    },
+    "priority": {
+      "maximum": 100,
+      "minimum": 0,
+      "title": "Priority",
+      "type": "integer"
+    },
+    "region": {
+      "$ref": "#/$defs/Region"
+    },
+    "template": {
+      "$ref": "#/$defs/CueTemplate"
+    },
+    "anchor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CueAnchor"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+    },
+    "text": {
+      "$ref": "#/$defs/CueText"
+    },
+    "transitions": {
+      "$ref": "#/$defs/CueTransitions"
+    }
+  },
+  "required": [
+    "schema_version",
+    "cue_id",
+    "insight_id",
+    "profile_id",
+    "match_id",
+    "start_ms",
+    "duration_ms",
+    "priority",
+    "region",
+    "template",
+    "anchor",
+    "data",
+    "text",
+    "transitions"
+  ],
+  "title": "OverlayCue",
+  "type": "object"
+}

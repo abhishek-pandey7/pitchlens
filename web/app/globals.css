@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Broadcast palette: dark by default (studio/TV), club colours are injected per match at runtime. */
+:root {
+  --background: #0b0f17;
+  --surface: #131a26;
+  --surface-2: #1b2433;
+  --foreground: #eef2f8;
+  --muted: #8b97ab;
+  --accent: #38e1a6;
+  --warning: #ffb547;
+  --danger: #ff5d6c;
+  --home: #2f6bff;
+  --away: #ff4d5e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-home: var(--home);
+  --color-away: var(--away);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+/* The broadcast overlay is loaded as an OBS browser source and must be transparent. */
+body:has(.overlay-root) {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
