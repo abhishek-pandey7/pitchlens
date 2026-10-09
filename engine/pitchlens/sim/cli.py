@@ -17,6 +17,7 @@ from .rosters import DEFAULT_PATH as ROSTER_PATH
 from .rosters import load_league
 from .simulator import SimulatedMatch, simulate
 from .storylines import STORYLINES, build, default_fixture
+from .tracking import Tracking, generate_tracking
 
 DEFAULT_OUT = Path(__file__).resolve().parents[3] / "data" / "matches"
 
@@ -31,6 +32,10 @@ def write_match(match: SimulatedMatch, out_dir: Path) -> Path:
         for event in match.events:
             fh.write(event.model_dump_json(exclude_none=True) + "\n")
     return match_dir
+
+
+def read_tracking(match_dir: Path) -> Tracking:
+    return Tracking.load(match_dir / "tracking.npz")
 
 
 def read_match(match_dir: Path) -> tuple[MatchMeta, list[MatchEvent]]:
@@ -73,6 +78,7 @@ def main(argv: list[str] | None = None) -> None:
     gen.add_argument("--away")
     gen.add_argument("--out", type=Path, default=DEFAULT_OUT)
     gen.add_argument("--roster", type=Path, default=ROSTER_PATH)
+    gen.add_argument("--no-tracking", action="store_true", help="skip the 5 Hz tracking file")
     summ = sub.add_parser("summary", help="summarize a generated match")
     summ.add_argument("match_dir", type=Path)
     args = parser.parse_args(argv)
@@ -84,6 +90,8 @@ def main(argv: list[str] | None = None) -> None:
         spec = build(league, args.storyline, home, away) if args.storyline else None
         match = simulate(league, home, away, seed=args.seed, storyline=spec)
         match_dir = write_match(match, args.out)
+        if not args.no_tracking:
+            generate_tracking(match.meta, match.events, league).save(match_dir / "tracking.npz")
         print(summarize(match.meta, match.events))
         print(f"wrote {match_dir}")
     else:
