@@ -281,7 +281,7 @@ All schemas are versioned (`schema_version: "1.0"`). Coordinates use metres on a
 - Shots: outcome sampled from xG (§8.2), adjusted by the finisher's attribute. Shot speed is drawn from N(95, 15) km/h scaled by finishing and distance.
 - Defensive actions: pressures generated with probability set by the defending team's `press_intensity` parameter, which storylines can change.
 - Tracking: players move toward formation anchors shifted by ball position. Speeds are capped by the pace attribute and sprint bursts happen on transitions. Positions are sampled at 5 Hz, and speeds and distances are derived from them.
-- The clock advances from action durations plus stoppages, giving about 1,600–2,000 events per match, which is realistic.
+- The clock advances from action durations plus stoppages, giving about 2,300–3,000 events per match (including pressures and explicit possession changes). Each event carries `match_ms` (continuous elapsed time), `clock_ms` (football clock, so 45+2 reads correctly) and `duration_ms`.
 
 **Storylines (seeded scripts that guarantee demo moments)**
 | Storyline | Script |
@@ -579,9 +579,9 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 
 ### Phase 1: Data & ingest (days 2–5)
 - [x] **T-10 (E)** Rosters: 20 fictional clubs × 25 players, attributes, career stats. *Done when:* YAML/JSON in `data/rosters/`, validated.
-- [ ] **T-11 (E)** Simulator core: possession-chain model, event emission. Deps: T-03, T-10. *Done when:* a seeded match produces 1,600–2,000 valid events.
+- [x] **T-11 (E)** Simulator core: possession-chain model, event emission. Deps: T-03, T-10. *Done when:* a seeded match produces ~2,300–3,000 valid events (incl. pressures and possession changes) and 50-seed averages match real-football ranges (~25 shots, ~2.8 goals, ~78% pass completion).
 - [ ] **T-12 (E)** Tracking generator (5 Hz) consistent with events. Deps: T-11. *Done when:* ball position matches event locations within 1 m.
-- [ ] **T-13 (E)** Storylines (5 from §7). Deps: T-11. *Done when:* each storyline's scripted moments appear in output.
+- [x] **T-13 (E)** Storylines (5 from §7). Deps: T-11. *Done when:* each storyline's scripted moments appear in output.
 - [ ] **T-14 (E)** Bus protocol + memory bus + replay (1/10/60×, pause/seek). Deps: T-03. *Done when:* replay emits in order at the requested speed.
 - [ ] **T-15 (E)** Dataset: generate 50 matches + `docs/dataset.md` + distribution sanity test. Deps: T-12, T-13.
 
