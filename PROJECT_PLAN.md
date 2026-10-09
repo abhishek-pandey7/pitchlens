@@ -578,7 +578,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-03 (E)** Pydantic schemas (§6) + JSON Schema export + TS type generation. Deps: T-01, T-02. *Done when:* `web/lib/types.ts` is generated and compiles.
 
 ### Phase 1: Data & ingest (days 2–5)
-- [ ] **T-10 (E)** Rosters: 20 fictional clubs × 25 players, attributes, career stats. *Done when:* YAML/JSON in `data/rosters/`, validated.
+- [x] **T-10 (E)** Rosters: 20 fictional clubs × 25 players, attributes, career stats. *Done when:* YAML/JSON in `data/rosters/`, validated.
 - [ ] **T-11 (E)** Simulator core: possession-chain model, event emission. Deps: T-03, T-10. *Done when:* a seeded match produces 1,600–2,000 valid events.
 - [ ] **T-12 (E)** Tracking generator (5 Hz) consistent with events. Deps: T-11. *Done when:* ball position matches event locations within 1 m.
 - [ ] **T-13 (E)** Storylines (5 from §7). Deps: T-11. *Done when:* each storyline's scripted moments appear in output.
