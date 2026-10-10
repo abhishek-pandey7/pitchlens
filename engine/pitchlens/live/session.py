@@ -57,6 +57,7 @@ class Outgoing:
 class Subscriber:
     profile_id: str | None = None
     frames: bool = False
+    events: bool = True  # raw match events (~2,700 per match); fan views and overlays can skip them
     queue: asyncio.Queue[Outgoing | None] = field(default_factory=asyncio.Queue)
     dropped: bool = False
 
@@ -87,7 +88,7 @@ class Channel:
             self.log.append(out)
             self.stats[event] += 1
         for sub in list(self.subscribers):
-            if ephemeral and not sub.frames:
+            if (ephemeral and not sub.frames) or (event == "event" and not sub.events):
                 continue
             if sub.queue.qsize() > SUBSCRIBER_QUEUE_LIMIT:
                 sub.dropped = True
@@ -340,14 +341,19 @@ class MatchSession:
         return channel
 
     def subscribe(
-        self, *, profile_id: str | None = None, frames: bool = False, last_event_id: int | None = None
+        self,
+        *,
+        profile_id: str | None = None,
+        frames: bool = False,
+        events: bool = True,
+        last_event_id: int | None = None,
     ) -> Subscriber:
         channel = self.channel(profile_id)
-        sub = Subscriber(profile_id=profile_id, frames=frames)
+        sub = Subscriber(profile_id=profile_id, frames=frames, events=events)
         oldest = channel.log[0].id if channel.log else channel.next_id
         if last_event_id is not None and oldest is not None and last_event_id >= oldest - 1:
             for out in channel.log:
-                if out.id is not None and out.id > last_event_id:
+                if out.id is not None and out.id > last_event_id and (events or out.event != "event"):
                     sub.queue.put_nowait(out)
         else:
             sub.queue.put_nowait(Outgoing(None, "sync", _json(self.sync_payload(channel))))

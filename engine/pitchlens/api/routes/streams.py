@@ -3,6 +3,8 @@
 Event names: `sync` (full picture on connect / after a seek), `reset`, `state` (~2 Hz), `event`
 (enriched), `insight`, `alert` (physical thresholds), `frame` (opt-in, ~25 Hz) and `control`.
 Every message except frames carries an `id`; reconnect with `Last-Event-ID` to resume without gaps.
+Query flags: `frames=true` opts into tracking frames; `events=false` skips raw match events, which fan
+views and overlays don't need (about 90% of the traffic).
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ async def stream(
     request: Request,
     profile_id: str | None = None,
     frames: bool = False,
+    events: bool = True,
     last_event_id: str | None = Header(default=None),
     hub: Hub = Depends(get_hub),
     profiles: ProfileStore = Depends(get_profiles),
@@ -35,7 +38,7 @@ async def stream(
     if profile_id is not None and profiles.get(profile_id) is None:
         raise HTTPException(404, f"unknown profile {profile_id!r}")
     resume = int(last_event_id) if last_event_id and last_event_id.isdigit() else None
-    sub = session.subscribe(profile_id=profile_id, frames=frames, last_event_id=resume)
+    sub = session.subscribe(profile_id=profile_id, frames=frames, events=events, last_event_id=resume)
 
     async def events() -> AsyncIterator[dict[str, str]]:
         try:

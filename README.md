@@ -44,7 +44,8 @@ uvicorn pitchlens.api.main:app --reload --port 8000
 # Web
 cd ../web
 npm install
-npm run dev
+npm run dev            # http://localhost:3000/watch
+npm run e2e            # browser end-to-end tests (boots engine + web, drives Chromium)
 ```
 
 ## License

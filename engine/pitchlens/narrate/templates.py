@@ -75,7 +75,9 @@ class TemplateText:
 def format_number(value: float, metric: str, lang: str) -> str:
     if isinstance(value, bool):
         return str(value)
-    if isinstance(value, int) or (float(value).is_integer() and PRECISION.get(metric, 1) == 0):
+    # Evidence values arrive as floats; whole numbers (players left, streak lengths, km/h records) must
+    # print as "9", never "9.0".
+    if isinstance(value, int) or float(value).is_integer():
         text = str(round(value))
     else:
         text = f"{value:.{PRECISION.get(metric, 1)}f}"
