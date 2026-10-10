@@ -606,11 +606,11 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-42 (E)** OpenTelemetry spans per stage. Deps: T-41.
 
 ### Phase 5: Narrative & personalization (days 8–13)
-- [ ] **T-50 (A)** LLMProvider interface + MockProvider. Deps: T-03.
+- [x] **T-50 (A)** LLMProvider interface + MockProvider. Deps: T-03.
 - [ ] **T-51 (A)** Azure OpenAI provider + Foundry Claude provider (fast/quality tiers). Deps: T-50.
-- [ ] **T-52 (A)** Template text packs for 6 languages + glossary YAML. Deps: T-31.
-- [ ] **T-53 (A)** Persona prompts (casual/analyst/tactician) + JSON output parsing. Deps: T-50.
-- [ ] **T-54 (A)** Grounding validator (multilingual numerals, entity check) + retry/fallback. Deps: T-53. *Done when:* adversarial test texts with invented numbers are rejected.
+- [x] **T-52 (A)** Template text packs for 6 languages + glossary YAML. Deps: T-31.
+- [x] **T-53 (A)** Persona prompts (casual/analyst/tactician) + JSON output parsing. Deps: T-50.
+- [x] **T-54 (A)** Grounding validator (multilingual numerals, entity check) + retry/fallback. Deps: T-53. *Done when:* adversarial test texts with invented numbers are rejected.
 - [ ] **T-55 (A)** Narration worker: cache, concurrency limit, backpressure. Deps: T-54, T-41.
 - [ ] **T-56 (A)** Profiles + ranker + spoiler-safe + focus metric. Deps: T-32.
 - [ ] **T-57 (A)** Player-focus mode card + boost. Deps: T-56, T-23.

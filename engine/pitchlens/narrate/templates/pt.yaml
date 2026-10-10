@@ -1,0 +1,108 @@
+# Texto instantâneo (português). Os campos vêm apenas das evidências do insight e dos nomes.
+_fallback:
+  headline: "Lance de {team}, {minute}."
+goal.go_ahead:
+  headline: "GOOOL! {player} coloca o {team} na frente, {score}."
+  detail: &goal_detail
+    - "Uma chance de {xg} xG, finalizada a {shot_speed_kmh} km/h."
+    - "{player2} preparou com um passe de dificuldade {assist_pass_difficulty}/100."
+    - "Probabilidade de vitória do {team}: {win_prob_from_pct} → {win_prob_to_pct}."
+goal.equaliser:
+  headline: "GOOOL! {player} empata para o {team}, {score}."
+  detail: *goal_detail
+goal.extends_lead:
+  headline: "GOOOL! {player} faz {score} para o {team}."
+  detail: *goal_detail
+goal.pulls_back:
+  headline: "GOOOL! {player} diminui para o {team}, {score}."
+  detail: *goal_detail
+career_milestone.goals:
+  headline: "{player} chega a {career_goals} gols na carreira."
+career_milestone.first_goal:
+  headline: "Primeiro gol da carreira de {player}!"
+career_milestone.appearances:
+  headline: "{player} chega a {career_appearances} jogos na carreira."
+career_milestone.debut:
+  headline: "Dia de estreia para {player}."
+big_chance.saved:
+  headline: "Chance clara! O goleiro para {player}."
+  detail: &chance_detail
+    - "Era uma chance de {xg} xG a {shot_distance_m} m."
+    - "Velocidade do chute: {shot_speed_kmh} km/h."
+big_chance.missed:
+  headline: "{player} desperdiça uma chance clara para o {team}."
+  detail: *chance_detail
+big_chance.blocked:
+  headline: "A grande chance de {player} é bloqueada."
+  detail: *chance_detail
+shot_speed_record.fastest:
+  headline: "Um foguete! {player} acerta o chute mais rápido do jogo: {shot_speed_kmh} km/h."
+  detail:
+    - "Recorde anterior: {previous_fastest_kmh} km/h."
+pass_of_note.line_breaking:
+  headline: "{player} quebra as linhas com um passe para {player2}."
+  detail: &pass_detail
+    - "Dificuldade {pass_difficulty}/100 em {pass_distance_m} m."
+    - "O passe superou {lines_broken} linhas adversárias."
+pass_of_note.difficult:
+  headline: "Que passe de {player} para achar {player2}!"
+  detail: *pass_detail
+player_streak.passes:
+  headline: "{player} acertou {consecutive_completed_passes} passes seguidos."
+player_streak.tackles:
+  headline: "{player} ganha {tackles_won} desarmes em {tackles_won_window} minutos."
+card.yellow:
+  headline: "Cartão amarelo para {player} ({team})."
+card.second_yellow:
+  headline: "Segundo amarelo! {player} é expulso e o {team} fica com {players_on_pitch}."
+  detail: &card_detail
+    - "Probabilidade de vitória do {team}: {win_prob_from_pct} → {win_prob_to_pct}."
+card.red:
+  headline: "Cartão vermelho! {player} é expulso e o {team} fica com {players_on_pitch}."
+  detail: *card_detail
+win_prob_swing.event:
+  headline: "Momento decisivo para o {team}: probabilidade de vitória {win_prob_from_pct} → {win_prob_to_pct}."
+momentum_shift.took_over:
+  headline: "O {team} assumiu o controle do jogo."
+  detail:
+    - "A participação no último terço passou de {field_tilt_from_pct} para {field_tilt_to_pct}."
+pressure_change.press_intensified:
+  headline: "O {team} aumentou a pressão."
+  detail: &press_detail
+    - "Ações de pressão a cada 10 passes adversários: {pressing_actions_per_10_opp_passes_from} → {pressing_actions_per_10_opp_passes_to} nos últimos {pressing_actions_per_10_opp_passes_window} minutos."
+    - "PPDA {ppda_from} → {ppda_to}."
+pressure_change.press_eased:
+  headline: "O {team} diminuiu a pressão."
+  detail: *press_detail
+control_chaos_flip.to_control:
+  headline: "O {team} acalmou o jogo e dita o ritmo."
+  detail:
+    - "Índice de controle {control_index_from} → {control_index_to}."
+    - "Teve {possession_5m_pct} da posse nos últimos 5 minutos."
+control_chaos_flip.to_chaos:
+  headline: "O jogo ficou truncado: lá e cá, com muitas perdas de bola."
+  detail:
+    - "Índice de controle {control_index_from} → {control_index_to}."
+    - "{turnovers_per_min} perdas de bola por minuto nos últimos 5 minutos."
+rhythm_break.faster:
+  headline: "O ritmo disparou."
+  detail:
+    - "{tempo} ações com a bola por minuto, contra uma média de {tempo_baseline} no jogo."
+rhythm_break.slower:
+  headline: "O jogo desacelerou bastante."
+  detail:
+    - "{tempo} ações com a bola por minuto, contra uma média de {tempo_baseline} no jogo."
+    - "A bola ficou parada {stoppage_share_pct} do tempo nos últimos 5 minutos."
+xg_swing.lead_flipped:
+  headline: "O {team} agora cria mais perigo."
+  detail: &xg_detail
+    - "Gols esperados: {team} {xg_team}, {opponent} {xg_opp}."
+xg_swing.gap_moved:
+  headline: "O {team} está criando as melhores chances."
+  detail: *xg_detail
+sprint_threshold.top_speed:
+  headline: "{player} chega a {top_speed} km/h!"
+distance_milestone.km:
+  headline: "{player} já percorreu {distance} km."
+distance_milestone.sprints:
+  headline: "{player} soma {sprint_count} piques."

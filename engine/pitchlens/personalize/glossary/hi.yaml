@@ -1,0 +1,21 @@
+# Football terms for narration prompts. Canonical key -> idiomatic term.
+language: Hindi
+terms:
+  goal: गोल
+  pressing: प्रेसिंग
+  press: हाई प्रेस
+  xg: अपेक्षित गोल (xG)
+  win_probability: जीत की संभावना
+  field_tilt: आखिरी तिहाई में हिस्सा
+  ppda: PPDA
+  through_ball: थ्रू बॉल
+  line_breaking_pass: लाइनें तोड़ने वाला पास
+  momentum: मोमेंटम
+  tempo: रफ़्तार
+  control: नियंत्रण
+  chaos: अफ़रा-तफ़री
+  counter_attack: काउंटर अटैक
+  big_chance: बड़ा मौका
+  sent_off: बाहर
+  equaliser: बराबरी का गोल
+  sprint: स्प्रिंट

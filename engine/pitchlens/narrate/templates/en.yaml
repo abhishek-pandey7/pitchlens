@@ -1,0 +1,110 @@
+# Instant template text (English). Slots come only from insight evidence and entity names.
+# `headline` is shown to every persona; `detail` sentences are added for analysts/tacticians and are
+# dropped individually when a slot they need is not in the evidence.
+_fallback:
+  headline: "{team} moment, {minute}."
+goal.go_ahead:
+  headline: "GOAL! {player} puts {team} ahead, {score}."
+  detail: &goal_detail
+    - "A {xg} xG chance, struck at {shot_speed_kmh} km/h."
+    - "{player2} set it up with a pass of difficulty {assist_pass_difficulty}/100."
+    - "{team} win probability: {win_prob_from_pct} → {win_prob_to_pct}."
+goal.equaliser:
+  headline: "GOAL! {player} levels it for {team}, {score}."
+  detail: *goal_detail
+goal.extends_lead:
+  headline: "GOAL! {player} makes it {score} for {team}."
+  detail: *goal_detail
+goal.pulls_back:
+  headline: "GOAL! {player} pulls one back for {team}, {score}."
+  detail: *goal_detail
+career_milestone.goals:
+  headline: "{player} reaches {career_goals} career goals."
+career_milestone.first_goal:
+  headline: "A first career goal for {player}!"
+career_milestone.appearances:
+  headline: "{player} makes career appearance number {career_appearances}."
+career_milestone.debut:
+  headline: "Debut day for {player}."
+big_chance.saved:
+  headline: "Big chance! {player} is denied by the goalkeeper."
+  detail: &chance_detail
+    - "It was a {xg} xG chance from {shot_distance_m} m."
+    - "Shot speed {shot_speed_kmh} km/h."
+big_chance.missed:
+  headline: "{player} misses a big chance for {team}."
+  detail: *chance_detail
+big_chance.blocked:
+  headline: "{player}'s big chance is blocked."
+  detail: *chance_detail
+shot_speed_record.fastest:
+  headline: "Rocket! {player} hits the fastest shot of the match at {shot_speed_kmh} km/h."
+  detail:
+    - "Previous best: {previous_fastest_kmh} km/h."
+pass_of_note.line_breaking:
+  headline: "{player} splits the defence with a line-breaking pass to {player2}."
+  detail: &pass_detail
+    - "Difficulty {pass_difficulty}/100 over {pass_distance_m} m."
+    - "It took out {lines_broken} lines of the opposition."
+pass_of_note.difficult:
+  headline: "What a pass from {player} to find {player2}."
+  detail: *pass_detail
+player_streak.passes:
+  headline: "{player} has completed {consecutive_completed_passes} passes in a row."
+player_streak.tackles:
+  headline: "{player} wins {tackles_won} tackles in {tackles_won_window} minutes."
+card.yellow:
+  headline: "Yellow card for {player} ({team})."
+card.second_yellow:
+  headline: "Second yellow! {player} is sent off and {team} are down to {players_on_pitch}."
+  detail: &card_detail
+    - "{team} win probability: {win_prob_from_pct} → {win_prob_to_pct}."
+card.red:
+  headline: "Red card! {player} is sent off and {team} are down to {players_on_pitch}."
+  detail: *card_detail
+win_prob_swing.event:
+  headline: "A big moment for {team}: win probability {win_prob_from_pct} → {win_prob_to_pct}."
+momentum_shift.took_over:
+  headline: "{team} have taken control of the game."
+  detail:
+    - "Their share of final-third play has gone from {field_tilt_from_pct} to {field_tilt_to_pct}."
+pressure_change.press_intensified:
+  headline: "{team} have cranked up the press."
+  detail: &press_detail
+    - "Pressing actions per 10 opposition passes: {pressing_actions_per_10_opp_passes_from} → {pressing_actions_per_10_opp_passes_to} over the last {pressing_actions_per_10_opp_passes_window} minutes."
+    - "PPDA {ppda_from} → {ppda_to}."
+pressure_change.press_eased:
+  headline: "{team} have eased off the press."
+  detail: *press_detail
+control_chaos_flip.to_control:
+  headline: "{team} have settled the game down and are playing it on their terms."
+  detail:
+    - "Control index {control_index_from} → {control_index_to}."
+    - "They have had {possession_5m_pct} of the ball over the last 5 minutes."
+control_chaos_flip.to_chaos:
+  headline: "The game has turned scrappy: end to end and full of turnovers."
+  detail:
+    - "Control index {control_index_from} → {control_index_to}."
+    - "{turnovers_per_min} turnovers per minute over the last 5 minutes."
+rhythm_break.faster:
+  headline: "The tempo has shot up."
+  detail: &rhythm_detail
+    - "{tempo} on-ball actions per minute, against a match average of {tempo_baseline}."
+rhythm_break.slower:
+  headline: "The game has slowed right down."
+  detail:
+    - "{tempo} on-ball actions per minute, against a match average of {tempo_baseline}."
+    - "The ball has been dead for {stoppage_share_pct} of the last 5 minutes."
+xg_swing.lead_flipped:
+  headline: "{team} now lead the chance count."
+  detail: &xg_detail
+    - "Expected goals: {team} {xg_team}, {opponent} {xg_opp}."
+xg_swing.gap_moved:
+  headline: "{team} are creating the better chances."
+  detail: *xg_detail
+sprint_threshold.top_speed:
+  headline: "{player} hits {top_speed} km/h!"
+distance_milestone.km:
+  headline: "{player} has covered {distance} km."
+distance_milestone.sprints:
+  headline: "{player} has made {sprint_count} sprints."

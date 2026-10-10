@@ -1,0 +1,108 @@
+# तुरंत दिखने वाला टेक्स्ट (हिंदी). सभी खाली जगहें सिर्फ़ इनसाइट के सबूत और नामों से भरी जाती हैं।
+_fallback:
+  headline: "{team} का अहम पल, {minute}."
+goal.go_ahead:
+  headline: "गोल! {player} ने {team} को बढ़त दिलाई, {score}."
+  detail: &goal_detail
+    - "{xg} xG का मौका, {shot_speed_kmh} किमी/घंटा की रफ़्तार से शॉट।"
+    - "{player2} ने {assist_pass_difficulty}/100 कठिनाई वाले पास से मौका बनाया।"
+    - "{team} की जीत की संभावना: {win_prob_from_pct} → {win_prob_to_pct}."
+goal.equaliser:
+  headline: "गोल! {player} ने {team} के लिए बराबरी की, {score}."
+  detail: *goal_detail
+goal.extends_lead:
+  headline: "गोल! {player} ने {team} के लिए स्कोर {score} किया।"
+  detail: *goal_detail
+goal.pulls_back:
+  headline: "गोल! {player} ने {team} के लिए अंतर कम किया, {score}."
+  detail: *goal_detail
+career_milestone.goals:
+  headline: "{player} के करियर में {career_goals} गोल पूरे।"
+career_milestone.first_goal:
+  headline: "{player} का करियर का पहला गोल!"
+career_milestone.appearances:
+  headline: "{player} का करियर का {career_appearances}वां मैच।"
+career_milestone.debut:
+  headline: "{player} का डेब्यू।"
+big_chance.saved:
+  headline: "बड़ा मौका! गोलकीपर ने {player} को रोक दिया।"
+  detail: &chance_detail
+    - "{shot_distance_m} मीटर से {xg} xG का मौका था।"
+    - "शॉट की रफ़्तार {shot_speed_kmh} किमी/घंटा।"
+big_chance.missed:
+  headline: "{player} ने {team} के लिए बड़ा मौका गंवाया।"
+  detail: *chance_detail
+big_chance.blocked:
+  headline: "{player} का बड़ा मौका ब्लॉक हो गया।"
+  detail: *chance_detail
+shot_speed_record.fastest:
+  headline: "रॉकेट! {player} ने मैच का सबसे तेज़ शॉट मारा, {shot_speed_kmh} किमी/घंटा।"
+  detail:
+    - "पिछला सबसे तेज़: {previous_fastest_kmh} किमी/घंटा।"
+pass_of_note.line_breaking:
+  headline: "{player} ने लाइनें तोड़ता पास {player2} तक पहुंचाया।"
+  detail: &pass_detail
+    - "{pass_distance_m} मीटर का पास, कठिनाई {pass_difficulty}/100."
+    - "विरोधी की {lines_broken} लाइनें पार कीं।"
+pass_of_note.difficult:
+  headline: "{player} का क्या पास, सीधे {player2} तक!"
+  detail: *pass_detail
+player_streak.passes:
+  headline: "{player} ने लगातार {consecutive_completed_passes} सही पास दिए।"
+player_streak.tackles:
+  headline: "{player} ने {tackles_won_window} मिनट में {tackles_won} टैकल जीते।"
+card.yellow:
+  headline: "{player} ({team}) को पीला कार्ड।"
+card.second_yellow:
+  headline: "दूसरा पीला कार्ड! {player} बाहर, {team} के पास अब {players_on_pitch} खिलाड़ी।"
+  detail: &card_detail
+    - "{team} की जीत की संभावना: {win_prob_from_pct} → {win_prob_to_pct}."
+card.red:
+  headline: "लाल कार्ड! {player} बाहर, {team} के पास अब {players_on_pitch} खिलाड़ी।"
+  detail: *card_detail
+win_prob_swing.event:
+  headline: "{team} के लिए बड़ा पल: जीत की संभावना {win_prob_from_pct} → {win_prob_to_pct}."
+momentum_shift.took_over:
+  headline: "{team} ने मैच पर कब्ज़ा कर लिया है।"
+  detail:
+    - "आखिरी तिहाई में उसका हिस्सा {field_tilt_from_pct} से बढ़कर {field_tilt_to_pct} हो गया।"
+pressure_change.press_intensified:
+  headline: "{team} ने प्रेसिंग तेज़ कर दी है।"
+  detail: &press_detail
+    - "पिछले {pressing_actions_per_10_opp_passes_window} मिनट में विरोधी के हर 10 पास पर प्रेसिंग: {pressing_actions_per_10_opp_passes_from} → {pressing_actions_per_10_opp_passes_to}."
+    - "PPDA {ppda_from} → {ppda_to}."
+pressure_change.press_eased:
+  headline: "{team} ने प्रेसिंग ढीली कर दी है।"
+  detail: *press_detail
+control_chaos_flip.to_control:
+  headline: "{team} ने खेल को शांत किया और अपनी रफ़्तार से खेल रही है।"
+  detail:
+    - "कंट्रोल इंडेक्स {control_index_from} → {control_index_to}."
+    - "पिछले 5 मिनट में {possession_5m_pct} गेंद उसके पास रही।"
+control_chaos_flip.to_chaos:
+  headline: "मैच बिखर गया है: इधर-उधर का खेल, बार-बार गेंद गंवाना।"
+  detail:
+    - "कंट्रोल इंडेक्स {control_index_from} → {control_index_to}."
+    - "पिछले 5 मिनट में हर मिनट {turnovers_per_min} बार गेंद गंवाई।"
+rhythm_break.faster:
+  headline: "खेल की रफ़्तार अचानक बढ़ गई है।"
+  detail:
+    - "हर मिनट {tempo} बार गेंद के साथ एक्शन, जबकि मैच का औसत {tempo_baseline}."
+rhythm_break.slower:
+  headline: "खेल काफ़ी धीमा हो गया है।"
+  detail:
+    - "हर मिनट {tempo} बार गेंद के साथ एक्शन, जबकि मैच का औसत {tempo_baseline}."
+    - "पिछले 5 मिनट में {stoppage_share_pct} समय गेंद रुकी रही।"
+xg_swing.lead_flipped:
+  headline: "{team} अब मौके बनाने में आगे है।"
+  detail: &xg_detail
+    - "अपेक्षित गोल: {team} {xg_team}, {opponent} {xg_opp}."
+xg_swing.gap_moved:
+  headline: "{team} बेहतर मौके बना रही है।"
+  detail: *xg_detail
+sprint_threshold.top_speed:
+  headline: "{player} ने {top_speed} किमी/घंटा की रफ़्तार छुई!"
+distance_milestone.km:
+  headline: "{player} अब तक {distance} किमी दौड़ चुके हैं।"
+distance_milestone.sprints:
+  headline: "{player} ने {sprint_count} स्प्रिंट पूरे किए।"

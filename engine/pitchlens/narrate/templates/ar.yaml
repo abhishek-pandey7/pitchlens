@@ -1,0 +1,108 @@
+# نص فوري (العربية). الحقول تأتي فقط من أدلة اللحظة وأسماء اللاعبين والفرق.
+_fallback:
+  headline: "لحظة لـ{team}، الدقيقة {minute}."
+goal.go_ahead:
+  headline: "هدف! {player} يتقدم لـ{team}، {score}."
+  detail: &goal_detail
+    - "فرصة بقيمة {xg} من الأهداف المتوقعة، سُددت بسرعة {shot_speed_kmh} كم/س."
+    - "صنعها {player2} بتمريرة صعوبتها {assist_pass_difficulty}/100."
+    - "احتمال فوز {team}: {win_prob_from_pct} ← {win_prob_to_pct}."
+goal.equaliser:
+  headline: "هدف! {player} يعادل لـ{team}، {score}."
+  detail: *goal_detail
+goal.extends_lead:
+  headline: "هدف! {player} يجعلها {score} لـ{team}."
+  detail: *goal_detail
+goal.pulls_back:
+  headline: "هدف! {player} يقلص الفارق لـ{team}، {score}."
+  detail: *goal_detail
+career_milestone.goals:
+  headline: "{player} يصل إلى {career_goals} هدفاً في مسيرته."
+career_milestone.first_goal:
+  headline: "الهدف الأول في مسيرة {player}!"
+career_milestone.appearances:
+  headline: "{player} يخوض مباراته رقم {career_appearances} في مسيرته."
+career_milestone.debut:
+  headline: "يوم الظهور الأول لـ{player}."
+big_chance.saved:
+  headline: "فرصة كبيرة! الحارس يتصدى لـ{player}."
+  detail: &chance_detail
+    - "كانت فرصة بقيمة {xg} من الأهداف المتوقعة من مسافة {shot_distance_m} م."
+    - "سرعة التسديدة {shot_speed_kmh} كم/س."
+big_chance.missed:
+  headline: "{player} يهدر فرصة كبيرة لـ{team}."
+  detail: *chance_detail
+big_chance.blocked:
+  headline: "صدّ الدفاع فرصة {player} الكبيرة."
+  detail: *chance_detail
+shot_speed_record.fastest:
+  headline: "صاروخ! {player} يسجل أسرع تسديدة في المباراة بسرعة {shot_speed_kmh} كم/س."
+  detail:
+    - "الرقم السابق: {previous_fastest_kmh} كم/س."
+pass_of_note.line_breaking:
+  headline: "{player} يكسر الخطوط بتمريرة إلى {player2}."
+  detail: &pass_detail
+    - "صعوبتها {pass_difficulty}/100 على مسافة {pass_distance_m} م."
+    - "تجاوزت {lines_broken} خطوط للمنافس."
+pass_of_note.difficult:
+  headline: "يا لها من تمريرة من {player} إلى {player2}!"
+  detail: *pass_detail
+player_streak.passes:
+  headline: "{player} أكمل {consecutive_completed_passes} تمريرة متتالية."
+player_streak.tackles:
+  headline: "{player} يفوز بـ{tackles_won} التحامات في {tackles_won_window} دقائق."
+card.yellow:
+  headline: "بطاقة صفراء لـ{player} ({team})."
+card.second_yellow:
+  headline: "إنذار ثانٍ! طرد {player} و{team} يلعب بـ{players_on_pitch} لاعبين."
+  detail: &card_detail
+    - "احتمال فوز {team}: {win_prob_from_pct} ← {win_prob_to_pct}."
+card.red:
+  headline: "بطاقة حمراء! طرد {player} و{team} يلعب بـ{players_on_pitch} لاعبين."
+  detail: *card_detail
+win_prob_swing.event:
+  headline: "لحظة حاسمة لـ{team}: احتمال الفوز {win_prob_from_pct} ← {win_prob_to_pct}."
+momentum_shift.took_over:
+  headline: "{team} يسيطر على المباراة."
+  detail:
+    - "حصته من اللعب في الثلث الأخير ارتفعت من {field_tilt_from_pct} إلى {field_tilt_to_pct}."
+pressure_change.press_intensified:
+  headline: "{team} يرفع حدة الضغط."
+  detail: &press_detail
+    - "أفعال الضغط لكل 10 تمريرات للمنافس: {pressing_actions_per_10_opp_passes_from} ← {pressing_actions_per_10_opp_passes_to} في آخر {pressing_actions_per_10_opp_passes_window} دقائق."
+    - "مؤشر PPDA ‏{ppda_from} ← {ppda_to}."
+pressure_change.press_eased:
+  headline: "{team} يخفف الضغط."
+  detail: *press_detail
+control_chaos_flip.to_control:
+  headline: "{team} هدّأ المباراة ويفرض إيقاعه."
+  detail:
+    - "مؤشر السيطرة {control_index_from} ← {control_index_to}."
+    - "استحوذ على {possession_5m_pct} من الكرة في آخر 5 دقائق."
+control_chaos_flip.to_chaos:
+  headline: "المباراة أصبحت فوضوية: كر وفر وكثير من فقدان الكرة."
+  detail:
+    - "مؤشر السيطرة {control_index_from} ← {control_index_to}."
+    - "{turnovers_per_min} فقدان للكرة في الدقيقة خلال آخر 5 دقائق."
+rhythm_break.faster:
+  headline: "الإيقاع ارتفع بشكل كبير."
+  detail:
+    - "{tempo} لمسة بالكرة في الدقيقة مقابل متوسط {tempo_baseline} في المباراة."
+rhythm_break.slower:
+  headline: "المباراة تباطأت كثيراً."
+  detail:
+    - "{tempo} لمسة بالكرة في الدقيقة مقابل متوسط {tempo_baseline} في المباراة."
+    - "توقفت الكرة {stoppage_share_pct} من الوقت في آخر 5 دقائق."
+xg_swing.lead_flipped:
+  headline: "{team} يتفوق الآن في صناعة الفرص."
+  detail: &xg_detail
+    - "الأهداف المتوقعة: {team} {xg_team}، {opponent} {xg_opp}."
+xg_swing.gap_moved:
+  headline: "{team} يصنع الفرص الأخطر."
+  detail: *xg_detail
+sprint_threshold.top_speed:
+  headline: "{player} يصل إلى سرعة {top_speed} كم/س!"
+distance_milestone.km:
+  headline: "{player} قطع {distance} كم."
+distance_milestone.sprints:
+  headline: "{player} نفذ {sprint_count} انطلاقة سريعة."

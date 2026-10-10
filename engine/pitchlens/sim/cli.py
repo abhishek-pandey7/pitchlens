@@ -15,6 +15,7 @@ import json
 from collections import Counter
 from pathlib import Path
 
+from pitchlens.clock import minute_label
 from pitchlens.ingest.bus import MessageKind
 from pitchlens.ingest.memory_bus import MemoryBus
 from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
@@ -88,9 +89,7 @@ TICKER = {
 
 
 def clock_label(event: MatchEvent) -> str:
-    minute = event.clock_ms // 60_000
-    regular = 45 * event.period
-    return f"{regular}+{minute - regular + 1}'" if minute >= regular else f"{minute + 1}'"
+    return minute_label(event.clock_ms, event.period)
 
 
 async def ticker(match_dir: Path, speed: float) -> None:

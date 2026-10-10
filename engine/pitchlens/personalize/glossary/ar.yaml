@@ -1,0 +1,21 @@
+# Football terms for narration prompts. Canonical key -> idiomatic term.
+language: Arabic (Modern Standard)
+terms:
+  goal: هدف
+  pressing: الضغط
+  press: الضغط العالي
+  xg: الأهداف المتوقعة (xG)
+  win_probability: احتمال الفوز
+  field_tilt: الحصة من اللعب في الثلث الأخير
+  ppda: مؤشر PPDA
+  through_ball: تمريرة بينية
+  line_breaking_pass: تمريرة تكسر الخطوط
+  momentum: الأفضلية
+  tempo: الإيقاع
+  control: السيطرة
+  chaos: الفوضى
+  counter_attack: هجمة مرتدة
+  big_chance: فرصة كبيرة
+  sent_off: مطرود
+  equaliser: هدف التعادل
+  sprint: انطلاقة سريعة

@@ -63,3 +63,7 @@ plugins = ["pydantic.mypy"]
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection markers are evaluated once by design.
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Query"]
+
+[tool.ruff.lint.per-file-ignores]
+# Multilingual test strings deliberately contain non-ASCII digits and typographic spaces.
+"tests/**" = ["RUF001"]
