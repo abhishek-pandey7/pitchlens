@@ -2,17 +2,22 @@
 
 python -m pitchlens.sim.cli generate --seed 42 --storyline comeback
 python -m pitchlens.sim.cli summary data/matches/SYN-NHR-SVC-42
+python -m pitchlens.sim.cli replay data/matches/SYN-NHR-SVC-42 --speed 60
 """
 
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 from collections import Counter
 from pathlib import Path
 
+from pitchlens.ingest.bus import MessageKind
+from pitchlens.ingest.memory_bus import MemoryBus
 from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
 
+from .replay import Replay
 from .rosters import DEFAULT_PATH as ROSTER_PATH
 from .rosters import load_league
 from .simulator import SimulatedMatch, simulate
@@ -68,6 +73,40 @@ def summarize(meta: MatchMeta, events: list[MatchEvent]) -> str:
     return "\n".join(lines)
 
 
+TICKER = {
+    EventType.GOAL,
+    EventType.CARD,
+    EventType.SUBSTITUTION,
+    EventType.PERIOD_START,
+    EventType.PERIOD_END,
+}
+
+
+def clock_label(event: MatchEvent) -> str:
+    minute = event.clock_ms // 60_000
+    regular = 45 * event.period
+    return f"{regular}+{minute - regular + 1}'" if minute >= regular else f"{minute + 1}'"
+
+
+async def ticker(match_dir: Path, speed: float) -> None:
+    """Replay a match through the in-memory bus and print key moments as they 'happen'."""
+    meta, events = read_match(match_dir)
+    bus = MemoryBus()
+    replay = Replay(bus, meta, events, speed=speed)
+    async with bus.subscribe(meta.match_id) as sub:
+        task = asyncio.create_task(replay.run())
+        async for message in sub:
+            if message.kind is MessageKind.META:
+                print(f"{meta.home.name} vs {meta.away.name} at {meta.venue}, x{speed:g}")
+            elif message.event is not None and message.event.type in TICKER:
+                e = message.event
+                who = f"{e.team_id or '':<4} {e.player_id or ''}"
+                print(f"{clock_label(e):>7}  {e.type:<14} {who} {' '.join(e.qualifiers)}")
+            elif message.kind is MessageKind.CONTROL and message.control == {"action": "finished"}:
+                break
+        await task
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="pitchlens-sim")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -81,6 +120,9 @@ def main(argv: list[str] | None = None) -> None:
     gen.add_argument("--no-tracking", action="store_true", help="skip the 5 Hz tracking file")
     summ = sub.add_parser("summary", help="summarize a generated match")
     summ.add_argument("match_dir", type=Path)
+    rep_ = sub.add_parser("replay", help="replay a match in (accelerated) real time")
+    rep_.add_argument("match_dir", type=Path)
+    rep_.add_argument("--speed", type=float, default=60.0)
     args = parser.parse_args(argv)
 
     if args.cmd == "generate":
@@ -94,6 +136,8 @@ def main(argv: list[str] | None = None) -> None:
             generate_tracking(match.meta, match.events, league).save(match_dir / "tracking.npz")
         print(summarize(match.meta, match.events))
         print(f"wrote {match_dir}")
+    elif args.cmd == "replay":
+        asyncio.run(ticker(args.match_dir, args.speed))
     else:
         print(summarize(*read_match(args.match_dir)))
 
