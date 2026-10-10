@@ -1,0 +1,67 @@
+{
+  "$defs": {
+    "AlertKind": {
+      "enum": [
+        "top_speed",
+        "distance",
+        "sprint_count"
+      ],
+      "title": "AlertKind",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A predefined physical threshold reached by a player (drives player-tag overlays).",
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "#/$defs/AlertKind"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "match_ms": {
+      "minimum": 0,
+      "title": "Match Ms",
+      "type": "integer"
+    },
+    "player_id": {
+      "title": "Player Id",
+      "type": "string"
+    },
+    "team_id": {
+      "title": "Team Id",
+      "type": "string"
+    },
+    "value": {
+      "title": "Value",
+      "type": "number"
+    },
+    "threshold": {
+      "title": "Threshold",
+      "type": "number"
+    },
+    "unit": {
+      "title": "Unit",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "match_id",
+    "match_ms",
+    "player_id",
+    "team_id",
+    "value",
+    "threshold",
+    "unit"
+  ],
+  "title": "PhysicalAlert",
+  "type": "object"
+}

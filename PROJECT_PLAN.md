@@ -586,10 +586,10 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-15 (E)** Dataset: generate 50 matches + `docs/dataset.md` + distribution sanity test. Deps: T-12, T-13.
 
 ### Phase 2: Interpret (days 4–8)
-- [ ] **T-20 (E)** MatchState (clock, score, possession, cards, subs, per-player accumulators). Deps: T-11.
-- [ ] **T-21 (E)** Pass metrics (distance, accuracy, lines broken, difficulty) + fit coefficients. Deps: T-20.
-- [ ] **T-22 (E)** Shot metrics (xG, shot speed, ball speed). Deps: T-20, T-12.
-- [ ] **T-23 (E)** Physical metrics + threshold triggers. Deps: T-12.
+- [x] **T-20 (E)** MatchState (clock, score, possession, cards, subs, per-player accumulators). Deps: T-11.
+- [x] **T-21 (E)** Pass metrics (distance, accuracy, lines broken, difficulty) + fit coefficients. Deps: T-20.
+- [x] **T-22 (E)** Shot metrics (xG, shot speed, ball speed). Deps: T-20, T-12.
+- [x] **T-23 (E)** Physical metrics + threshold triggers. Deps: T-12.
 - [ ] **T-24 (E)** Rolling windows, possession %, field tilt, PPDA, momentum. Deps: T-20.
 - [ ] **T-25 (E)** Control/Chaos index + rhythm/tempo. Deps: T-24.
 - [ ] **T-26 (E)** Win probability model. Deps: T-22.

@@ -1,6 +1,7 @@
 """Versioned Pydantic schemas shared by every pipeline stage (events, insights, cues, profiles)."""
 
 from .common import PITCH_LENGTH, PITCH_WIDTH, SCHEMA_VERSION, Point, Point3
+from .enriched import AlertKind, EnrichedEvent, PhysicalAlert
 from .events import (
     BodyPart,
     EventType,
@@ -23,10 +24,12 @@ __all__ = [
     "PITCH_LENGTH",
     "PITCH_WIDTH",
     "SCHEMA_VERSION",
+    "AlertKind",
     "BodyPart",
     "CueAnchor",
     "CueTemplate",
     "CueText",
+    "EnrichedEvent",
     "Entities",
     "EventType",
     "Evidence",
@@ -42,6 +45,7 @@ __all__ = [
     "Outcome",
     "OverlayCue",
     "Persona",
+    "PhysicalAlert",
     "PlayerFocus",
     "Point",
     "Point3",
