@@ -620,12 +620,12 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-60 (E)** Overlay cue generator + scheduler (regions, priority, preemption, rate limit). Deps: T-56.
 - [x] **T-61 (F)** `lib/sse.ts`, `lib/clock.ts`, `lib/i18n.ts` (incl. RTL). Deps: T-03.
 - [x] **T-62 (F)** PitchCanvas with 60 fps interpolation. Deps: T-61.
-- [ ] **T-63 (F)** Overlay components: PlayerTag, PassCard, ShotSpeedCard, MomentumBar, LowerThird, ChaosMeter, WP swing. Deps: T-61.
-- [ ] **T-64 (F)** `/overlay` route (transparent, OBS-ready). Deps: T-60, T-63.
+- [x] **T-63 (F)** Overlay components: PlayerTag, PassCard, ShotSpeedCard, MomentumBar, LowerThird, ChaosMeter, WP swing. Deps: T-61.
+- [x] **T-64 (F)** `/overlay` route (transparent, OBS-ready). Deps: T-60, T-63.
 - [ ] **T-65 (F)** `/watch` fan app + ProfilePicker + player-focus panel + personal recap. Deps: T-56, T-57. *(In progress: live feed, pitch, scoreboard, profiles, i18n/RTL done; player-focus panel and personal recap pending.)*
 - [ ] **T-66 (F)** `/analyst` charts + evidence inspector. Deps: T-24…T-26.
 - [ ] **T-67 (F)** `/studio` console (replay controls, insight queue, recap triggers, latency HUD). Deps: T-40, T-58.
-- [ ] **T-68 (F)** `/compare` side-by-side view. Deps: T-65.
+- [x] **T-68 (F)** `/compare` side-by-side view. Deps: T-65.
 
 ### Phase 7: Azure (days 12–17)
 - [ ] **T-70 (I)** Bicep modules + `azure.yaml`; Dockerfiles for engine and web. *Done when:* `azd up` deploys from clean.

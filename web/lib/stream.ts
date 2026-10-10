@@ -68,7 +68,7 @@ export type MatchView = {
   profile: Profile | null;
   state: StateSnapshot | null;
   feed: FeedItem[]; // newest first
-  cues: OverlayCue[]; // cues currently on air (pruned by match time)
+  cues: ActiveCue[]; // cues currently on air
   frame: TrackingFrame | null;
   lastEvent: EnrichedEvent | null;
   alerts: PhysicalAlert[]; // most recent first, bounded
@@ -90,17 +90,25 @@ export const initialView: MatchView = {
   lastEventId: null,
 };
 
-export type StreamMessage = { event: string; data: unknown; id?: number | null };
+export type StreamMessage = { event: string; data: unknown; id?: number | null; at?: number };
+
+/** A cue on air, with the wall-clock time it arrived. */
+export type ActiveCue = OverlayCue & { shown_at: number };
+
+// Cue durations are in match time (right for a renderer synced to video). In an accelerated replay
+// that can be a fraction of a second, so every cue also stays up for at least this long in real time.
+export const MIN_ON_AIR_MS = 4000;
 
 const MAX_FEED = 200;
 const MAX_ALERTS = 20;
 
-function activeCues(cues: OverlayCue[], matchMs: number): OverlayCue[] {
-  return cues.filter((c) => c.start_ms + c.duration_ms > matchMs);
+function activeCues(cues: ActiveCue[], matchMs: number, now: number): ActiveCue[] {
+  return cues.filter((c) => c.start_ms + c.duration_ms > matchMs || now - c.shown_at < MIN_ON_AIR_MS);
 }
 
 export function reduce(view: MatchView, msg: StreamMessage): MatchView {
   const next = msg.id != null ? { ...view, lastEventId: msg.id } : view;
+  const now = msg.at ?? 0;
   switch (msg.event) {
     case "sync": {
       const data = msg.data as SyncPayload;
@@ -124,7 +132,7 @@ export function reduce(view: MatchView, msg: StreamMessage): MatchView {
         state,
         matchMs: Math.max(next.matchMs, state.match_ms),
         status: state.finished ? "finished" : "live",
-        cues: activeCues(next.cues, state.match_ms),
+        cues: activeCues(next.cues, state.match_ms, now),
       };
     }
     case "event": {
@@ -148,14 +156,21 @@ export function reduce(view: MatchView, msg: StreamMessage): MatchView {
       };
     }
     case "cue": {
-      const cue = msg.data as OverlayCue;
+      const cue: ActiveCue = { ...(msg.data as OverlayCue), shown_at: now };
       const others = next.cues.filter((c) => c.region !== cue.region || c.region === "player_anchor");
-      return { ...next, cues: activeCues([...others, cue], Math.max(next.matchMs, cue.start_ms)) };
+      return { ...next, cues: activeCues([...others, cue], Math.max(next.matchMs, cue.start_ms), now) };
     }
     case "frame": {
       const frame = msg.data as TrackingFrame;
-      return { ...next, frame, matchMs: Math.max(next.matchMs, frame.match_ms), cues: activeCues(next.cues, frame.match_ms) };
+      return {
+        ...next,
+        frame,
+        matchMs: Math.max(next.matchMs, frame.match_ms),
+        cues: activeCues(next.cues, frame.match_ms, now),
+      };
     }
+    case "tick":
+      return { ...next, cues: activeCues(next.cues, next.matchMs, now) };
     case "alert":
       return { ...next, alerts: [msg.data as PhysicalAlert, ...next.alerts].slice(0, MAX_ALERTS) };
     case "control": {

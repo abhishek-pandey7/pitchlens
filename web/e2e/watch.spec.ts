@@ -43,7 +43,10 @@ test("an analyst sees evidence, an Arabic fan reads right to left", async ({ pag
 });
 
 test("the launcher simulates a match and lists it", async ({ page }) => {
+  // Count existing matches only once the launcher's initial list has arrived from the engine.
+  const listed = page.waitForResponse((r) => r.url().endsWith("/matches") && r.request().method() === "GET");
   await page.goto("/watch");
+  await listed;
   await expect(page.getByRole("button", { name: "Simulate match" })).toBeVisible();
   const before = await page.getByRole("link", { name: "Open" }).count();
   await page.getByRole("button", { name: "Simulate match" }).click();

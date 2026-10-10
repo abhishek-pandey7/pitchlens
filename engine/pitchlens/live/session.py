@@ -29,13 +29,17 @@ from pitchlens.narrate.worker import NarrationWorker
 from pitchlens.personalize.profiles import ProfileStore
 from pitchlens.personalize.ranker import rank
 from pitchlens.render.cues import CueScheduler, build_cue
-from pitchlens.schema.events import MatchMeta
+from pitchlens.schema.events import EventType, MatchMeta
 from pitchlens.schema.insights import Insight
 from pitchlens.schema.profiles import Persona, Profile
 from pitchlens.telemetry import LatencyRecorder
 
 LOG_SIZE = 5000
 STATE_EVERY_S = 0.5  # wall-clock throttle for `state` snapshots
+# Score-changing and phase events push a state update at once: a goal caption must never sit next to a
+# stale score bug, whatever the replay speed.
+STATE_NOW = {EventType.GOAL, EventType.OWN_GOAL, EventType.CARD, EventType.PERIOD_START, EventType.PERIOD_END,
+             EventType.MATCH_END}  # fmt: skip
 FRAMES_PER_S = 25  # tracking frames forwarded to clients (all frames still feed the physical metrics)
 SUBSCRIBER_QUEUE_LIMIT = 20_000  # a client this far behind is disconnected
 RAW = "*"
@@ -229,7 +233,7 @@ class MatchSession:
                 with self.latency.stage("personalize"):
                     for insight in insights:
                         self.publish_insight(insight)
-                self._maybe_state()
+                self._maybe_state(force=message.event.type in STATE_NOW)
                 self.latency.record("event_to_broadcast", (time.perf_counter() - start) * 1000)
         elif message.kind is MessageKind.FRAME and message.frame is not None:
             with self.latency.stage("physical"):
@@ -303,9 +307,9 @@ class MatchSession:
             ]
             channel.send("sync", _json(self.sync_payload(channel)))
 
-    def _maybe_state(self) -> None:
+    def _maybe_state(self, *, force: bool = False) -> None:
         now = time.monotonic()
-        if now - self._last_state_wall >= STATE_EVERY_S or self.state.finished:
+        if force or now - self._last_state_wall >= STATE_EVERY_S or self.state.finished:
             self._last_state_wall = now
             self.broadcast("state", self.state.snapshot())
 
