@@ -37,6 +37,9 @@ python -m venv .venv && source .venv/Scripts/activate   # Windows Git Bash; use 
 pip install -e ".[dev]"
 pytest
 
+# API (http://localhost:8000/docs) - see docs/api.md
+uvicorn pitchlens.api.main:app --reload --port 8000
+
 # Web
 cd ../web
 npm install

@@ -601,9 +601,9 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-32 (E)** Salience scoring + config table. Deps: T-31. *Done when:* storyline tests fire the expected insights with sensible salience ordering.
 
 ### Phase 4: API & streaming (days 5–9, parallel)
-- [ ] **T-40 (E)** FastAPI app, routes §14, SSE stream with Last-Event-ID, in-memory store. Deps: T-14, T-20.
-- [ ] **T-41 (E)** Pipeline orchestrator: bus → state → metrics → detectors → personalization → cues → SSE fan-out per profile. Deps: T-32, T-40.
-- [ ] **T-42 (E)** OpenTelemetry spans per stage. Deps: T-41.
+- [x] **T-40 (E)** FastAPI app, routes §14, SSE stream with Last-Event-ID, in-memory store. Deps: T-14, T-20.
+- [x] **T-41 (E)** Pipeline orchestrator: bus → state → metrics → detectors → personalization → cues → SSE fan-out per profile. Deps: T-32, T-40. *(Done: bus → state → explain → SSE with resume. The personalization (T-56) and cue (T-60) stages plug into `live/session.py`.)*
+- [x] **T-42 (E)** OpenTelemetry spans per stage. Deps: T-41.
 
 ### Phase 5: Narrative & personalization (days 8–13)
 - [ ] **T-50 (A)** LLMProvider interface + MockProvider. Deps: T-03.

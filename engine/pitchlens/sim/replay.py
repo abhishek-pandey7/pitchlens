@@ -49,11 +49,15 @@ class Replay:
         tracking: Tracking | None = None,
         *,
         speed: float = 1.0,
+        thin_frames: bool = True,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         if speed <= 0:
             raise ValueError("speed must be positive")
+        # Thin frames only when the bus feeds displays directly. A pipeline that computes physical
+        # metrics needs every frame and thins for display at its own edge (see live.session).
+        self.thin_frames = thin_frames
         self.bus = bus
         self.meta = meta
         self.tracking = tracking
@@ -191,7 +195,11 @@ class Replay:
             assert self.tracking is not None and item.frame_index is not None
             now = self._clock()
             min_gap = max(TICK_MS / 1000 / self.speed, 1 / MAX_FRAME_MSGS_PER_SEC)
-            if self._last_frame_wall >= 0 and now - self._last_frame_wall < min_gap * 0.999:
+            if (
+                self.thin_frames
+                and self._last_frame_wall >= 0
+                and now - self._last_frame_wall < min_gap * 0.999
+            ):
                 return
             self._last_frame_wall = now
             message = BusMessage(
