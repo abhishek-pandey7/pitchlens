@@ -190,3 +190,13 @@ async def test_provider_errors_fall_back_to_template(comeback) -> None:
     narrator = Narrator(Broken())
     narration = await narrator.narrate(goals(insights)[0], Profile(profile_id="p"), ctx)
     assert narration.source == "template" and narrator.stats["provider_errors"] == 1
+
+
+def test_whole_numbers_never_print_with_a_decimal_point() -> None:
+    from pitchlens.narrate.templates import format_number
+
+    assert format_number(9.0, "players_on_pitch", "en") == "9"
+    assert format_number(9.0, "players_on_pitch", "es") == "9"
+    assert format_number(33.0, "top_speed", "fr") == "33"
+    assert format_number(33.8, "top_speed", "fr") == "33,8"
+    assert format_number(0.41, "xg", "en") == "0.41"

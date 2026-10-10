@@ -50,6 +50,7 @@ class Replay:
         *,
         speed: float = 1.0,
         thin_frames: bool = True,
+        batch_s: float = 0.0,
         clock: Callable[[], float] = time.monotonic,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
@@ -58,6 +59,10 @@ class Replay:
         # Thin frames only when the bus feeds displays directly. A pipeline that computes physical
         # metrics needs every frame and thins for display at its own edge (see live.session).
         self.thin_frames = thin_frames
+        # Publish items due within `batch_s` immediately instead of sleeping until each one. Exact pacing
+        # (0) is right for tests; live serving uses ~50 ms so the loop wakes ~20x/s instead of once per
+        # item, which matters where timers are coarse (Windows rounds short sleeps to the timer tick).
+        self.batch_s = batch_s
         self.bus = bus
         self.meta = meta
         self.tracking = tracking
@@ -78,6 +83,7 @@ class Replay:
         self._pending_seek: int | None = None
         self._last_frame_wall = -1.0
         self.published = 0
+        self.position_ms = 0  # match time of the last item actually published
 
     @property
     def match_id(self) -> str:
@@ -138,7 +144,7 @@ class Replay:
             item = self._items[self._pos]
             due = self._origin_wall + (item.match_ms - self._origin_ms) / 1000 / self.speed
             delay = due - self._clock()
-            if delay > 0:
+            if delay > self.batch_s:
                 self._wake.clear()
                 woken = await self._first_of(self._sleep(delay), self._wake.wait()) == 1
                 # A pause/seek/speed change may land in the same tick the sleep finished: re-check.
@@ -209,6 +215,7 @@ class Replay:
                 frame=self.tracking.frame(item.frame_index),
             )
         self.published += 1
+        self.position_ms = item.match_ms
         await self.bus.publish(message)
         # Yield every message: when the replay is behind schedule it never sleeps, and an in-memory publish
         # never suspends, so without this one fast replay would starve every other task on the loop.

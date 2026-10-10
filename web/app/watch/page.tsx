@@ -1,11 +1,13 @@
-import { RouteStub } from "@/components/RouteStub";
+import { Suspense } from "react";
+import { WatchClient } from "./WatchClient";
 
-export default function Page() {
+export const metadata = { title: "Watch · PitchLens" };
+
+// The client reads ?match= and ?profile= with useSearchParams, which needs a Suspense boundary.
+export default function WatchPage() {
   return (
-    <RouteStub
-      title="Watch"
-      audience="Fans · second screen"
-      description="Live insight feed, 2D pitch and cards tuned to your persona, language, favorite club and player."
-    />
+    <Suspense fallback={<div className="p-8 text-muted">Loading…</div>}>
+      <WatchClient />
+    </Suspense>
   );
 }

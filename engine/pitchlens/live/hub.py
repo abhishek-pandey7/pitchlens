@@ -19,6 +19,8 @@ from pitchlens.sim.replay import Replay
 from .session import MatchSession
 from .store import MatchRecord, MatchStore
 
+REPLAY_BATCH_S = 0.05  # publish in ~50 ms bursts: imperceptible to viewers, far fewer loop wake-ups
+
 
 class HubError(LookupError):
     pass
@@ -69,10 +71,14 @@ class Hub:
         live = self._live.get(match_id)
         if live is None or live.replay is None:
             return {"state": "idle"}
+        replay = live.replay
         return {
-            "state": live.replay.state.value,
-            "speed": live.replay.speed,
-            "match_ms": live.replay.match_ms,
+            "state": replay.state.value,
+            "speed": replay.speed,
+            "match_ms": replay.match_ms,  # where the replay clock says the match is
+            "position_ms": replay.position_ms,  # last item actually published
+            "published": replay.published,
+            "session_ms": live.session.state.match_ms,  # last item the pipeline has processed
         }
 
     async def start_replay(
@@ -85,7 +91,15 @@ class Hub:
         live = self._live[match_id]
         await self._stop_replay(live)
         tracking = record.tracking if frames else None
-        replay = Replay(self.bus, record.meta, record.events, tracking, speed=speed, thin_frames=False)
+        replay = Replay(
+            self.bus,
+            record.meta,
+            record.events,
+            tracking,
+            speed=speed,
+            thin_frames=False,
+            batch_s=REPLAY_BATCH_S,
+        )
         live.replay = replay
         live.task = asyncio.create_task(replay.run(from_ms=from_ms), name=f"replay:{match_id}")
         return replay
