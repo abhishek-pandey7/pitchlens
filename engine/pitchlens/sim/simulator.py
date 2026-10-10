@@ -315,7 +315,7 @@ class MatchSimulator:
             if self.rng.random() < 0.05 * self.dfn.aggression_mult * presser.attributes.aggression / 70:
                 self.foul(self.dfn, presser, carrier)
                 return
-            if self.rng.random() < 0.06 + 0.08 * self.dfn.press:
+            if self.rng.random() < 0.19 * self.dfn.press:  # an intense press wins the ball back
                 self.emit(
                     EventType.TACKLE,
                     self.dfn,

@@ -56,16 +56,16 @@ JSON Schemas for every record live in [`web/lib/schemas/`](../web/lib/schemas); 
 
 | Statistic | Mean | Range | Real-football reference |
 |---|---|---|---|
-| Passes | 1,118 | 992–1,261 | 850–1,150 |
-| Pass completion | 78.3% | 74.8–82.7% | 75–86% |
-| Shots | 25.0 | 14–39 | 22–28 |
-| Goals | 2.76 | 0–6 | 2.4–3.1 |
-| xG | 2.71 | 1.26–4.69 | 2.3–3.2 |
-| Fouls | 27.7 | 16–40 | 18–27 |
-| Cards | 4.6 | 1–8 | 3–5 |
-| Corners | 8.6 | 2–19 | 8–12 |
-| Throw-ins | 43.4 | 24–57 | 35–50 |
-| Offsides | 3.3 | 0–8 | 2–5 |
+| Passes | 1,127 | 925–1,287 | 850–1,150 |
+| Pass completion | 78.4% | 75.3%–82.3% | 75–86% |
+| Shots | 25.6 | 17–33 | 22–28 |
+| Goals | 2.89 | 0–9 | 2.4–3.1 |
+| xG | 2.75 | 1.56–4.94 | 2.3–3.2 |
+| Fouls | 26.1 | 14–40 | 18–27 |
+| Cards | 4.7 | 1–10 | 3–5 |
+| Corners | 9.4 | 3–17 | 8–12 |
+| Throw-ins | 44.0 | 28–60 | 35–50 |
+| Offsides | 3.2 | 0–11 | 2–5 |
 
 Shot distances: about 6% from inside 8 m and 18% from beyond 25 m. Full-match outfield players cover a median of about 10 km. The engine test suite asserts the calibration ranges, so drift is caught in CI.
 

@@ -590,9 +590,9 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-21 (E)** Pass metrics (distance, accuracy, lines broken, difficulty) + fit coefficients. Deps: T-20.
 - [x] **T-22 (E)** Shot metrics (xG, shot speed, ball speed). Deps: T-20, T-12.
 - [x] **T-23 (E)** Physical metrics + threshold triggers. Deps: T-12.
-- [ ] **T-24 (E)** Rolling windows, possession %, field tilt, PPDA, momentum. Deps: T-20.
-- [ ] **T-25 (E)** Control/Chaos index + rhythm/tempo. Deps: T-24.
-- [ ] **T-26 (E)** Win probability model. Deps: T-22.
+- [x] **T-24 (E)** Rolling windows, possession %, field tilt, PPDA, momentum. Deps: T-20.
+- [x] **T-25 (E)** Control/Chaos index + rhythm/tempo. Deps: T-24.
+- [x] **T-26 (E)** Win probability model. Deps: T-22.
 - *Done when (Phase 2):* all §18 metric tests pass; `docs/metrics.md` written.
 
 ### Phase 3: Explain (days 7–10)
