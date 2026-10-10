@@ -25,10 +25,16 @@ from pitchlens.schema.events import (
 
 from . import passes as pass_model
 from . import shots as shot_model
+from .control_chaos import ControlChaos
 from .geometry import distance, to_attacking, unit_lines
+from .momentum import Observation, TeamDynamics
 from .physical import PhysicalTracker
+from .rhythm import Rhythm
+from .win_prob import WinProbability, remaining_minutes, scoring_rate_per_90, win_probability
 
 FRAME_MAX_AGE_MS = 1000  # tracking older than this is not used for pass context
+SAMPLE_EVERY_MS = 30_000  # time-series resolution for charts and change-point detection
+WP_EVENTS = {EventType.GOAL, EventType.SHOT, EventType.CARD}
 GOAL: tuple[float, float] = (PITCH_LENGTH, 34.0)
 
 
@@ -154,6 +160,13 @@ class MatchState:
         self.events_applied = 0
         self.last_frame: TrackingFrame | None = None
         self._last_completed_pass: tuple[MatchEvent, float] | None = None  # event, difficulty
+        self.dynamics = TeamDynamics(self.home_id, self.away_id)
+        self.control = ControlChaos()
+        self.rhythm = Rhythm()
+        self.added_minutes: dict[int, float] = {}
+        self.win_prob = self.compute_win_probability()
+        self.series: list[dict[str, Any]] = []
+        self._next_sample_ms = 0
 
     # ------------------------------------------------------------------ helpers
     def is_home(self, club_id: str | None) -> bool:
@@ -203,6 +216,9 @@ class MatchState:
         t = e.type
         if t is EventType.PERIOD_START:
             self.period = e.period
+            for q in e.qualifiers:
+                if q.startswith("added_minutes:"):
+                    self.added_minutes[e.period] = float(q.split(":", 1)[1])
         elif t is EventType.MATCH_END:
             self.finished = True
         elif t is EventType.POSSESSION_CHANGE and e.team_id:
@@ -270,11 +286,76 @@ class MatchState:
         elif t in (EventType.FREE_KICK, EventType.THROW_IN, EventType.GOAL_KICK) and team and player:
             metrics = self._apply_pass(e, team, player, counts_as_pass=False)
 
+        self._observe_dynamics(e, metrics)
+        wp_before = self.win_prob
+        self.win_prob = self.compute_win_probability()
+        if t in WP_EVENTS and e.team_id in self.teams:
+            is_home = self.is_home(e.team_id)
+            metrics["wp_before"] = round(wp_before.for_team(is_home), 4)
+            metrics["wp_after"] = round(self.win_prob.for_team(is_home), 4)
+        while e.match_ms >= self._next_sample_ms:
+            self.series.append(self.readings())
+            self._next_sample_ms += SAMPLE_EVERY_MS
+
         self.events_applied += 1
         home, away = self.score
         return EnrichedEvent(
             event=e, metrics=metrics, home_score=home, away_score=away, possession_team=self.possession_team
         )
+
+    def _observe_dynamics(self, e: MatchEvent, metrics: dict[str, MetricValue]) -> None:
+        start = end = None
+        if e.team_id in self.teams:
+            if e.start:
+                start = self.attacking(e.team_id, e.start.x, e.start.y, e.period)
+            if e.end:
+                end = self.attacking(e.team_id, e.end.x, e.end.y, e.period)
+            self.dynamics.observe(Observation(e, e.team_id, start, end, metrics))
+        self.control.observe(e)
+        self.rhythm.observe(e)
+
+    def compute_win_probability(self) -> WinProbability:
+        if self.finished:
+            return win_probability(*self.score, home_rate_90=0, away_rate_90=0, minutes_left=0)
+        minute = self.clock_ms / 60_000
+        played = max(0.0, self.match_ms / 60_000)
+        home, away = self.teams[self.home_id], self.teams[self.away_id]
+        regulation_end = 45 * self.period
+        added = self.added_minutes.get(self.period) if minute >= regulation_end - 1 else None
+        left = remaining_minutes(minute, self.period, added)
+        return win_probability(
+            home.score,
+            away.score,
+            home_rate_90=scoring_rate_per_90(self.meta.pre_match.home_strength, home.xg, played),
+            away_rate_90=scoring_rate_per_90(self.meta.pre_match.away_strength, away.xg, played),
+            minutes_left=left,
+            home_reds=home.red_cards,
+            away_reds=away.red_cards,
+        )
+
+    def readings(self) -> dict[str, Any]:
+        """Team-dynamics readings at the current moment (one row of the time series)."""
+        now = self.match_ms
+        dyn, home, away = self.dynamics, self.home_id, self.away_id
+        control = self.control.reading(now)
+        rhythm = self.rhythm.reading(now)
+        return {
+            "match_ms": now,
+            "clock_ms": self.clock_ms,
+            "period": self.period,
+            "score": list(self.score),
+            "wp": [round(self.win_prob.home, 4), round(self.win_prob.draw, 4), round(self.win_prob.away, 4)],
+            "xg": [round(self.teams[home].xg, 3), round(self.teams[away].xg, 3)],
+            "momentum": round(dyn.momentum(now), 3),
+            "possession_5m": round(dyn.possession_share(home, now), 3),
+            "field_tilt": round(dyn.field_tilt(home, now), 3),
+            "ppda": [round(dyn.ppda(home, now), 2), round(dyn.ppda(away, now), 2)],
+            "control": control.index if control else None,
+            "control_components": control.components if control else None,
+            "tempo": rhythm.tempo,
+            "tempo_z": rhythm.z,
+            "stoppage_share": rhythm.stoppage_share,
+        }
 
     def _advance_clock(self, e: MatchEvent) -> None:
         if self.possession_team is not None and e.match_ms > self._possession_since:
@@ -400,6 +481,7 @@ class MatchState:
             "clock_ms": self.clock_ms,
             "finished": self.finished,
             "possession_team": self.possession_team,
+            "dynamics": self.readings(),
             "home": team_view(home),
             "away": team_view(away),
         }

@@ -20,6 +20,7 @@ UNITS = (DEFENDERS, MIDFIELDERS, FORWARDS)
 
 FINAL_THIRD_X = PITCH_LENGTH * 2 / 3
 OWN_DEFENSIVE_60_X = PITCH_LENGTH * 0.6  # PPDA counts opposition passes in their own 60%
+PRESS_ZONE_X = PITCH_LENGTH - OWN_DEFENSIVE_60_X  # ...and defensive actions beyond 42 m
 
 
 def attacks_positive_x(is_home: bool, period: int) -> bool:

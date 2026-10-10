@@ -5,40 +5,40 @@
  "count": 5,
  "summary_organic_matches": {
   "events": {
-   "mean": 2614.2,
-   "min": 2503,
-   "max": 2730,
+   "mean": 2673.6,
+   "min": 2622,
+   "max": 2764,
    "reference": null
   },
   "passes": {
-   "mean": 1068.6,
-   "min": 938,
-   "max": 1177,
+   "mean": 1106.2,
+   "min": 984,
+   "max": 1164,
    "reference": [
     850,
     1150
    ]
   },
   "pass_completion": {
-   "mean": 0.771,
-   "min": 0.7559,
-   "max": 0.7927,
+   "mean": 0.78,
+   "min": 0.75,
+   "max": 0.8058,
    "reference": [
     0.75,
     0.86
    ]
   },
   "shots": {
-   "mean": 26,
-   "min": 22,
-   "max": 29,
+   "mean": 24.4,
+   "min": 21,
+   "max": 30,
    "reference": [
     22,
     28
    ]
   },
   "goals": {
-   "mean": 2.4,
+   "mean": 2.6,
    "min": 1,
    "max": 5,
    "reference": [
@@ -47,35 +47,35 @@
    ]
   },
   "xg": {
-   "mean": 3.119,
-   "min": 2.355,
-   "max": 3.659,
+   "mean": 3.166,
+   "min": 2.473,
+   "max": 4.199,
    "reference": [
     2.3,
     3.2
    ]
   },
   "fouls": {
-   "mean": 32,
-   "min": 25,
-   "max": 46,
+   "mean": 32.6,
+   "min": 29,
+   "max": 42,
    "reference": [
     18,
     27
    ]
   },
   "cards": {
-   "mean": 5.8,
+   "mean": 5.2,
    "min": 2,
-   "max": 12,
+   "max": 8,
    "reference": [
     3,
     5
    ]
   },
   "corners": {
-   "mean": 10,
-   "min": 3,
+   "mean": 11.2,
+   "min": 9,
    "max": 15,
    "reference": [
     8,
@@ -83,27 +83,27 @@
    ]
   },
   "throw_ins": {
-   "mean": 44.4,
-   "min": 32,
-   "max": 51,
+   "mean": 37.6,
+   "min": 30,
+   "max": 48,
    "reference": [
     35,
     50
    ]
   },
   "offsides": {
-   "mean": 4.2,
-   "min": 2,
-   "max": 9,
+   "mean": 2.8,
+   "min": 0,
+   "max": 5,
    "reference": [
     2,
     5
    ]
   },
   "possessions": {
-   "mean": 360.4,
-   "min": 337,
-   "max": 381,
+   "mean": 354.4,
+   "min": 335,
+   "max": 368,
    "reference": null
   }
  },
@@ -114,24 +114,24 @@
    "away": "SVC",
    "seed": 1000,
    "storyline": "chaos_derby",
-   "score": "0-1",
+   "score": "1-1",
    "stats": {
-    "events": 2570,
-    "passes": 938,
-    "pass_completion": 0.7559,
-    "shots": 22,
-    "goals": 1,
-    "xg": 2.355,
-    "fouls": 46,
-    "cards": 12,
-    "corners": 3,
-    "throw_ins": 48,
-    "offsides": 2,
-    "possessions": 370
+    "events": 2626,
+    "passes": 984,
+    "pass_completion": 0.7846,
+    "shots": 30,
+    "goals": 2,
+    "xg": 2.659,
+    "fouls": 42,
+    "cards": 7,
+    "corners": 15,
+    "throw_ins": 31,
+    "offsides": 4,
+    "possessions": 354
    },
    "files": {
     "meta": "SYN-NHR-SVC-1000/meta.json  sha256:af043af6eef7f75075436c87e2527afa441613a36a58bf25b7bec486c96d0c93",
-    "events": "SYN-NHR-SVC-1000/events.jsonl.gz  sha256:202856853e6470a725c596320ba07170eb89b5ad06142982f835f3c3c4dbb2b8"
+    "events": "SYN-NHR-SVC-1000/events.jsonl.gz  sha256:65f920faa8e3e05ec880e8359e7ae7eb7f49507fa9ef0f55e1c2f9e95ec07080"
    }
   },
   {
@@ -142,22 +142,22 @@
    "storyline": "comeback",
    "score": "2-3",
    "stats": {
-    "events": 2557,
-    "passes": 1066,
-    "pass_completion": 0.7871,
-    "shots": 26,
+    "events": 2622,
+    "passes": 1136,
+    "pass_completion": 0.7958,
+    "shots": 23,
     "goals": 5,
-    "xg": 3.235,
-    "fouls": 32,
-    "cards": 4,
-    "corners": 14,
-    "throw_ins": 32,
-    "offsides": 4,
-    "possessions": 337
+    "xg": 4.199,
+    "fouls": 29,
+    "cards": 5,
+    "corners": 10,
+    "throw_ins": 30,
+    "offsides": 3,
+    "possessions": 335
    },
    "files": {
     "meta": "SYN-NHR-SVC-1001/meta.json  sha256:0313065248747e1c88f71d480826f277e7de9227ffefcc9ec5ea98047196a524",
-    "events": "SYN-NHR-SVC-1001/events.jsonl.gz  sha256:106c38e8e6a5d71d8e6b60625cbdb23fb7f025e9eae4c15f60c177953db11446"
+    "events": "SYN-NHR-SVC-1001/events.jsonl.gz  sha256:37f39fb353653c54532ea2807d08857817efcf3f42556f7e77ddcd013fa4e47b"
    }
   },
   {
@@ -168,22 +168,22 @@
    "storyline": "pressure_surge",
    "score": "1-1",
    "stats": {
-    "events": 2730,
-    "passes": 1177,
-    "pass_completion": 0.7927,
-    "shots": 29,
+    "events": 2764,
+    "passes": 1164,
+    "pass_completion": 0.8058,
+    "shots": 24,
     "goals": 2,
-    "xg": 3.184,
-    "fouls": 27,
+    "xg": 2.473,
+    "fouls": 29,
     "cards": 2,
-    "corners": 10,
-    "throw_ins": 51,
-    "offsides": 2,
-    "possessions": 363
+    "corners": 12,
+    "throw_ins": 35,
+    "offsides": 0,
+    "possessions": 352
    },
    "files": {
     "meta": "SYN-NHR-SVC-1002/meta.json  sha256:1517f20aa65eaba0130eb19ab40665eb9ae3d17375ada015ad29f530945f9803",
-    "events": "SYN-NHR-SVC-1002/events.jsonl.gz  sha256:2e533d5d73fa8b7b91d875f15842e70d34ebab60921e2fad381353628bc5357e"
+    "events": "SYN-NHR-SVC-1002/events.jsonl.gz  sha256:f890647f7e29ca47268b7847b41e15384d90e3ce4f5ef22d5dc419ae1c4f3a99"
    }
   },
   {
@@ -194,22 +194,22 @@
    "storyline": "red_card_turn",
    "score": "0-1",
    "stats": {
-    "events": 2503,
-    "passes": 1019,
-    "pass_completion": 0.7605,
-    "shots": 29,
+    "events": 2715,
+    "passes": 1119,
+    "pass_completion": 0.7659,
+    "shots": 24,
     "goals": 1,
-    "xg": 3.16,
-    "fouls": 30,
-    "cards": 6,
-    "corners": 15,
-    "throw_ins": 46,
-    "offsides": 9,
-    "possessions": 351
+    "xg": 2.667,
+    "fouls": 32,
+    "cards": 8,
+    "corners": 9,
+    "throw_ins": 44,
+    "offsides": 5,
+    "possessions": 363
    },
    "files": {
     "meta": "SYN-SGV-ELR-1003/meta.json  sha256:ca2c7dcc134d26de378717e5d0744ec8c8ce234dea269317cff7ec69b6916e33",
-    "events": "SYN-SGV-ELR-1003/events.jsonl.gz  sha256:74da90b5cd41b8b069322923ab9d8ea5bc2a9e6b0f48af62c76f2a173d681354"
+    "events": "SYN-SGV-ELR-1003/events.jsonl.gz  sha256:aaaf8c2fba1defda0ae9b5df008cfd8365fd14eccb679b4f3cf5cc6955d2e76c"
    }
   },
   {
@@ -220,22 +220,22 @@
    "storyline": "star_player",
    "score": "3-0",
    "stats": {
-    "events": 2711,
-    "passes": 1143,
-    "pass_completion": 0.7577,
-    "shots": 24,
+    "events": 2641,
+    "passes": 1128,
+    "pass_completion": 0.75,
+    "shots": 21,
     "goals": 3,
-    "xg": 3.659,
-    "fouls": 25,
-    "cards": 5,
-    "corners": 8,
-    "throw_ins": 45,
-    "offsides": 4,
-    "possessions": 381
+    "xg": 3.832,
+    "fouls": 31,
+    "cards": 4,
+    "corners": 10,
+    "throw_ins": 48,
+    "offsides": 2,
+    "possessions": 368
    },
    "files": {
     "meta": "SYN-SGV-ELR-1004/meta.json  sha256:eb45aae485fce09ce27b6e63c9206fb434cef34ecdb3b968d53f652facba73c3",
-    "events": "SYN-SGV-ELR-1004/events.jsonl.gz  sha256:ea823af1ff133e075f2e2c7b1fa679e720bfafb83fd74835be44fa719e5a0279"
+    "events": "SYN-SGV-ELR-1004/events.jsonl.gz  sha256:269746fc776089339593b3b2cff2e96f7f997b299a17eabbb89a5aaf9868567d"
    }
   }
  ]
