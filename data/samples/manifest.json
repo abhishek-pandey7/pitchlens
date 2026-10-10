@@ -5,31 +5,31 @@
  "count": 5,
  "summary_organic_matches": {
   "events": {
-   "mean": 2673.6,
-   "min": 2622,
-   "max": 2764,
+   "mean": 2661.6,
+   "min": 2588,
+   "max": 2853,
    "reference": null
   },
   "passes": {
-   "mean": 1106.2,
-   "min": 984,
-   "max": 1164,
+   "mean": 1171,
+   "min": 1060,
+   "max": 1269,
    "reference": [
     850,
     1150
    ]
   },
   "pass_completion": {
-   "mean": 0.78,
-   "min": 0.75,
-   "max": 0.8058,
+   "mean": 0.796,
+   "min": 0.7699,
+   "max": 0.8292,
    "reference": [
     0.75,
     0.86
    ]
   },
   "shots": {
-   "mean": 24.4,
+   "mean": 25,
    "min": 21,
    "max": 30,
    "reference": [
@@ -38,72 +38,72 @@
    ]
   },
   "goals": {
-   "mean": 2.6,
+   "mean": 3.2,
    "min": 1,
-   "max": 5,
+   "max": 6,
    "reference": [
     2.4,
     3.1
    ]
   },
   "xg": {
-   "mean": 3.166,
-   "min": 2.473,
-   "max": 4.199,
+   "mean": 3.795,
+   "min": 1.751,
+   "max": 5.501,
    "reference": [
     2.3,
     3.2
    ]
   },
   "fouls": {
-   "mean": 32.6,
-   "min": 29,
-   "max": 42,
+   "mean": 23.2,
+   "min": 16,
+   "max": 38,
    "reference": [
     18,
     27
    ]
   },
   "cards": {
-   "mean": 5.2,
-   "min": 2,
-   "max": 8,
+   "mean": 5.8,
+   "min": 1,
+   "max": 13,
    "reference": [
     3,
     5
    ]
   },
   "corners": {
-   "mean": 11.2,
-   "min": 9,
-   "max": 15,
+   "mean": 9.6,
+   "min": 6,
+   "max": 13,
    "reference": [
     8,
     12
    ]
   },
   "throw_ins": {
-   "mean": 37.6,
-   "min": 30,
-   "max": 48,
+   "mean": 43.8,
+   "min": 33,
+   "max": 52,
    "reference": [
     35,
     50
    ]
   },
   "offsides": {
-   "mean": 2.8,
-   "min": 0,
-   "max": 5,
+   "mean": 4.6,
+   "min": 2,
+   "max": 8,
    "reference": [
     2,
     5
    ]
   },
   "possessions": {
-   "mean": 354.4,
-   "min": 335,
-   "max": 368,
+   "mean": 349.8,
+   "min": 317,
+   "max": 391,
    "reference": null
   }
  },
@@ -114,24 +114,24 @@
    "away": "SVC",
    "seed": 1000,
    "storyline": "chaos_derby",
-   "score": "1-1",
+   "score": "2-0",
    "stats": {
-    "events": 2626,
-    "passes": 984,
-    "pass_completion": 0.7846,
-    "shots": 30,
+    "events": 2594,
+    "passes": 1060,
+    "pass_completion": 0.8292,
+    "shots": 21,
     "goals": 2,
-    "xg": 2.659,
-    "fouls": 42,
-    "cards": 7,
-    "corners": 15,
-    "throw_ins": 31,
-    "offsides": 4,
-    "possessions": 354
+    "xg": 1.751,
+    "fouls": 38,
+    "cards": 13,
+    "corners": 6,
+    "throw_ins": 33,
+    "offsides": 2,
+    "possessions": 317
    },
    "files": {
-    "meta": "SYN-NHR-SVC-1000/meta.json  sha256:af043af6eef7f75075436c87e2527afa441613a36a58bf25b7bec486c96d0c93",
-    "events": "SYN-NHR-SVC-1000/events.jsonl.gz  sha256:65f920faa8e3e05ec880e8359e7ae7eb7f49507fa9ef0f55e1c2f9e95ec07080"
+    "meta": "SYN-NHR-SVC-1000/meta.json  sha256:425741afca8644b027fbe6a7a0fed9d3b61904b46b832bd176530e7c8e878fcc",
+    "events": "SYN-NHR-SVC-1000/events.jsonl.gz  sha256:b7e262026c05e6a127c4bd5dec272e5dcb8b3379c58eb430542b3f554ead26ce"
    }
   },
   {
@@ -142,22 +142,22 @@
    "storyline": "comeback",
    "score": "2-3",
    "stats": {
-    "events": 2622,
-    "passes": 1136,
-    "pass_completion": 0.7958,
-    "shots": 23,
+    "events": 2588,
+    "passes": 1095,
+    "pass_completion": 0.7699,
+    "shots": 25,
     "goals": 5,
-    "xg": 4.199,
-    "fouls": 29,
+    "xg": 5.501,
+    "fouls": 28,
     "cards": 5,
-    "corners": 10,
-    "throw_ins": 30,
+    "corners": 12,
+    "throw_ins": 46,
     "offsides": 3,
-    "possessions": 335
+    "possessions": 361
    },
    "files": {
-    "meta": "SYN-NHR-SVC-1001/meta.json  sha256:0313065248747e1c88f71d480826f277e7de9227ffefcc9ec5ea98047196a524",
-    "events": "SYN-NHR-SVC-1001/events.jsonl.gz  sha256:37f39fb353653c54532ea2807d08857817efcf3f42556f7e77ddcd013fa4e47b"
+    "meta": "SYN-NHR-SVC-1001/meta.json  sha256:4a5721829bc41d0c46c031c31df5e09bd6a2d51b5edf796cdeeeb657307299cc",
+    "events": "SYN-NHR-SVC-1001/events.jsonl.gz  sha256:ead64ab837584d623ca603872bdbefde199930c9a649af94105f4f0fd5936168"
    }
   },
   {
@@ -166,24 +166,24 @@
    "away": "SVC",
    "seed": 1002,
    "storyline": "pressure_surge",
-   "score": "1-1",
+   "score": "0-2",
    "stats": {
-    "events": 2764,
-    "passes": 1164,
-    "pass_completion": 0.8058,
+    "events": 2853,
+    "passes": 1269,
+    "pass_completion": 0.7849,
     "shots": 24,
     "goals": 2,
-    "xg": 2.473,
-    "fouls": 29,
-    "cards": 2,
-    "corners": 12,
-    "throw_ins": 35,
-    "offsides": 0,
-    "possessions": 352
+    "xg": 2.343,
+    "fouls": 18,
+    "cards": 1,
+    "corners": 13,
+    "throw_ins": 52,
+    "offsides": 6,
+    "possessions": 391
    },
    "files": {
-    "meta": "SYN-NHR-SVC-1002/meta.json  sha256:1517f20aa65eaba0130eb19ab40665eb9ae3d17375ada015ad29f530945f9803",
-    "events": "SYN-NHR-SVC-1002/events.jsonl.gz  sha256:f890647f7e29ca47268b7847b41e15384d90e3ce4f5ef22d5dc419ae1c4f3a99"
+    "meta": "SYN-NHR-SVC-1002/meta.json  sha256:ff4294d706c9f2aa4b74810504ec93cfa5c65d03edde3ff0f604b9b331eac4ea",
+    "events": "SYN-NHR-SVC-1002/events.jsonl.gz  sha256:2738e98e3a21f5edb2e0e9e07f365e02a69b31d432bca759d018e2b41b57d66d"
    }
   },
   {
@@ -194,22 +194,22 @@
    "storyline": "red_card_turn",
    "score": "0-1",
    "stats": {
-    "events": 2715,
-    "passes": 1119,
-    "pass_completion": 0.7659,
-    "shots": 24,
+    "events": 2642,
+    "passes": 1229,
+    "pass_completion": 0.8145,
+    "shots": 30,
     "goals": 1,
-    "xg": 2.667,
-    "fouls": 32,
-    "cards": 8,
-    "corners": 9,
-    "throw_ins": 44,
-    "offsides": 5,
-    "possessions": 363
+    "xg": 4.916,
+    "fouls": 16,
+    "cards": 7,
+    "corners": 11,
+    "throw_ins": 42,
+    "offsides": 4,
+    "possessions": 324
    },
    "files": {
-    "meta": "SYN-SGV-ELR-1003/meta.json  sha256:ca2c7dcc134d26de378717e5d0744ec8c8ce234dea269317cff7ec69b6916e33",
-    "events": "SYN-SGV-ELR-1003/events.jsonl.gz  sha256:aaaf8c2fba1defda0ae9b5df008cfd8365fd14eccb679b4f3cf5cc6955d2e76c"
+    "meta": "SYN-SGV-ELR-1003/meta.json  sha256:6d2f90f1428394be7f44c4675b65cd92d1ea972570fc9129d829296c4d0140e9",
+    "events": "SYN-SGV-ELR-1003/events.jsonl.gz  sha256:3187d87d13abf68933861bc6a3c314e988555e84429619d5d19bc41f7d5ea5a0"
    }
   },
   {
@@ -218,24 +218,24 @@
    "away": "ELR",
    "seed": 1004,
    "storyline": "star_player",
-   "score": "3-0",
+   "score": "4-2",
    "stats": {
-    "events": 2641,
-    "passes": 1128,
-    "pass_completion": 0.75,
-    "shots": 21,
-    "goals": 3,
-    "xg": 3.832,
-    "fouls": 31,
-    "cards": 4,
-    "corners": 10,
-    "throw_ins": 48,
-    "offsides": 2,
-    "possessions": 368
+    "events": 2631,
+    "passes": 1202,
+    "pass_completion": 0.7795,
+    "shots": 25,
+    "goals": 6,
+    "xg": 4.465,
+    "fouls": 16,
+    "cards": 3,
+    "corners": 6,
+    "throw_ins": 46,
+    "offsides": 8,
+    "possessions": 356
    },
    "files": {
-    "meta": "SYN-SGV-ELR-1004/meta.json  sha256:eb45aae485fce09ce27b6e63c9206fb434cef34ecdb3b968d53f652facba73c3",
-    "events": "SYN-SGV-ELR-1004/events.jsonl.gz  sha256:269746fc776089339593b3b2cff2e96f7f997b299a17eabbb89a5aaf9868567d"
+    "meta": "SYN-SGV-ELR-1004/meta.json  sha256:c58172a551b8fed9a7cca276c80a4e1e8e435e9592fabb5b3b2985bc14d7facb",
+    "events": "SYN-SGV-ELR-1004/events.jsonl.gz  sha256:039bdb89ddf2c7051fdbf046ae78e0ef8276347461476f875296d06004f75731"
    }
   }
  ]

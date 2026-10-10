@@ -24,6 +24,34 @@
           "default": true,
           "title": "Starter",
           "type": "boolean"
+        },
+        "career_appearances": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Before this match.",
+          "title": "Career Appearances"
+        },
+        "career_goals": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Before this match.",
+          "title": "Career Goals"
         }
       },
       "required": [
@@ -31,7 +59,9 @@
         "name",
         "pos",
         "shirt",
-        "starter"
+        "starter",
+        "career_appearances",
+        "career_goals"
       ],
       "title": "LineupPlayer",
       "type": "object"

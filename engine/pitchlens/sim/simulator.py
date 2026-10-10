@@ -304,7 +304,9 @@ class MatchSimulator:
         assert carrier is not None
         x, y = self.to_team(team, self.ball)
         pressured = False
-        p_press = 0.1 + 0.4 * self.dfn.press * (1 - x / PITCH_LENGTH) + (0.25 if x > 75 else 0.0)
+        # Pressing intensity drives how often the ball carrier is closed down (2-3x between passive and
+        # aggressive sides); every defence also tightens near its own box.
+        p_press = 0.03 + 0.75 * self.dfn.press**1.5 * (1 - x / PITCH_LENGTH) + (0.25 if x > 75 else 0.0)
         if self.rng.random() < p_press:
             presser = self.nearest(self.dfn, self.ball)
             self.emit(
@@ -332,11 +334,11 @@ class MatchSimulator:
         slot = team.slot_of(carrier)
         d_goal = _dist((x, y), (PITCH_LENGTH, PITCH_WIDTH / 2))
         if d_goal < 11:
-            shot_w = 0.17
+            shot_w = 0.16
         elif pass_model.in_box(x, y):
-            shot_w = 0.06
+            shot_w = 0.052
         elif d_goal < 25:
-            shot_w = 0.075
+            shot_w = 0.068
         elif d_goal < 32:
             shot_w = 0.035
         else:

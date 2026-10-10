@@ -14,6 +14,7 @@ from .windows import DecayedSum, EventWindow, SegmentShare
 POSSESSION_WINDOW_MS = 5 * 60_000
 TILT_WINDOW_MS = 10 * 60_000
 PPDA_WINDOW_MS = 10 * 60_000
+PRESS_WINDOW_MS = 10 * 60_000
 MOMENTUM_HALF_LIFE_MS = 3 * 60_000
 PPDA_CAP = 40.0  # no defensive actions at all reads as "no press", not infinity
 
@@ -42,6 +43,8 @@ class TeamDynamics:
         self.possession = SegmentShare(POSSESSION_WINDOW_MS)
         self.tilt = EventWindow(TILT_WINDOW_MS)
         self._ppda = EventWindow(PPDA_WINDOW_MS)
+        self._press = EventWindow(PRESS_WINDOW_MS)
+        self._first_ms: int | None = None
         self._threat = {
             home_id: DecayedSum(MOMENTUM_HALF_LIFE_MS),
             away_id: DecayedSum(MOMENTUM_HALF_LIFE_MS),
@@ -52,6 +55,10 @@ class TeamDynamics:
 
     def observe(self, ob: Observation) -> None:
         e, team, ms = ob.event, ob.team_id, ob.event.match_ms
+        if self._first_ms is None:
+            self._first_ms = ms
+        if e.type is EventType.PRESSURE and ob.start and ob.start[0] > PRESS_ZONE_X:
+            self._press.add(ms, team)
         if e.type is EventType.POSSESSION_CHANGE:
             self.possession.change(ms, team)
             return
@@ -90,6 +97,12 @@ class TeamDynamics:
         passes = self._ppda.total(f"passes_allowed:{club_id}", now_ms)
         actions = self._ppda.total(f"actions:{club_id}", now_ms)
         return min(PPDA_CAP, passes / actions) if actions else (PPDA_CAP if passes else 0.0)
+
+    def press_rate(self, club_id: str, now_ms: int) -> float:
+        """Pressures per minute applied inside the opponent's own 60% (higher = more aggressive press).
+        Pressure events are ~3x more frequent than PPDA's defensive actions, so this moves more cleanly."""
+        minutes = self._press.span_ms(now_ms, self._first_ms or 0) / 60_000
+        return self._press.total(club_id, now_ms) / minutes
 
     def threat(self, club_id: str, now_ms: int) -> float:
         return self._threat[club_id].value(now_ms)

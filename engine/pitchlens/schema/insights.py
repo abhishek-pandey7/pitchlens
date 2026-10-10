@@ -54,6 +54,7 @@ class Insight(Model):
     insight_id: str
     match_id: str
     match_ms: int = Field(ge=0)
+    clock_ms: int = Field(ge=0, description="Football clock, for display (62', 90+3').")
     period: int = Field(ge=1, le=4)
     type: InsightType
     salience: float = Field(ge=0.0, le=1.0)

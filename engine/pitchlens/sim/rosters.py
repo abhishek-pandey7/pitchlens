@@ -345,7 +345,13 @@ class Club(Model):
         starters = {p.player_id for p in self.starting_xi()}
         return [
             LineupPlayer(
-                player_id=p.player_id, name=p.name, pos=p.pos, shirt=p.shirt, starter=p.player_id in starters
+                player_id=p.player_id,
+                name=p.name,
+                pos=p.pos,
+                shirt=p.shirt,
+                starter=p.player_id in starters,
+                career_appearances=p.career.appearances,
+                career_goals=p.career.goals,
             )
             for p in self.players
         ]

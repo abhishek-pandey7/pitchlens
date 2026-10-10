@@ -45,11 +45,12 @@ Touches; passes, completion, distance and mean difficulty; hardest completed pas
 | Possession | match / 5 min | Time-weighted share between possession changes |
 | **Field tilt** | 10 min | Team's final-third on-ball actions ÷ both teams' final-third on-ball actions |
 | **PPDA** | 10 min | Opposition passes in their own 60% ÷ the team's tackles, interceptions and fouls beyond 42 m (capped at 40). **Lower = more intense press** |
+| **Press rate** | 10 min | Pressures per minute inside the opponent's own 60% (higher = more aggressive). Pressing *changes* are detected on pressures, tackles and interceptions there **per opponent pass**, because a successful press wins the ball and leaves fewer passes to press (see [insights.md](insights.md)) |
 | **Momentum** | half-life 3 min | Decayed threat (final-third entry 0.2, box entry 0.5, 3 × xG per shot); `(home − away) / (home + away + 0.5)`, in −1..1 |
 | **Control ↔ chaos** | 5 min | 0 (chaos) … 100 (control). Logistic of the mean z-score of + passes per possession, + pass completion, − turnovers per min and − fouls and cards per min. Baselines are measured on 30 organic synthetic matches. Components are kept as evidence. ≥ 60 = control, ≤ 40 = chaos |
 | **Tempo** | 5 min | On-ball actions per minute. A match-specific baseline (one sample per minute after 10') gives a z-score; \|z\| > 1.5 is a **rhythm break** |
 | Stoppage share | 5 min | Share of time inside gaps of ≥ 8 s between events (ball dead) |
-| **Win probability** | per event | Remaining goals ~ Poisson(rate × minutes left / 90). Rate = pre-match xG/90 blended with the live xG/90 (live weight rises to 0.6 at full time). Red cards: ×0.7 for the short-handed side, ×1.2 for the opponent. Minutes left uses the announced added time once regulation ends, otherwise +5 |
+| **Win probability** | per event | Remaining goals ~ Poisson(rate × minutes left / 90). Rate = pre-match xG/90 blended with the live xG/90 (live weight rises as (minutes/90)^1.5 to 0.5 at full time). Red cards: ×0.7 for the short-handed side, ×1.2 for the opponent. Minutes left uses the announced added time once regulation ends, otherwise +5 |
 
 `MatchState.readings()` returns all of these at once, and `MatchState.series` records them every 30 s of match time. The series feeds the analyst charts and the change-point detection behind *pressure change* insights.
 
@@ -59,7 +60,7 @@ The test suite runs the metrics on scripted storylines and checks that they resp
 
 | Storyline | Check |
 |---|---|
-| `pressure_surge` | Away PPDA after the 55' press falls to under 75% of its first-half level (median of 5 seeds) |
+| `pressure_surge` | Away press rate rises ≥ 1.8× after the 55' press (median of 7 seeds, every seed > 1.2×), PPDA falls (median < 0.85×), and a *pressure change* insight fires between 55' and 72' in every tested seed |
 | `comeback` | Away win probability < 12% at 60' and 100% at full time. The 90+3 winner adds > 40 points. Momentum swings towards the away side after the 62' press |
 | `chaos_derby` | The control index is more than 15 points higher in the calm phases than in the chaotic ones |
 | `red_card_turn` | The dismissal lowers the short-handed side's win probability |

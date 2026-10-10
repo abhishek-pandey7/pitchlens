@@ -186,6 +186,12 @@
       "title": "Match Ms",
       "type": "integer"
     },
+    "clock_ms": {
+      "description": "Football clock, for display (62', 90+3').",
+      "minimum": 0,
+      "title": "Clock Ms",
+      "type": "integer"
+    },
     "period": {
       "maximum": 4,
       "minimum": 1,
@@ -243,6 +249,7 @@
     "insight_id",
     "match_id",
     "match_ms",
+    "clock_ms",
     "period",
     "type",
     "salience",

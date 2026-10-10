@@ -596,9 +596,9 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - *Done when (Phase 2):* all §18 metric tests pass; `docs/metrics.md` written.
 
 ### Phase 3: Explain (days 7–10)
-- [ ] **T-30 (E)** Detector framework + cooldowns + evidence builder. Deps: T-20.
-- [ ] **T-31 (E)** All detectors from §9 (incl. CUSUM change-point, milestones). Deps: T-21…T-26, T-30.
-- [ ] **T-32 (E)** Salience scoring + config table. Deps: T-31. *Done when:* storyline tests fire the expected insights with sensible salience ordering.
+- [x] **T-30 (E)** Detector framework + cooldowns + evidence builder. Deps: T-20.
+- [x] **T-31 (E)** All detectors from §9 (incl. CUSUM change-point, milestones). Deps: T-21…T-26, T-30.
+- [x] **T-32 (E)** Salience scoring + config table. Deps: T-31. *Done when:* storyline tests fire the expected insights with sensible salience ordering.
 
 ### Phase 4: API & streaming (days 5–9, parallel)
 - [ ] **T-40 (E)** FastAPI app, routes §14, SSE stream with Last-Event-ID, in-memory store. Deps: T-14, T-20.
