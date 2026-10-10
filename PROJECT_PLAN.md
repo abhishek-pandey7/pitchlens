@@ -583,7 +583,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-12 (E)** Tracking generator (5 Hz) consistent with events. Deps: T-11. *Done when:* ball position matches event locations within 1 m. Stored as `tracking.npz` (~3 MB per match).
 - [x] **T-13 (E)** Storylines (5 from §7). Deps: T-11. *Done when:* each storyline's scripted moments appear in output.
 - [x] **T-14 (E)** Bus protocol + memory bus + replay (1/10/60×, pause/seek). Deps: T-03. *Done when:* replay emits in order at the requested speed.
-- [ ] **T-15 (E)** Dataset: generate 50 matches + `docs/dataset.md` + distribution sanity test. Deps: T-12, T-13.
+- [x] **T-15 (E)** Dataset: generate 50 matches + `docs/dataset.md` + distribution sanity test. Deps: T-12, T-13.
 
 ### Phase 2: Interpret (days 4–8)
 - [ ] **T-20 (E)** MatchState (clock, score, possession, cards, subs, per-player accumulators). Deps: T-11.

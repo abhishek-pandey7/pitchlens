@@ -1,0 +1,391 @@
+{
+  "schema_version": "1.0",
+  "match_id": "SYN-SGV-ELR-1003",
+  "competition": "Synthetic Premier Division",
+  "venue": "Stonegate Park",
+  "kickoff_utc": "2026-10-18T14:00:00Z",
+  "weather": "light rain",
+  "referee": "R. Hale",
+  "home": {
+    "club_id": "SGV",
+    "name": "Stonegate Villa",
+    "short_name": "Stonegate",
+    "colors": [
+      "#7B2CBF",
+      "#E0AAFF"
+    ],
+    "formation": "4-4-2"
+  },
+  "away": {
+    "club_id": "ELR",
+    "name": "Elmford Rovers",
+    "short_name": "Elmford",
+    "colors": [
+      "#1F7A4D",
+      "#F2E8CF"
+    ],
+    "formation": "3-5-2"
+  },
+  "lineups": {
+    "SGV": [
+      {
+        "player_id": "SGV-01",
+        "name": "Henrik Zhang",
+        "pos": "GK",
+        "shirt": 1,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-30",
+        "name": "Leon Yilmaz",
+        "pos": "GK",
+        "shirt": 30,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-35",
+        "name": "Theo Balogun",
+        "pos": "GK",
+        "shirt": 35,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-03",
+        "name": "Jonah Horvat",
+        "pos": "RB",
+        "shirt": 3,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-24",
+        "name": "Sami Lindqvist",
+        "pos": "RB",
+        "shirt": 24,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-39",
+        "name": "Yusuf Novak",
+        "pos": "CB",
+        "shirt": 39,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-17",
+        "name": "Lars Saleh",
+        "pos": "CB",
+        "shirt": 17,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-26",
+        "name": "Ade Navarro",
+        "pos": "CB",
+        "shirt": 26,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-38",
+        "name": "Andrés Rahman",
+        "pos": "CB",
+        "shirt": 38,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-31",
+        "name": "Leon Lund",
+        "pos": "LB",
+        "shirt": 31,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-13",
+        "name": "Ilias Gallagher",
+        "pos": "LB",
+        "shirt": 13,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-16",
+        "name": "Iker Moreira",
+        "pos": "DM",
+        "shirt": 16,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-02",
+        "name": "Tomás Whitlock",
+        "pos": "DM",
+        "shirt": 2,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-28",
+        "name": "Iker Mehta",
+        "pos": "CM",
+        "shirt": 28,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-08",
+        "name": "Mikel Laurent",
+        "pos": "CM",
+        "shirt": 8,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-10",
+        "name": "Lars Arrieta",
+        "pos": "CM",
+        "shirt": 10,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-36",
+        "name": "Viktor Farouk",
+        "pos": "AM",
+        "shirt": 36,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-34",
+        "name": "Viktor Okafor",
+        "pos": "AM",
+        "shirt": 34,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-05",
+        "name": "Ilias Ortega",
+        "pos": "RW",
+        "shirt": 5,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-37",
+        "name": "Rafael Becker",
+        "pos": "RW",
+        "shirt": 37,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-23",
+        "name": "Declan Mensah",
+        "pos": "LW",
+        "shirt": 23,
+        "starter": false
+      },
+      {
+        "player_id": "SGV-06",
+        "name": "Ilias Nyberg",
+        "pos": "LW",
+        "shirt": 6,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-32",
+        "name": "Arjun Brooks",
+        "pos": "ST",
+        "shirt": 32,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-27",
+        "name": "Noah Fletcher",
+        "pos": "ST",
+        "shirt": 27,
+        "starter": true
+      },
+      {
+        "player_id": "SGV-21",
+        "name": "Kwame Obi",
+        "pos": "ST",
+        "shirt": 21,
+        "starter": false
+      }
+    ],
+    "ELR": [
+      {
+        "player_id": "ELR-01",
+        "name": "Declan Petrov",
+        "pos": "GK",
+        "shirt": 1,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-33",
+        "name": "Lars Rossi",
+        "pos": "GK",
+        "shirt": 33,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-28",
+        "name": "Kofi Whitlock",
+        "pos": "GK",
+        "shirt": 28,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-23",
+        "name": "Elias Diallo",
+        "pos": "RB",
+        "shirt": 23,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-34",
+        "name": "Kofi Bianchi",
+        "pos": "RB",
+        "shirt": 34,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-24",
+        "name": "Amadou Benali",
+        "pos": "CB",
+        "shirt": 24,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-07",
+        "name": "Sami Farouk",
+        "pos": "CB",
+        "shirt": 7,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-03",
+        "name": "Diego Moreira",
+        "pos": "CB",
+        "shirt": 3,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-22",
+        "name": "Mateo Lund",
+        "pos": "CB",
+        "shirt": 22,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-10",
+        "name": "Elias Kowalski",
+        "pos": "LB",
+        "shirt": 10,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-09",
+        "name": "Dario Horvat",
+        "pos": "LB",
+        "shirt": 9,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-05",
+        "name": "Jonah Laurent",
+        "pos": "DM",
+        "shirt": 5,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-14",
+        "name": "Jonah Adeyemi",
+        "pos": "DM",
+        "shirt": 14,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-30",
+        "name": "Kenji Sokolov",
+        "pos": "CM",
+        "shirt": 30,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-11",
+        "name": "Declan Fletcher",
+        "pos": "CM",
+        "shirt": 11,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-21",
+        "name": "Samuel Mehta",
+        "pos": "CM",
+        "shirt": 21,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-37",
+        "name": "Amadou Tanaka",
+        "pos": "AM",
+        "shirt": 37,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-20",
+        "name": "Ezra Zhang",
+        "pos": "AM",
+        "shirt": 20,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-35",
+        "name": "Pavel Costa",
+        "pos": "RW",
+        "shirt": 35,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-36",
+        "name": "Sami Navarro",
+        "pos": "RW",
+        "shirt": 36,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-26",
+        "name": "Theo Hartley",
+        "pos": "LW",
+        "shirt": 26,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-19",
+        "name": "Amadou Pereira",
+        "pos": "LW",
+        "shirt": 19,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-02",
+        "name": "Henrik Ferraro",
+        "pos": "ST",
+        "shirt": 2,
+        "starter": true
+      },
+      {
+        "player_id": "ELR-18",
+        "name": "Wen Ortega",
+        "pos": "ST",
+        "shirt": 18,
+        "starter": false
+      },
+      {
+        "player_id": "ELR-25",
+        "name": "Pavel Ogunleye",
+        "pos": "ST",
+        "shirt": 25,
+        "starter": true
+      }
+    ]
+  },
+  "pre_match": {
+    "home_strength": 2.08,
+    "away_strength": 0.93
+  },
+  "seed": 1003,
+  "storyline": "red_card_turn"
+}

@@ -3,6 +3,8 @@
 python -m pitchlens.sim.cli generate --seed 42 --storyline comeback
 python -m pitchlens.sim.cli summary data/matches/SYN-NHR-SVC-42
 python -m pitchlens.sim.cli replay data/matches/SYN-NHR-SVC-42 --speed 60
+python -m pitchlens.sim.cli dataset --count 50            # full dataset -> data/matches/
+python -m pitchlens.sim.cli dataset --samples              # committed samples -> data/samples/
 """
 
 from __future__ import annotations
@@ -17,6 +19,7 @@ from pitchlens.ingest.bus import MessageKind
 from pitchlens.ingest.memory_bus import MemoryBus
 from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
 
+from .dataset import build_dataset
 from .replay import Replay
 from .rosters import DEFAULT_PATH as ROSTER_PATH
 from .rosters import load_league
@@ -24,7 +27,9 @@ from .simulator import SimulatedMatch, simulate
 from .storylines import STORYLINES, build, default_fixture
 from .tracking import Tracking, generate_tracking
 
-DEFAULT_OUT = Path(__file__).resolve().parents[3] / "data" / "matches"
+DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+DEFAULT_OUT = DATA_DIR / "matches"
+SAMPLES_OUT = DATA_DIR / "samples"
 
 
 def write_match(match: SimulatedMatch, out_dir: Path) -> Path:
@@ -123,6 +128,12 @@ def main(argv: list[str] | None = None) -> None:
     rep_ = sub.add_parser("replay", help="replay a match in (accelerated) real time")
     rep_.add_argument("match_dir", type=Path)
     rep_.add_argument("--speed", type=float, default=60.0)
+    ds = sub.add_parser("dataset", help="build the reproducible synthetic dataset")
+    ds.add_argument("--count", type=int, default=50)
+    ds.add_argument("--out", type=Path, default=None)
+    ds.add_argument("--no-tracking", action="store_true")
+    ds.add_argument("--samples", action="store_true", help="the 5 storyline matches, gzipped, no tracking")
+    ds.add_argument("--roster", type=Path, default=ROSTER_PATH)
     args = parser.parse_args(argv)
 
     if args.cmd == "generate":
@@ -136,6 +147,18 @@ def main(argv: list[str] | None = None) -> None:
             generate_tracking(match.meta, match.events, league).save(match_dir / "tracking.npz")
         print(summarize(match.meta, match.events))
         print(f"wrote {match_dir}")
+    elif args.cmd == "dataset":
+        league = load_league(args.roster)
+        if args.samples:
+            manifest = build_dataset(league, args.out or SAMPLES_OUT, count=5, tracking=False, gzipped=True)
+        else:
+            manifest = build_dataset(
+                league, args.out or DEFAULT_OUT, count=args.count, tracking=not args.no_tracking
+            )
+        for key, row in manifest["summary_organic_matches"].items():
+            ref = row["reference"]
+            print(f"{key:16s} mean {row['mean']:>9}  range {row['min']}-{row['max']}  reference {ref or '-'}")
+        print(f"{manifest['count']} matches written")
     elif args.cmd == "replay":
         asyncio.run(ticker(args.match_dir, args.speed))
     else:
