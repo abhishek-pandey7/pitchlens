@@ -1,0 +1,21 @@
+# Football terms for narration prompts. Canonical key -> idiomatic term.
+language: Spanish (Spain/LatAm neutral)
+terms:
+  goal: gol
+  pressing: presión
+  press: presión alta
+  xg: goles esperados (xG)
+  win_probability: probabilidad de victoria
+  field_tilt: peso en el último tercio
+  ppda: PPDA (pases rivales por acción defensiva)
+  through_ball: pase al hueco
+  line_breaking_pass: pase que rompe líneas
+  momentum: dominio
+  tempo: ritmo
+  control: control
+  chaos: caos
+  counter_attack: contraataque
+  big_chance: ocasión clarísima
+  sent_off: expulsado
+  equaliser: empate
+  sprint: esprint
