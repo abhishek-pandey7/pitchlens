@@ -611,13 +611,13 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-52 (A)** Template text packs for 6 languages + glossary YAML. Deps: T-31.
 - [x] **T-53 (A)** Persona prompts (casual/analyst/tactician) + JSON output parsing. Deps: T-50.
 - [x] **T-54 (A)** Grounding validator (multilingual numerals, entity check) + retry/fallback. Deps: T-53. *Done when:* adversarial test texts with invented numbers are rejected.
-- [ ] **T-55 (A)** Narration worker: cache, concurrency limit, backpressure. Deps: T-54, T-41.
-- [ ] **T-56 (A)** Profiles + ranker + spoiler-safe + focus metric. Deps: T-32.
+- [x] **T-55 (A)** Narration worker: cache, concurrency limit, backpressure. Deps: T-54, T-41.
+- [x] **T-56 (A)** Profiles + ranker + spoiler-safe + focus metric. Deps: T-32.
 - [ ] **T-57 (A)** Player-focus mode card + boost. Deps: T-56, T-23.
 - [ ] **T-58 (A)** Recaps: HT, FT, player of the match, personal recap. Deps: T-54.
 
 ### Phase 6: Render & frontend (days 6–15)
-- [ ] **T-60 (E)** Overlay cue generator + scheduler (regions, priority, preemption, rate limit). Deps: T-56.
+- [x] **T-60 (E)** Overlay cue generator + scheduler (regions, priority, preemption, rate limit). Deps: T-56.
 - [ ] **T-61 (F)** `lib/sse.ts`, `lib/clock.ts`, `lib/i18n.ts` (incl. RTL). Deps: T-03.
 - [ ] **T-62 (F)** PitchCanvas with 60 fps interpolation. Deps: T-61.
 - [ ] **T-63 (F)** Overlay components: PlayerTag, PassCard, ShotSpeedCard, MomentumBar, LowerThird, ChaosMeter, WP swing. Deps: T-61.

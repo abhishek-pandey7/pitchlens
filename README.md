@@ -36,6 +36,7 @@ cd engine
 python -m venv .venv && source .venv/Scripts/activate   # Windows Git Bash; use .venv/bin/activate on macOS/Linux
 pip install -e ".[dev]"
 pytest
+python scripts/e2e_smoke.py   # whole system, start to finish (33 checks)
 
 # API (http://localhost:8000/docs) - see docs/api.md
 uvicorn pitchlens.api.main:app --reload --port 8000
