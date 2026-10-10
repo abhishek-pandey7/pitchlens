@@ -71,13 +71,28 @@ def system_prompt(persona: Persona, lang: str, verbosity: Verbosity) -> str:
         "Ground rules:\n"
         "- Use only facts from EVIDENCE, ENTITIES, MINUTE and SCORE in the user message. Every number you "
         "write must come from there; you may round it or write a probability as a percentage.\n"
-        "- Name only the players and teams listed in ENTITIES.\n"
+        "- Name only the players and teams listed in ENTITIES, spelled exactly as given and in Latin "
+        "script, whatever the language.\n"
+        "- SCORE is the scoreline at this moment and LEADER says who is ahead. Never say a team leads, "
+        "trails, extends or loses a lead unless SCORE and LEADER show it; only a goal changes the score.\n"
         "- Do not invent history, records, injuries, quotes or reasons that the evidence does not show. "
         "If a detail is missing, leave it out.\n"
         "- REFERENCE is a correct, plain version of the line. Improve its style for the audience; do not "
         "add facts it lacks.\n"
         'Reply with JSON only: {"text": "<your line>", "emphasis_entities": ["<names to highlight>"]}'
     )
+
+
+def scoreline(ctx: NarrationContext) -> str:
+    home, away = ctx.team_names[ctx.home_id], ctx.team_names[ctx.away_id]
+    return f"{home} {ctx.score[0]}-{ctx.score[1]} {away}"
+
+
+def leader(ctx: NarrationContext) -> str:
+    home, away = ctx.score
+    if home == away:
+        return "level"
+    return ctx.team_names[ctx.home_id if home > away else ctx.away_id]
 
 
 def _payload(insight: Insight, ctx: NarrationContext, profile: Profile) -> dict[str, Any]:
@@ -98,7 +113,8 @@ def _payload(insight: Insight, ctx: NarrationContext, profile: Profile) -> dict[
         "moment": insight.headline_key,
         "why_it_matters": insight.why_tags,
         "MINUTE": values["minute"],
-        "SCORE": values["score"],
+        "SCORE": scoreline(ctx),
+        "LEADER": leader(ctx),
         "ENTITIES": {
             "players": [ctx.player_names.get(p, p) for p in insight.entities.players],
             "teams": [ctx.team_names.get(t, t) for t in insight.entities.teams],

@@ -15,6 +15,7 @@ from pitchlens.narrate.azure_openai import AzureOpenAIProvider
 from pitchlens.narrate.foundry_claude import FoundryClaudeProvider
 from pitchlens.narrate.mock import MockProvider
 from pitchlens.narrate.narrator import Narrator
+from pitchlens.narrate.openai_compat import OpenAICompatibleProvider, RateBudget
 from pitchlens.narrate.provider import LLMError, LLMRequest, Tier
 from pitchlens.narrate.providers import build_provider
 from pitchlens.narrate.templates import NarrationContext
@@ -191,3 +192,98 @@ async def test_narrator_uses_grounded_claude_text_and_falls_back_on_refusal() ->
 def test_build_provider_defaults_to_mock() -> None:
     assert isinstance(build_provider("mock"), MockProvider)
     assert isinstance(build_provider("something-else"), MockProvider)
+
+
+# ---------------------------------------------------------------- OpenAI-compatible (Groq, free dev)
+async def test_groq_style_request_shape() -> None:
+    fake = FakeOpenAI()
+    provider = OpenAICompatibleProvider(
+        name="groq", fast_model="openai/gpt-oss-20b", quality_model="openai/gpt-oss-120b", reasoning=True,
+        client=fake,
+    )  # fmt: skip
+    await provider.generate(REQUEST)
+    call = fake.calls[0]
+    assert call["model"] == "openai/gpt-oss-20b"
+    assert call["response_format"]["json_schema"]["strict"] is True
+    assert call["reasoning_effort"] == "low" and call["extra_body"] == {"include_reasoning": False}
+    assert call["max_completion_tokens"] > REQUEST.max_tokens  # room for reasoning
+    await provider.generate(LLMRequest(system="s", user="u", tier=Tier.QUALITY, json_schema=SCHEMA))
+    assert fake.calls[1]["model"] == "openai/gpt-oss-120b" and fake.calls[1]["reasoning_effort"] == "medium"
+
+
+async def test_openai_compat_json_object_mode_and_errors() -> None:
+    fake = FakeOpenAI()
+    await OpenAICompatibleProvider(fast_model="m", structured="json_object", client=fake).generate(REQUEST)
+    assert fake.calls[0]["response_format"] == {"type": "json_object"}
+    assert "reasoning_effort" not in fake.calls[0]
+    with pytest.raises(LLMError, match="429"):
+        await OpenAICompatibleProvider(
+            fast_model="m", client=FakeOpenAI(error=status_error(openai, 429))
+        ).generate(REQUEST)
+
+
+class FakeClock:
+    def __init__(self) -> None:
+        self.now = 0.0
+        self.slept: list[float] = []
+
+    def __call__(self) -> float:
+        return self.now
+
+    async def sleep(self, seconds: float) -> None:
+        self.slept.append(seconds)
+        self.now += seconds
+
+
+async def test_rate_budget_waits_for_quality_and_fails_fast_for_live_lines() -> None:
+    clock = FakeClock()
+    budget = RateBudget(rpm=2, tpm=1000, clock=clock, sleep=clock.sleep)
+    await budget.acquire(100, max_wait_s=2)
+    entry = await budget.acquire(100, max_wait_s=2)
+    with pytest.raises(LLMError, match="rate budget"):
+        await budget.acquire(100, max_wait_s=2)  # third request in the minute: a live line won't wait
+    await budget.acquire(100, max_wait_s=90)  # a recap waits for the window to roll
+    assert clock.slept == [60.0]
+
+    tokens = RateBudget(rpm=100, tpm=1000, clock=clock, sleep=clock.sleep)
+    first = await tokens.acquire(900, max_wait_s=0)
+    RateBudget.settle(first, 300)  # real usage was lower than estimated
+    await tokens.acquire(600, max_wait_s=0)
+    with pytest.raises(LLMError):
+        await tokens.acquire(200, max_wait_s=0)
+    assert entry[1] == 100
+
+
+async def test_provider_falls_back_to_template_when_budget_is_spent() -> None:
+    fake = FakeOpenAI(
+        content=json.dumps({"text": "Reyes strikes! Northbridge lead 1-0.", "emphasis_entities": []})
+    )
+    clock = FakeClock()
+    provider = OpenAICompatibleProvider(
+        fast_model="m", client=fake, budget=RateBudget(rpm=1, tpm=100_000, clock=clock, sleep=clock.sleep)
+    )
+    narrator = Narrator(provider)
+    assert (await narrator.narrate(GOAL, Profile(profile_id="p"), CTX)).source == "llm"
+    second = await narrator.narrate(GOAL, Profile(profile_id="q"), CTX)
+    assert second.source == "template" and len(fake.calls) == 1
+
+
+def test_build_provider_groq_needs_a_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    assert isinstance(build_provider("groq"), MockProvider)
+    monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
+    provider = build_provider("groq")
+    assert isinstance(provider, OpenAICompatibleProvider) and provider.name == "groq"
+    assert str(provider.client.base_url).startswith("https://api.groq.com/openai/v1")
+    assert provider.budget is not None and provider.budget.rpm == 30
+
+
+def test_prompt_states_scoreline_and_leader() -> None:
+    from pitchlens.narrate.prompts import build_request
+
+    request = build_request(GOAL, CTX, Profile(profile_id="p"))
+    assert request.payload["SCORE"] == "Northbridge 1-0 Southvale"
+    assert request.payload["LEADER"] == "Northbridge"
+    level = NarrationContext("m", "NHR", "SVC", CTX.team_names, CTX.player_names, (2, 2))
+    assert build_request(GOAL, level, Profile(profile_id="p")).payload["LEADER"] == "level"
+    assert "Latin script" in request.system and "LEADER" in request.system
