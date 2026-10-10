@@ -1,5 +1,6 @@
 """Live check of the configured LLM provider against real match insights (needs Azure credentials).
 
+    LLM_PROVIDER=groq GROQ_API_KEY=... python scripts/llm_smoke.py   (free tier; waits for rate budget)
     LLM_PROVIDER=foundry_claude ANTHROPIC_FOUNDRY_RESOURCE=<resource> python scripts/llm_smoke.py
     LLM_PROVIDER=azure_openai AZURE_OPENAI_ENDPOINT=... AZURE_OPENAI_FAST_DEPLOYMENT=... \
         python scripts/llm_smoke.py
@@ -29,6 +30,8 @@ from pitchlens.sim.storylines import build, default_fixture
 async def main() -> int:
     name = os.environ.get("LLM_PROVIDER", "mock")
     provider = build_provider(name)
+    if hasattr(provider, "max_wait_s"):  # free tiers: wait for the rate window instead of skipping lines
+        provider.max_wait_s = dict.fromkeys(provider.max_wait_s, 120.0)
     league = generate_league()
     home, away = default_fixture(league, "comeback")
     match = simulate(league, home, away, seed=7, storyline=build(league, "comeback", home, away))
