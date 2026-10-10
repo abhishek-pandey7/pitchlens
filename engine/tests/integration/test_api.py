@@ -3,20 +3,12 @@
 from __future__ import annotations
 
 import json
-import socket
-import threading
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 
 import httpx
-import pytest
-import uvicorn
 
-from pitchlens.api.main import API_PREFIX, create_app
-from pitchlens.config import Settings
-from pitchlens.live.hub import Hub
-from pitchlens.live.store import MatchStore
 from pitchlens.sim.simulator import simulate
 
 
@@ -25,30 +17,6 @@ class Sse:
     event: str
     data: dict = field(default_factory=dict)
     id: int | None = None
-
-
-def free_port() -> int:
-    with socket.socket() as s:
-        s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1]
-
-
-@pytest.fixture(scope="module")
-def server() -> Iterator[tuple[str, Hub]]:
-    store = MatchStore(data_dirs=[])
-    hub = Hub(store)
-    app = create_app(Settings(data_dirs=[]), hub=hub)
-    port = free_port()
-    srv = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", lifespan="on"))
-    thread = threading.Thread(target=srv.run, daemon=True)
-    thread.start()
-    deadline = time.time() + 15
-    while not srv.started and time.time() < deadline:
-        time.sleep(0.05)
-    assert srv.started, "server did not start"
-    yield f"http://127.0.0.1:{port}{API_PREFIX}", hub
-    srv.should_exit = True
-    thread.join(timeout=10)
 
 
 def sse_events(response: httpx.Response) -> Iterator[Sse]:
@@ -121,7 +89,9 @@ def test_live_stream_with_seek_sync_and_goal_insights(server) -> None:
     assert sync.data["state"]["home"]["score"] == 2  # both home goals came during the catch-up
     live_events = [m for m in received if m.event == "event"]
     assert live_events and min(m.data["event"]["match_ms"] for m in live_events) > 80 * 60_000
-    goals = [m.data for m in received if m.event == "insight" and m.data["type"] == "goal"]
+    goals = [
+        m.data["insight"] for m in received if m.event == "insight" and m.data["insight"]["type"] == "goal"
+    ]
     assert [g["headline_key"] for g in goals] == ["goal.equaliser", "goal.go_ahead"]
     ids = [m.id for m in received if m.id is not None]
     assert ids == sorted(ids) and len(set(ids)) == len(ids)

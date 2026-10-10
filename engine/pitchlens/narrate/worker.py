@@ -1,0 +1,98 @@
+"""Narration worker (§10, T-55): LLM rewrites off the hot path.
+
+Narration text depends only on (insight, persona, language, verbosity), so fans who share those settings
+share one LLM call. Calls are cached, deduplicated while in flight, run with bounded concurrency, and
+shed under load: when the queue is long, low-salience moments keep their template text.
+"""
+
+from __future__ import annotations
+
+import asyncio
+from collections import OrderedDict
+from dataclasses import dataclass
+
+from pitchlens.schema.insights import Insight
+from pitchlens.schema.profiles import Narration, Persona, Profile, Verbosity
+
+from .narrator import Narrator
+from .templates import NarrationContext
+
+CacheKey = tuple[str, Persona, str, Verbosity]
+
+
+def cache_key(insight: Insight, profile: Profile) -> CacheKey:
+    return (insight.insight_id, profile.persona, profile.language, profile.verbosity)
+
+
+@dataclass
+class WorkerStats:
+    requested: int = 0
+    cache_hits: int = 0
+    deduplicated: int = 0
+    shed: int = 0
+    completed: int = 0
+
+
+class NarrationWorker:
+    def __init__(
+        self, narrator: Narrator, *, concurrency: int = 4, max_pending: int = 64, shed_below: float = 0.5,
+        cache_size: int = 5000,
+    ) -> None:  # fmt: skip
+        self.narrator = narrator
+        self._semaphore = asyncio.Semaphore(concurrency)
+        self.max_pending = max_pending
+        self.shed_below = shed_below
+        self._cache: OrderedDict[CacheKey, Narration] = OrderedDict()
+        self._cache_size = cache_size
+        self._inflight: dict[CacheKey, asyncio.Task[Narration]] = {}
+        self.stats = WorkerStats()
+
+    @property
+    def pending(self) -> int:
+        return len(self._inflight)
+
+    async def narrate(
+        self, insight: Insight, profile: Profile, ctx: NarrationContext, *, personal_salience: float
+    ) -> Narration | None:
+        """The LLM narration for this fan, or None if shed (the template text then stands)."""
+        self.stats.requested += 1
+        key = cache_key(insight, profile)
+        if key in self._cache:
+            self.stats.cache_hits += 1
+            self._cache.move_to_end(key)
+            return self._for_profile(self._cache[key], profile)
+        task = self._inflight.get(key)
+        if task is not None:
+            self.stats.deduplicated += 1
+        else:
+            if self.pending >= self.max_pending and personal_salience < self.shed_below:
+                self.stats.shed += 1
+                return None
+            task = asyncio.ensure_future(self._run(key, insight, profile, ctx))
+            self._inflight[key] = task
+        return self._for_profile(await asyncio.shield(task), profile)
+
+    async def _run(
+        self, key: CacheKey, insight: Insight, profile: Profile, ctx: NarrationContext
+    ) -> Narration:
+        try:
+            async with self._semaphore:
+                narration = await self.narrator.narrate(insight, profile, ctx)
+            self._cache[key] = narration
+            if len(self._cache) > self._cache_size:
+                self._cache.popitem(last=False)
+            self.stats.completed += 1
+            return narration
+        finally:
+            self._inflight.pop(key, None)
+
+    @staticmethod
+    def _for_profile(narration: Narration, profile: Profile) -> Narration:
+        if narration.profile_id == profile.profile_id:
+            return narration
+        return narration.model_copy(
+            update={
+                "profile_id": profile.profile_id,
+                "narration_id": f"n-{narration.insight_id}-{profile.profile_id}",
+            }
+        )

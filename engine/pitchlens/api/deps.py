@@ -15,8 +15,8 @@ def get_hub(request: Request) -> Hub:
 
 
 def get_profiles(request: Request) -> ProfileStore:
-    profiles: ProfileStore = request.app.state.profiles
-    return profiles
+    hub: Hub = request.app.state.hub
+    return hub.profiles
 
 
 def session_or_404(hub: Hub, match_id: str) -> MatchSession:

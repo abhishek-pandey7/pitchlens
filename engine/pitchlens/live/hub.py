@@ -8,6 +8,11 @@ from dataclasses import dataclass
 
 from pitchlens.ingest.bus import BusMessage, MessageKind
 from pitchlens.ingest.memory_bus import MemoryBus
+from pitchlens.narrate.mock import MockProvider
+from pitchlens.narrate.narrator import Narrator
+from pitchlens.narrate.provider import LLMProvider
+from pitchlens.narrate.worker import NarrationWorker
+from pitchlens.personalize.profiles import ProfileStore
 from pitchlens.schema.events import MatchEvent, MatchMeta
 from pitchlens.sim.replay import Replay
 
@@ -27,9 +32,20 @@ class Live:
 
 
 class Hub:
-    def __init__(self, store: MatchStore, bus: MemoryBus | None = None) -> None:
+    def __init__(
+        self,
+        store: MatchStore,
+        bus: MemoryBus | None = None,
+        *,
+        profiles: ProfileStore | None = None,
+        provider: LLMProvider | None = None,
+        narrate: bool = True,
+    ) -> None:
         self.store = store
         self.bus = bus or MemoryBus()
+        self.profiles = profiles or ProfileStore()
+        self.provider = provider or MockProvider()
+        self.narrate = narrate
         self._live: dict[str, Live] = {}
 
     def record(self, match_id: str) -> MatchRecord:
@@ -43,7 +59,9 @@ class Hub:
         live = self._live.get(match_id)
         if live is None:
             record = self.record(match_id)
-            live = self._live[match_id] = Live(MatchSession(record.meta, self.bus))
+            worker = NarrationWorker(Narrator(self.provider)) if self.narrate else None
+            session = MatchSession(record.meta, self.bus, profiles=self.profiles, worker=worker)
+            live = self._live[match_id] = Live(session)
             live.session.start()
         return live.session
 

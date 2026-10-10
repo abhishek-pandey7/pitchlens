@@ -210,3 +210,6 @@ class Replay:
             )
         self.published += 1
         await self.bus.publish(message)
+        # Yield every message: when the replay is behind schedule it never sleeps, and an in-memory publish
+        # never suspends, so without this one fast replay would starve every other task on the loop.
+        await asyncio.sleep(0)
