@@ -127,6 +127,10 @@ export interface Insight {
   insight_id: string;
   match_id: string;
   match_ms: number;
+  /**
+   * Football clock, for display (62', 90+3').
+   */
+  clock_ms: number;
   period: number;
   type: InsightType;
   salience: number;
@@ -205,6 +209,14 @@ export interface LineupPlayer {
   pos: Position;
   shirt: number;
   starter: boolean;
+  /**
+   * Before this match.
+   */
+  career_appearances: number | null;
+  /**
+   * Before this match.
+   */
+  career_goals: number | null;
 }
 /**
  * Expected goals per 90 for each side, used as the win-probability prior.

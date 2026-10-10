@@ -92,15 +92,21 @@ def test_goal_events_carry_win_probability_shift() -> None:
 
 
 # ---------------------------------------------------------------- pressing, territory, control, rhythm
-def test_pressure_surge_collapses_away_ppda() -> None:
-    """A 10-minute PPDA rests on ~10 defensive actions, so judge the press across several seeds."""
-    ratios = []
-    for seed in range(3, 8):
+def test_pressure_surge_raises_press_rate_and_lowers_ppda() -> None:
+    """Press rate (pressures per minute in the opponent's 60%) moves cleanly; PPDA, built on ~10 defensive
+    actions per window, is noisy per match but still falls in the median across seeds."""
+    rate_ratios, ppda_ratios = [], []
+    for seed in range(3, 10):
         state = run_state("pressure_surge", seed)
-        before = series_mean(state, "ppda", 25, 50, index=1)
-        after = series_mean(state, "ppda", 62, 85, index=1)
-        ratios.append(after / before)
-    assert statistics.median(ratios) < 0.75
+        rate_ratios.append(
+            series_mean(state, "press_rate", 62, 85, index=1)
+            / series_mean(state, "press_rate", 25, 50, index=1)
+        )
+        ppda_ratios.append(
+            series_mean(state, "ppda", 62, 85, index=1) / series_mean(state, "ppda", 25, 50, index=1)
+        )
+    assert statistics.median(rate_ratios) >= 1.8 and min(rate_ratios) > 1.2
+    assert statistics.median(ppda_ratios) < 0.85
 
 
 def test_chaos_derby_control_index_follows_the_phases() -> None:

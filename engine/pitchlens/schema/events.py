@@ -89,6 +89,8 @@ class LineupPlayer(Model):
     pos: Position
     shirt: int = Field(ge=1, le=99)
     starter: bool = True
+    career_appearances: int | None = Field(default=None, ge=0, description="Before this match.")
+    career_goals: int | None = Field(default=None, ge=0, description="Before this match.")
 
 
 class TeamInfo(Model):

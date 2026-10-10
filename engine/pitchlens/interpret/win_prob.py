@@ -11,7 +11,7 @@ import math
 from dataclasses import dataclass
 
 MAX_GOALS = 10
-LIVE_WEIGHT_AT_FULL_TIME = 0.6
+LIVE_WEIGHT_AT_FULL_TIME = 0.5
 RED_CARD_OWN = 0.7
 RED_CARD_OPPONENT = 1.2
 DEFAULT_ADDED_MINUTES = 5.0
@@ -36,7 +36,8 @@ def scoring_rate_per_90(prior: float, xg: float, minutes_played: float) -> float
     if minutes_played <= 1:
         return prior
     live = xg / minutes_played * 90
-    w = LIVE_WEIGHT_AT_FULL_TIME * min(minutes_played / 90, 1.0)
+    # The live rate earns weight slowly: one early chance should not rewrite the match outlook.
+    w = LIVE_WEIGHT_AT_FULL_TIME * min(minutes_played / 90, 1.0) ** 1.5
     return (1 - w) * prior + w * live
 
 

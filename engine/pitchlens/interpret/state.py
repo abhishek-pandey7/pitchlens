@@ -350,10 +350,12 @@ class MatchState:
             "possession_5m": round(dyn.possession_share(home, now), 3),
             "field_tilt": round(dyn.field_tilt(home, now), 3),
             "ppda": [round(dyn.ppda(home, now), 2), round(dyn.ppda(away, now), 2)],
+            "press_rate": [round(dyn.press_rate(home, now), 3), round(dyn.press_rate(away, now), 3)],
             "control": control.index if control else None,
             "control_components": control.components if control else None,
             "tempo": rhythm.tempo,
             "tempo_z": rhythm.z,
+            "tempo_baseline": rhythm.baseline,
             "stoppage_share": rhythm.stoppage_share,
         }
 

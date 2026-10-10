@@ -33,175 +33,225 @@
         "name": "Theo Karimi",
         "pos": "GK",
         "shirt": 1,
-        "starter": false
+        "starter": false,
+        "career_appearances": 112,
+        "career_goals": 2
       },
       {
         "player_id": "NHR-34",
         "name": "Jakub Tanaka",
         "pos": "GK",
         "shirt": 34,
-        "starter": true
+        "starter": true,
+        "career_appearances": 317,
+        "career_goals": 8
       },
       {
         "player_id": "NHR-39",
         "name": "Arjun Calloway",
         "pos": "GK",
         "shirt": 39,
-        "starter": false
+        "starter": false,
+        "career_appearances": 375,
+        "career_goals": 8
       },
       {
         "player_id": "NHR-08",
         "name": "Kofi Kowalski",
         "pos": "RB",
         "shirt": 8,
-        "starter": false
+        "starter": false,
+        "career_appearances": 97,
+        "career_goals": 1
       },
       {
         "player_id": "NHR-16",
         "name": "Bruno Alvarez",
         "pos": "RB",
         "shirt": 16,
-        "starter": true
+        "starter": true,
+        "career_appearances": 220,
+        "career_goals": 5
       },
       {
         "player_id": "NHR-28",
         "name": "Nikolai Ferraro",
         "pos": "CB",
         "shirt": 28,
-        "starter": true
+        "starter": true,
+        "career_appearances": 197,
+        "career_goals": 5
       },
       {
         "player_id": "NHR-33",
         "name": "Omar Bianchi",
         "pos": "CB",
         "shirt": 33,
-        "starter": false
+        "starter": false,
+        "career_appearances": 407,
+        "career_goals": 10
       },
       {
         "player_id": "NHR-30",
         "name": "Youssef Etxeberria",
         "pos": "CB",
         "shirt": 30,
-        "starter": true
+        "starter": true,
+        "career_appearances": 337,
+        "career_goals": 8
       },
       {
         "player_id": "NHR-09",
         "name": "Mateo Mehta",
         "pos": "CB",
         "shirt": 9,
-        "starter": false
+        "starter": false,
+        "career_appearances": 68,
+        "career_goals": 1
       },
       {
         "player_id": "NHR-02",
         "name": "Omar Yilmaz",
         "pos": "LB",
         "shirt": 2,
-        "starter": true
+        "starter": true,
+        "career_appearances": 64,
+        "career_goals": 1
       },
       {
         "player_id": "NHR-21",
         "name": "Zane Zhang",
         "pos": "LB",
         "shirt": 21,
-        "starter": false
+        "starter": false,
+        "career_appearances": 216,
+        "career_goals": 4
       },
       {
         "player_id": "NHR-04",
         "name": "Tariq Novak",
         "pos": "DM",
         "shirt": 4,
-        "starter": false
+        "starter": false,
+        "career_appearances": 472,
+        "career_goals": 23
       },
       {
         "player_id": "NHR-05",
         "name": "Tariq Ogunleye",
         "pos": "DM",
         "shirt": 5,
-        "starter": false
+        "starter": false,
+        "career_appearances": 284,
+        "career_goals": 12
       },
       {
         "player_id": "NHR-11",
         "name": "Andrés Haddad",
         "pos": "CM",
         "shirt": 11,
-        "starter": false
+        "starter": false,
+        "career_appearances": 28,
+        "career_goals": 2
       },
       {
         "player_id": "NHR-35",
         "name": "Mateo Rossi",
         "pos": "CM",
         "shirt": 35,
-        "starter": true
+        "starter": true,
+        "career_appearances": 14,
+        "career_goals": 0
       },
       {
         "player_id": "NHR-36",
         "name": "Theo Laurent",
         "pos": "CM",
         "shirt": 36,
-        "starter": true
+        "starter": true,
+        "career_appearances": 199,
+        "career_goals": 11
       },
       {
         "player_id": "NHR-31",
         "name": "Marco Fletcher",
         "pos": "AM",
         "shirt": 31,
-        "starter": false
+        "starter": false,
+        "career_appearances": 260,
+        "career_goals": 44
       },
       {
         "player_id": "NHR-23",
         "name": "Idris Farouk",
         "pos": "AM",
         "shirt": 23,
-        "starter": false
+        "starter": false,
+        "career_appearances": 321,
+        "career_goals": 56
       },
       {
         "player_id": "NHR-17",
         "name": "Oliver Petrov",
         "pos": "RW",
         "shirt": 17,
-        "starter": false
+        "starter": false,
+        "career_appearances": 191,
+        "career_goals": 44
       },
       {
         "player_id": "NHR-12",
         "name": "Mikel Whitlock",
         "pos": "RW",
         "shirt": 12,
-        "starter": true
+        "starter": true,
+        "career_appearances": 156,
+        "career_goals": 53
       },
       {
         "player_id": "NHR-37",
         "name": "Bruno Diallo",
         "pos": "LW",
         "shirt": 37,
-        "starter": false
+        "starter": false,
+        "career_appearances": 145,
+        "career_goals": 39
       },
       {
         "player_id": "NHR-14",
         "name": "Noah Benali",
         "pos": "LW",
         "shirt": 14,
-        "starter": true
+        "starter": true,
+        "career_appearances": 101,
+        "career_goals": 15
       },
       {
         "player_id": "NHR-10",
         "name": "Bilal Brooks",
         "pos": "ST",
         "shirt": 10,
-        "starter": true
+        "starter": true,
+        "career_appearances": 93,
+        "career_goals": 32
       },
       {
         "player_id": "NHR-13",
         "name": "Declan Horvat",
         "pos": "ST",
         "shirt": 13,
-        "starter": false
+        "starter": false,
+        "career_appearances": 267,
+        "career_goals": 113
       },
       {
         "player_id": "NHR-25",
         "name": "Mikel Sokolov",
         "pos": "ST",
         "shirt": 25,
-        "starter": true
+        "starter": true,
+        "career_appearances": 57,
+        "career_goals": 20
       }
     ],
     "SVC": [
@@ -210,175 +260,225 @@
         "name": "Tariq Diallo",
         "pos": "GK",
         "shirt": 1,
-        "starter": false
+        "starter": false,
+        "career_appearances": 92,
+        "career_goals": 2
       },
       {
         "player_id": "SVC-31",
         "name": "Hugo Haddad",
         "pos": "GK",
         "shirt": 31,
-        "starter": true
+        "starter": true,
+        "career_appearances": 221,
+        "career_goals": 4
       },
       {
         "player_id": "SVC-24",
         "name": "Elias Zhang",
         "pos": "GK",
         "shirt": 24,
-        "starter": false
+        "starter": false,
+        "career_appearances": 265,
+        "career_goals": 4
       },
       {
         "player_id": "SVC-07",
         "name": "Ezra Benali",
         "pos": "RB",
         "shirt": 7,
-        "starter": false
+        "starter": false,
+        "career_appearances": 28,
+        "career_goals": 0
       },
       {
         "player_id": "SVC-06",
         "name": "Tariq Etxeberria",
         "pos": "RB",
         "shirt": 6,
-        "starter": true
+        "starter": true,
+        "career_appearances": 46,
+        "career_goals": 1
       },
       {
         "player_id": "SVC-37",
         "name": "Yusuf Ortega",
         "pos": "CB",
         "shirt": 37,
-        "starter": true
+        "starter": true,
+        "career_appearances": 539,
+        "career_goals": 14
       },
       {
         "player_id": "SVC-33",
         "name": "Lars Vogel",
         "pos": "CB",
         "shirt": 33,
-        "starter": false
+        "starter": false,
+        "career_appearances": 193,
+        "career_goals": 4
       },
       {
         "player_id": "SVC-21",
         "name": "Samuel Balogun",
         "pos": "CB",
         "shirt": 21,
-        "starter": false
+        "starter": false,
+        "career_appearances": 383,
+        "career_goals": 9
       },
       {
         "player_id": "SVC-10",
         "name": "Bruno Petrov",
         "pos": "CB",
         "shirt": 10,
-        "starter": true
+        "starter": true,
+        "career_appearances": 375,
+        "career_goals": 6
       },
       {
         "player_id": "SVC-26",
         "name": "Samuel Ferraro",
         "pos": "LB",
         "shirt": 26,
-        "starter": false
+        "starter": false,
+        "career_appearances": 200,
+        "career_goals": 4
       },
       {
         "player_id": "SVC-23",
         "name": "Zane Costa",
         "pos": "LB",
         "shirt": 23,
-        "starter": true
+        "starter": true,
+        "career_appearances": 18,
+        "career_goals": 0
       },
       {
         "player_id": "SVC-09",
         "name": "Oliver Rahman",
         "pos": "DM",
         "shirt": 9,
-        "starter": true
+        "starter": true,
+        "career_appearances": 151,
+        "career_goals": 5
       },
       {
         "player_id": "SVC-35",
         "name": "Tomás Mehta",
         "pos": "DM",
         "shirt": 35,
-        "starter": true
+        "starter": true,
+        "career_appearances": 115,
+        "career_goals": 5
       },
       {
         "player_id": "SVC-12",
         "name": "Viktor Novak",
         "pos": "CM",
         "shirt": 12,
-        "starter": false
+        "starter": false,
+        "career_appearances": 456,
+        "career_goals": 38
       },
       {
         "player_id": "SVC-15",
         "name": "Henrik Demir",
         "pos": "CM",
         "shirt": 15,
-        "starter": false
+        "starter": false,
+        "career_appearances": 164,
+        "career_goals": 18
       },
       {
         "player_id": "SVC-18",
         "name": "Bruno Iyer",
         "pos": "CM",
         "shirt": 18,
-        "starter": false
+        "starter": false,
+        "career_appearances": 242,
+        "career_goals": 21
       },
       {
         "player_id": "SVC-19",
         "name": "Tariq Fletcher",
         "pos": "AM",
         "shirt": 19,
-        "starter": false
+        "starter": false,
+        "career_appearances": 49,
+        "career_goals": 6
       },
       {
         "player_id": "SVC-27",
         "name": "Bilal Okafor",
         "pos": "AM",
         "shirt": 27,
-        "starter": true
+        "starter": true,
+        "career_appearances": 57,
+        "career_goals": 11
       },
       {
         "player_id": "SVC-30",
         "name": "Leon Becker",
         "pos": "RW",
         "shirt": 30,
-        "starter": false
+        "starter": false,
+        "career_appearances": 167,
+        "career_goals": 49
       },
       {
         "player_id": "SVC-17",
         "name": "Jakub Adeyemi",
         "pos": "RW",
         "shirt": 17,
-        "starter": true
+        "starter": true,
+        "career_appearances": 0,
+        "career_goals": 0
       },
       {
         "player_id": "SVC-14",
         "name": "Femi Navarro",
         "pos": "LW",
         "shirt": 14,
-        "starter": false
+        "starter": false,
+        "career_appearances": 0,
+        "career_goals": 0
       },
       {
         "player_id": "SVC-22",
         "name": "Jonah Mensah",
         "pos": "LW",
         "shirt": 22,
-        "starter": true
+        "starter": true,
+        "career_appearances": 364,
+        "career_goals": 125
       },
       {
         "player_id": "SVC-28",
         "name": "Diego Ogunleye",
         "pos": "ST",
         "shirt": 28,
-        "starter": false
+        "starter": false,
+        "career_appearances": 249,
+        "career_goals": 61
       },
       {
         "player_id": "SVC-08",
         "name": "Ezra Horvat",
         "pos": "ST",
         "shirt": 8,
-        "starter": false
+        "starter": false,
+        "career_appearances": 0,
+        "career_goals": 0
       },
       {
         "player_id": "SVC-20",
         "name": "Henrik Yilmaz",
         "pos": "ST",
         "shirt": 20,
-        "starter": true
+        "starter": true,
+        "career_appearances": 134,
+        "career_goals": 59
       }
     ]
   },
