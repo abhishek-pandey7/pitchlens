@@ -582,7 +582,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-11 (E)** Simulator core: possession-chain model, event emission. Deps: T-03, T-10. *Done when:* a seeded match produces ~2,300–3,000 valid events (incl. pressures and possession changes) and 50-seed averages match real-football ranges (~25 shots, ~2.8 goals, ~78% pass completion).
 - [x] **T-12 (E)** Tracking generator (5 Hz) consistent with events. Deps: T-11. *Done when:* ball position matches event locations within 1 m. Stored as `tracking.npz` (~3 MB per match).
 - [x] **T-13 (E)** Storylines (5 from §7). Deps: T-11. *Done when:* each storyline's scripted moments appear in output.
-- [ ] **T-14 (E)** Bus protocol + memory bus + replay (1/10/60×, pause/seek). Deps: T-03. *Done when:* replay emits in order at the requested speed.
+- [x] **T-14 (E)** Bus protocol + memory bus + replay (1/10/60×, pause/seek). Deps: T-03. *Done when:* replay emits in order at the requested speed.
 - [ ] **T-15 (E)** Dataset: generate 50 matches + `docs/dataset.md` + distribution sanity test. Deps: T-12, T-13.
 
 ### Phase 2: Interpret (days 4–8)
