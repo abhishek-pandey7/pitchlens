@@ -608,7 +608,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 ### Phase 5: Narrative & personalization (days 8–13)
 - [x] **T-50 (A)** LLMProvider interface + MockProvider. Deps: T-03.
 - [x] **T-51 (A)** Azure OpenAI provider + Foundry Claude provider (fast/quality tiers). Deps: T-50. *(Implemented and tested offline; live validation with `scripts/llm_smoke.py` once Azure credentials exist.)*
-- [x] **T-51b (A)** Free development provider: Groq (`openai/gpt-oss-20b` / `120b`) plus a generic OpenAI-compatible adapter, with a client-side rate budget for free-tier limits. Azure credits are kept for the final deployment; switching is `LLM_PROVIDER` only. Deps: T-51.
+- [x] **T-51b (A)** Free development provider: Groq (`openai/gpt-oss-120b`) plus a generic OpenAI-compatible adapter, with a client-side rate budget for free-tier limits. Azure credits are kept for the final deployment; switching is `LLM_PROVIDER` only. Deps: T-51.
 - [x] **T-52 (A)** Template text packs for 6 languages + glossary YAML. Deps: T-31.
 - [x] **T-53 (A)** Persona prompts (casual/analyst/tactician) + JSON output parsing. Deps: T-50.
 - [x] **T-54 (A)** Grounding validator (multilingual numerals, entity check) + retry/fallback. Deps: T-53. *Done when:* adversarial test texts with invented numbers are rejected.

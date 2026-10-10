@@ -276,3 +276,14 @@ def test_build_provider_groq_needs_a_key(monkeypatch: pytest.MonkeyPatch) -> Non
     assert isinstance(provider, OpenAICompatibleProvider) and provider.name == "groq"
     assert str(provider.client.base_url).startswith("https://api.groq.com/openai/v1")
     assert provider.budget is not None and provider.budget.rpm == 30
+
+
+def test_prompt_states_scoreline_and_leader() -> None:
+    from pitchlens.narrate.prompts import build_request
+
+    request = build_request(GOAL, CTX, Profile(profile_id="p"))
+    assert request.payload["SCORE"] == "Northbridge 1-0 Southvale"
+    assert request.payload["LEADER"] == "Northbridge"
+    level = NarrationContext("m", "NHR", "SVC", CTX.team_names, CTX.player_names, (2, 2))
+    assert build_request(GOAL, level, Profile(profile_id="p")).payload["LEADER"] == "level"
+    assert "Latin script" in request.system and "LEADER" in request.system

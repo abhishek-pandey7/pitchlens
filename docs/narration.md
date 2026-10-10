@@ -27,7 +27,7 @@ Rendering takes microseconds, so overlays never wait for an LLM.
 ## Persona prompts (`prompts.py`)
 
 - **System prompt:** persona + language + verbosity + football glossary (`personalize/glossary/*.yaml`) + ground rules. It is **byte-identical for every moment** with those settings, so providers can cache it.
-- **User message:** JSON with `MINUTE`, `SCORE`, `ENTITIES`, `EVIDENCE`, `why_it_matters` and a `REFERENCE` line (the template text). The model may restyle the reference, but may not add facts it lacks.
+- **User message:** JSON with `MINUTE`, `SCORE` (with team names, e.g. `Northbridge 1-0 Southvale`), `LEADER` (a team or `level`), `ENTITIES`, `EVIDENCE`, `why_it_matters` and a `REFERENCE` line (the template text). The model may restyle the reference, but may not add facts it lacks. The ground rules forbid claiming a lead change unless SCORE and LEADER show it (live tests showed small models getting the leader wrong from a bare `1-0`) and require names in Latin script, as given, in every language.
 - **Output:** `{"text", "emphasis_entities"}`, requested as structured output where the provider supports it and parsed tolerantly otherwise (code fences and stray prose are handled).
 
 Personas:
@@ -64,7 +64,7 @@ Personas:
 | `mock` (default) | `mock.py` | Offline and deterministic. Echoes the reference line; `faulty_first=N` invents a statistic to exercise retry and fallback |
 | `foundry_claude` | `foundry_claude.py` | **Claude on Microsoft Foundry** via `anthropic.AsyncAnthropicFoundry`. Both tiers default to `claude-opus-5-5`; with thinking always on, tiers differ by **effort** (`low` for live lines, `medium` for recaps), and `max_tokens` leaves room for thinking. JSON via structured outputs (`output_config.format`). Safety-classifier refusals are retried on `claude-opus-5` by the SDK's `BetaRefusalFallbackMiddleware` (server-side fallbacks are not offered on Foundry) |
 | `azure_openai` | `azure_openai.py` | `openai.AsyncAzureOpenAI` with a strict JSON-schema response format; fast and quality deployments |
-| `groq` | `openai_compat.py` | **Free development tier.** Groq's `openai/gpt-oss-20b` (live) and `gpt-oss-120b` (recaps) with strict JSON-schema output, `reasoning_effort` low/medium and the reasoning text hidden. Needs `GROQ_API_KEY` |
+| `groq` | `openai_compat.py` | **Free development tier.** Groq's `openai/gpt-oss-120b` for both tiers (in a 24-line live test, `20b` needed retries and wrote names in Devanagari; `120b` made no slips at ~0.9 s median) with strict JSON-schema output, `reasoning_effort` low/medium and the reasoning text hidden. Needs `GROQ_API_KEY` |
 | `openai_compat` | `openai_compat.py` | Any OpenAI-compatible endpoint (Ollama, OpenRouter, GitHub Models) set by `OPENAI_COMPAT_*`; `json_schema`, `json_object` or no structured output |
 
 The interface is `LLMProvider.generate(LLMRequest) -> LLMResponse` with `fast` and `quality` tiers. There are no sampling parameters: current Claude models reject them, and grounding is enforced by the validator anyway.

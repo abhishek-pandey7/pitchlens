@@ -157,7 +157,7 @@ def groq_provider() -> OpenAICompatibleProvider:
         name="groq",
         base_url=GROQ_BASE_URL,
         api_key=key,
-        fast_model=os.environ.get("GROQ_FAST_MODEL", "openai/gpt-oss-20b"),
+        fast_model=os.environ.get("GROQ_FAST_MODEL", "openai/gpt-oss-120b"),
         quality_model=os.environ.get("GROQ_QUALITY_MODEL", "openai/gpt-oss-120b"),
         structured="json_schema",
         reasoning=True,
