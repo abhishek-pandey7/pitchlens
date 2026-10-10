@@ -16,8 +16,8 @@ from pitchlens import __version__, telemetry
 from pitchlens.config import Settings
 from pitchlens.live.hub import Hub
 from pitchlens.live.store import MatchStore
-from pitchlens.narrate.mock import MockProvider
 from pitchlens.narrate.provider import LLMProvider
+from pitchlens.narrate.providers import build_provider
 
 from .routes import matches, misc, streams
 
@@ -26,10 +26,8 @@ log = logging.getLogger("pitchlens")
 
 
 def provider_from(settings: Settings) -> LLMProvider:
-    """The configured LLM provider. Real providers (Azure OpenAI, Claude on Foundry) arrive in T-51."""
-    if settings.llm_provider != "mock":
-        log.warning("LLM_PROVIDER=%s is not available yet; using the mock provider", settings.llm_provider)
-    return MockProvider()
+    """The configured LLM provider (mock offline; Claude on Foundry or Azure OpenAI in Azure)."""
+    return build_provider(settings.llm_provider)
 
 
 def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> FastAPI:
