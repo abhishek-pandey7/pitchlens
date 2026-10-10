@@ -57,8 +57,18 @@ Personas:
 
 **Verified:** every insight from five storylines, rendered in 6 languages × 2 personas (about 2,900 lines), passes the validator. Invented statistics, foreign players and invented ordinals are rejected.
 
-## Providers (`provider.py`)
+## Providers
 
-`LLMProvider.generate(LLMRequest) -> LLMResponse`, with two tiers: `fast` for live lines and `quality` for recaps. There are no sampling parameters, because current Claude models reject them. The `mock` provider echoes the reference line deterministically, so everything runs offline and in CI. Its `faulty_first=N` mode invents a statistic to exercise retry and fallback.
+| `LLM_PROVIDER` | Module | Notes |
+|---|---|---|
+| `mock` (default) | `mock.py` | Offline and deterministic. Echoes the reference line; `faulty_first=N` invents a statistic to exercise retry and fallback |
+| `foundry_claude` | `foundry_claude.py` | **Claude on Microsoft Foundry** via `anthropic.AsyncAnthropicFoundry`. Both tiers default to `claude-opus-5-5`; with thinking always on, tiers differ by **effort** (`low` for live lines, `medium` for recaps), and `max_tokens` leaves room for thinking. JSON via structured outputs (`output_config.format`). Safety-classifier refusals are retried on `claude-opus-5` by the SDK's `BetaRefusalFallbackMiddleware` (server-side fallbacks are not offered on Foundry) |
+| `azure_openai` | `azure_openai.py` | `openai.AsyncAzureOpenAI` with a strict JSON-schema response format; fast and quality deployments |
 
-Azure OpenAI and Claude on Microsoft Foundry arrive in T-51. The Foundry default is `claude-opus-5-5` for both tiers, with lower effort for live lines, and the model is configurable.
+The interface is `LLMProvider.generate(LLMRequest) -> LLMResponse` with `fast` and `quality` tiers. There are no sampling parameters: current Claude models reject them, and grounding is enforced by the validator anyway.
+
+**Auth:** an API key if set (`ANTHROPIC_FOUNDRY_API_KEY` / `AZURE_OPENAI_API_KEY`), otherwise **Microsoft Entra ID** through `azure-identity` (managed identity in Azure, `az login` locally), so the deployment carries no secrets.
+
+**Failures:** refusals, truncation, HTTP errors and timeouts become `LLMError`. The narrator then serves the grounded template text, so a provider outage never blanks the broadcast. Unit tests cover the request shape and every failure path with fake SDK clients.
+
+**Live check** (needs credentials): `python engine/scripts/llm_smoke.py` narrates the comeback's top moments for three fans. It reports how many lines came from the model, retries, template fallbacks, provider errors and latency.
