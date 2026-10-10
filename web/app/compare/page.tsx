@@ -1,11 +1,13 @@
-import { RouteStub } from "@/components/RouteStub";
+import { Suspense } from "react";
+import { CompareClient } from "./CompareClient";
 
-export default function Page() {
+export const metadata = { title: "Compare · PitchLens" };
+
+// /compare?match=…&a=…&b=… — one match, two fans: the same moments as two different experiences.
+export default function ComparePage() {
   return (
-    <RouteStub
-      title="Compare"
-      audience="Demo · side by side"
-      description="Two fan profiles watching the same match: one insight, two genuinely different experiences."
-    />
+    <Suspense fallback={<div className="p-8 text-muted">Loading…</div>}>
+      <CompareClient />
+    </Suspense>
   );
 }

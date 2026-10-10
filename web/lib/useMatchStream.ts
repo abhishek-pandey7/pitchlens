@@ -50,14 +50,17 @@ export function useMatchStream(
     const handlers = EVENTS.map((name) => {
       const handler = (e: MessageEvent<string>) => {
         const id = e.lastEventId ? Number(e.lastEventId) : null;
-        buffer.push({ event: name, data: JSON.parse(e.data), id });
+        buffer.push({ event: name, data: JSON.parse(e.data), id, at: Date.now() });
         if (!scheduled) scheduled = requestAnimationFrame(flush);
       };
       source.addEventListener(name, handler as EventListener);
       return [name, handler] as const;
     });
     source.onerror = () => dispatch({ kind: "status", status: "reconnecting" });
+    // Expire cues even when the stream goes quiet (e.g. after full time).
+    const ticker = setInterval(() => dispatch({ kind: "batch", messages: [{ event: "tick", data: null, at: Date.now() }] }), 1000);
     return () => {
+      clearInterval(ticker);
       for (const [name, handler] of handlers) source.removeEventListener(name, handler as EventListener);
       if (scheduled) cancelAnimationFrame(scheduled);
       source.close();

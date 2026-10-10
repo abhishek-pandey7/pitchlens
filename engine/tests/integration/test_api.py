@@ -160,3 +160,23 @@ def test_external_feed_ingest(server) -> None:
         time.sleep(0.05)
     assert state["match_ms"] == events[599].match_ms
     assert httpx.post(f"{base}/ingest", json={"match_id": "nope", "events": []}).status_code == 404
+
+
+def test_goals_push_state_immediately(server) -> None:
+    """Every goal is followed directly by a state message carrying the new score (no throttling)."""
+    base, _ = server
+    mid = create(base, seed=7, storyline="comeback")["match_id"]
+    received: list[Sse] = []
+    with httpx.stream("GET", f"{base}/matches/{mid}/stream", params={"events": "true"}, timeout=60) as r:
+        events = sse_events(r)
+        next(events)  # initial sync
+        httpx.post(f"{base}/matches/{mid}/replay", json={"speed": 600, "frames": False})
+        for msg in events:
+            received.append(msg)
+            if msg.event == "control" and msg.data.get("action") == "finished":
+                break
+    for i, msg in enumerate(received):
+        if msg.event == "event" and msg.data["event"]["type"] == "goal":
+            after = next(m for m in received[i + 1 :] if m.event == "state")
+            score = (after.data["home"]["score"], after.data["away"]["score"])
+            assert score == (msg.data["home_score"], msg.data["away_score"])
