@@ -148,6 +148,19 @@ class OpenAICompatibleProvider:
         )
 
 
+_GROQ_BUDGET: RateBudget | None = None
+
+
+def groq_budget() -> RateBudget:
+    """One budget per process: narration and agents share the same Groq account limits."""
+    global _GROQ_BUDGET
+    if _GROQ_BUDGET is None:
+        _GROQ_BUDGET = RateBudget(
+            int(os.environ.get("GROQ_RPM", "30")), int(os.environ.get("GROQ_TPM", "8000"))
+        )
+    return _GROQ_BUDGET
+
+
 def groq_provider() -> OpenAICompatibleProvider:
     """Groq's free tier. Needs GROQ_API_KEY (console.groq.com); the defaults suit the free limits."""
     key = os.environ.get("GROQ_API_KEY")
@@ -161,8 +174,7 @@ def groq_provider() -> OpenAICompatibleProvider:
         quality_model=os.environ.get("GROQ_QUALITY_MODEL", "openai/gpt-oss-120b"),
         structured="json_schema",
         reasoning=True,
-        rpm=int(os.environ.get("GROQ_RPM", "30")),
-        tpm=int(os.environ.get("GROQ_TPM", "8000")),
+        budget=groq_budget(),
     )
 
 

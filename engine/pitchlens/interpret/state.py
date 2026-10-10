@@ -314,9 +314,11 @@ class MatchState:
         self.control.observe(e)
         self.rhythm.observe(e)
 
-    def compute_win_probability(self) -> WinProbability:
+    def compute_win_probability(self, score: tuple[int, int] | None = None) -> WinProbability:
+        """Win probability now; `score` overrides the scoreline for what-if questions."""
+        home_goals, away_goals = score or self.score
         if self.finished:
-            return win_probability(*self.score, home_rate_90=0, away_rate_90=0, minutes_left=0)
+            return win_probability(home_goals, away_goals, home_rate_90=0, away_rate_90=0, minutes_left=0)
         minute = self.clock_ms / 60_000
         played = max(0.0, self.match_ms / 60_000)
         home, away = self.teams[self.home_id], self.teams[self.away_id]
@@ -324,8 +326,8 @@ class MatchState:
         added = self.added_minutes.get(self.period) if minute >= regulation_end - 1 else None
         left = remaining_minutes(minute, self.period, added)
         return win_probability(
-            home.score,
-            away.score,
+            home_goals,
+            away_goals,
             home_rate_90=scoring_rate_per_90(self.meta.pre_match.home_strength, home.xg, played),
             away_rate_90=scoring_rate_per_90(self.meta.pre_match.away_strength, away.xg, played),
             minutes_left=left,
