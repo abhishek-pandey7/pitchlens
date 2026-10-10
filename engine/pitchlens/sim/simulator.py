@@ -496,7 +496,7 @@ class MatchSimulator:
             self.emit(kind, team, passer, outcome=Outcome.OUT, **common)
             self.advance(duration)
             if "cross" in quals:
-                if rng.random() < 0.3:
+                if rng.random() < 0.55:
                     corner_y = 0.5 if end[1] < PITCH_WIDTH / 2 else PITCH_WIDTH - 0.5
                     self.set_restart(
                         "corner", team, self.to_team(team, (PITCH_LENGTH - 0.5, corner_y)), 25_000
@@ -752,7 +752,7 @@ class MatchSimulator:
             self.emit(EventType.SHOT, team, shooter, end=block_at, outcome=Outcome.BLOCKED, **common)
             self.advance(200)
             self.emit(EventType.BLOCK, self.dfn, blocker, start=block_at, outcome=Outcome.SUCCESS)
-            if rng.random() < 0.35:
+            if rng.random() < 0.5:
                 self.set_restart("corner", team, self.corner_spot(team, y), 25_000)
             else:
                 self.emit(EventType.BALL_RECOVERY, self.dfn, blocker, start=block_at)

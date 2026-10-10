@@ -1,0 +1,391 @@
+{
+  "schema_version": "1.0",
+  "match_id": "SYN-NHR-SVC-1002",
+  "competition": "Synthetic Premier Division",
+  "venue": "Northbridge Stadium",
+  "kickoff_utc": "2026-10-18T14:00:00Z",
+  "weather": "windy",
+  "referee": "R. Hale",
+  "home": {
+    "club_id": "NHR",
+    "name": "Northbridge Harriers",
+    "short_name": "Northbridge",
+    "colors": [
+      "#0B3D91",
+      "#FFFFFF"
+    ],
+    "formation": "4-4-2"
+  },
+  "away": {
+    "club_id": "SVC",
+    "name": "Southvale City",
+    "short_name": "Southvale",
+    "colors": [
+      "#C8102E",
+      "#111111"
+    ],
+    "formation": "4-2-3-1"
+  },
+  "lineups": {
+    "NHR": [
+      {
+        "player_id": "NHR-01",
+        "name": "Theo Karimi",
+        "pos": "GK",
+        "shirt": 1,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-34",
+        "name": "Jakub Tanaka",
+        "pos": "GK",
+        "shirt": 34,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-39",
+        "name": "Arjun Calloway",
+        "pos": "GK",
+        "shirt": 39,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-08",
+        "name": "Kofi Kowalski",
+        "pos": "RB",
+        "shirt": 8,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-16",
+        "name": "Bruno Alvarez",
+        "pos": "RB",
+        "shirt": 16,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-28",
+        "name": "Nikolai Ferraro",
+        "pos": "CB",
+        "shirt": 28,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-33",
+        "name": "Omar Bianchi",
+        "pos": "CB",
+        "shirt": 33,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-30",
+        "name": "Youssef Etxeberria",
+        "pos": "CB",
+        "shirt": 30,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-09",
+        "name": "Mateo Mehta",
+        "pos": "CB",
+        "shirt": 9,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-02",
+        "name": "Omar Yilmaz",
+        "pos": "LB",
+        "shirt": 2,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-21",
+        "name": "Zane Zhang",
+        "pos": "LB",
+        "shirt": 21,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-04",
+        "name": "Tariq Novak",
+        "pos": "DM",
+        "shirt": 4,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-05",
+        "name": "Tariq Ogunleye",
+        "pos": "DM",
+        "shirt": 5,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-11",
+        "name": "Andrés Haddad",
+        "pos": "CM",
+        "shirt": 11,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-35",
+        "name": "Mateo Rossi",
+        "pos": "CM",
+        "shirt": 35,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-36",
+        "name": "Theo Laurent",
+        "pos": "CM",
+        "shirt": 36,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-31",
+        "name": "Marco Fletcher",
+        "pos": "AM",
+        "shirt": 31,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-23",
+        "name": "Idris Farouk",
+        "pos": "AM",
+        "shirt": 23,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-17",
+        "name": "Oliver Petrov",
+        "pos": "RW",
+        "shirt": 17,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-12",
+        "name": "Mikel Whitlock",
+        "pos": "RW",
+        "shirt": 12,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-37",
+        "name": "Bruno Diallo",
+        "pos": "LW",
+        "shirt": 37,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-14",
+        "name": "Noah Benali",
+        "pos": "LW",
+        "shirt": 14,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-10",
+        "name": "Bilal Brooks",
+        "pos": "ST",
+        "shirt": 10,
+        "starter": true
+      },
+      {
+        "player_id": "NHR-13",
+        "name": "Declan Horvat",
+        "pos": "ST",
+        "shirt": 13,
+        "starter": false
+      },
+      {
+        "player_id": "NHR-25",
+        "name": "Mikel Sokolov",
+        "pos": "ST",
+        "shirt": 25,
+        "starter": true
+      }
+    ],
+    "SVC": [
+      {
+        "player_id": "SVC-01",
+        "name": "Tariq Diallo",
+        "pos": "GK",
+        "shirt": 1,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-31",
+        "name": "Hugo Haddad",
+        "pos": "GK",
+        "shirt": 31,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-24",
+        "name": "Elias Zhang",
+        "pos": "GK",
+        "shirt": 24,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-07",
+        "name": "Ezra Benali",
+        "pos": "RB",
+        "shirt": 7,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-06",
+        "name": "Tariq Etxeberria",
+        "pos": "RB",
+        "shirt": 6,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-37",
+        "name": "Yusuf Ortega",
+        "pos": "CB",
+        "shirt": 37,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-33",
+        "name": "Lars Vogel",
+        "pos": "CB",
+        "shirt": 33,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-21",
+        "name": "Samuel Balogun",
+        "pos": "CB",
+        "shirt": 21,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-10",
+        "name": "Bruno Petrov",
+        "pos": "CB",
+        "shirt": 10,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-26",
+        "name": "Samuel Ferraro",
+        "pos": "LB",
+        "shirt": 26,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-23",
+        "name": "Zane Costa",
+        "pos": "LB",
+        "shirt": 23,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-09",
+        "name": "Oliver Rahman",
+        "pos": "DM",
+        "shirt": 9,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-35",
+        "name": "Tomás Mehta",
+        "pos": "DM",
+        "shirt": 35,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-12",
+        "name": "Viktor Novak",
+        "pos": "CM",
+        "shirt": 12,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-15",
+        "name": "Henrik Demir",
+        "pos": "CM",
+        "shirt": 15,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-18",
+        "name": "Bruno Iyer",
+        "pos": "CM",
+        "shirt": 18,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-19",
+        "name": "Tariq Fletcher",
+        "pos": "AM",
+        "shirt": 19,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-27",
+        "name": "Bilal Okafor",
+        "pos": "AM",
+        "shirt": 27,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-30",
+        "name": "Leon Becker",
+        "pos": "RW",
+        "shirt": 30,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-17",
+        "name": "Jakub Adeyemi",
+        "pos": "RW",
+        "shirt": 17,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-14",
+        "name": "Femi Navarro",
+        "pos": "LW",
+        "shirt": 14,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-22",
+        "name": "Jonah Mensah",
+        "pos": "LW",
+        "shirt": 22,
+        "starter": true
+      },
+      {
+        "player_id": "SVC-28",
+        "name": "Diego Ogunleye",
+        "pos": "ST",
+        "shirt": 28,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-08",
+        "name": "Ezra Horvat",
+        "pos": "ST",
+        "shirt": 8,
+        "starter": false
+      },
+      {
+        "player_id": "SVC-20",
+        "name": "Henrik Yilmaz",
+        "pos": "ST",
+        "shirt": 20,
+        "starter": true
+      }
+    ]
+  },
+  "pre_match": {
+    "home_strength": 1.2,
+    "away_strength": 1.62
+  },
+  "seed": 1002,
+  "storyline": "pressure_surge"
+}

@@ -3,3 +3,5 @@
 *.jpg binary
 *.mp3 binary
 *.parquet binary
+*.gz binary
+*.npz binary
