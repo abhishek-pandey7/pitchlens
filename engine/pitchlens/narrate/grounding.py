@@ -68,6 +68,11 @@ def _matches(n: float, decimals: int, allowed: set[float]) -> bool:
     return any(abs(n - a) <= tolerance for a in allowed)
 
 
+def unsupported_numbers(text: str, allowed: set[float]) -> list[str]:
+    """Numbers in the text that no allowed value supports at the precision written (agents reuse this)."""
+    return [f"{n:g}" for n, decimals in numbers_with_precision(text) if not _matches(n, decimals, allowed)]
+
+
 def validate(text: str, insight: Insight, ctx: NarrationContext, lang: str = "en") -> Grounding:
     violations: list[str] = []
     allowed = allowed_numbers(insight, ctx, lang)

@@ -648,15 +648,15 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [ ] **T-77 (I)** Hardening: Key Vault, rate limiting on public endpoints, CORS allow-list, cost caps, health probes, `SECURITY.md`, `CODE_OF_CONDUCT.md`, responsible-AI note in `docs/responsible-ai.md`.
 
 ### Phase 10: Agent layer (§10A), days 6–16, owned by track A
-- [ ] **T-120 (A)** Agent Framework setup: pin version, Foundry model clients (fast/quality) behind the pluggable provider, `mock` client for tests, tracing → App Insights. Deps: T-50. *Done when:* a hello-world agent with one tool runs locally (mock) and in Azure.
-- [ ] **T-121 (A)** Analyst tools (`agents/tools.py`) wrapping interpret/explain functions with typed schemas. Deps: T-26, T-31.
+- [x] **T-120 (A)** Agent Framework setup: pin version, Foundry model clients (fast/quality) behind the pluggable provider, `mock` client for tests, tracing → App Insights. Deps: T-50. *Done when:* a hello-world agent with one tool runs locally (mock) and in Azure. *(Done locally on the offline client and Groq, pinned at agent-framework-core 1.21.0. The Azure run lands with T-73.)*
+- [x] **T-121 (A)** Analyst tools (`agents/tools.py`) wrapping interpret/explain functions with typed schemas. Deps: T-26, T-31.
 - [ ] **T-122 (A)** Analyst Agent + periodic and salience-triggered runs → `tactical_note` insights with citations. Deps: T-121.
 - [ ] **T-123 (A)** Narrator + Localization agents with concurrent fan-out per persona-language group. Deps: T-120, T-52. *Replaces the direct-LLM path in T-55; the template fallback is kept.*
 - [ ] **T-124 (A)** Fact-Checker reflection loop (approve / revise / reject) using `grounding.validate`. Deps: T-54, T-123. *Done when:* ≥ 95% of seeded hallucinations are caught and < 5% of good narrations are rejected.
 - [ ] **T-125 (A/F)** Director Agent + `/studio` approve/auto mode. Deps: T-60, T-67.
 - [ ] **T-126 (A)** Editor Agent group chat for HT/FT recap, player of the match, pundit sheet and chapter titles. Deps: T-58, T-122, T-124. *Supersedes the single-call recap in T-58.*
 - [ ] **T-127 (A/F)** Fan Companion Agent with handoff, profile memory and Content Safety. Deps: T-121, T-76. *This is T-91, implemented as an agent.*
-- [ ] **T-128 (E)** `pitchlens-mcp` server + Container App + README snippet for connecting from GitHub Copilot / VS Code. Deps: T-121.
+- [x] **T-128 (E)** `pitchlens-mcp` server + Container App + README snippet for connecting from GitHub Copilot / VS Code. Deps: T-121. *(Mounted on the engine at `/mcp` rather than a separate Container App, so it reads live sessions directly; also runs over stdio. See docs/agents.md.)*
 - [ ] **T-129 (F)** `/studio` Agent Trace panel (live agent/tool timeline + Fact-Checker verdicts). Deps: T-120, T-67.
 - [ ] **T-130 (A)** Agent eval suite (§10A) → `docs/eval.md`. Deps: T-124, T-127.
 

@@ -56,6 +56,11 @@ class Hub:
             raise HubError(f"unknown match {match_id!r}")
         return record
 
+    def live_session(self, match_id: str) -> MatchSession | None:
+        """The match's session if one is running, without starting one (read-only callers)."""
+        live = self._live.get(match_id)
+        return live.session if live else None
+
     def session(self, match_id: str) -> MatchSession:
         """The match's live session, created (and started) on first use."""
         live = self._live.get(match_id)

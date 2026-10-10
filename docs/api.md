@@ -39,6 +39,8 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `GET/POST /profiles`, `GET/PUT /profiles/{id}` | Fan profiles (demo presets included) |
 | `GET /schema/{name}` | JSON Schema of a public model |
 
+**MCP:** the engine also serves the PitchLens MCP server at `/mcp` (outside `/api/v1`; streamable HTTP). It exposes the analyst tools to GitHub Copilot, Claude or any MCP client. See [agents.md](agents.md).
+
 ## Live stream (SSE)
 
 | Event | When | Data |
