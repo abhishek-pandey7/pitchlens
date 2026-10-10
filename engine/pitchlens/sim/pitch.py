@@ -8,10 +8,10 @@ Mirroring (x, y) -> (105 - x, 68 - y) converts between a team frame and the oppo
 
 from __future__ import annotations
 
+from pitchlens.interpret.geometry import DEFENDERS, FORWARDS, MIDFIELDERS, XY, mirror
+from pitchlens.interpret.geometry import unit_lines as _unit_lines
 from pitchlens.schema.common import PITCH_LENGTH, PITCH_WIDTH
 from pitchlens.schema.events import Position
-
-XY = tuple[float, float]
 
 CENTRE: XY = (PITCH_LENGTH / 2, PITCH_WIDTH / 2)
 
@@ -28,9 +28,8 @@ FORMATION_ANCHORS: dict[str, list[XY]] = {
               (40, 34), (52, 24), (52, 44), (48, 62), (72, 28), (72, 40)],
 }  # fmt: skip
 
-DEFENDERS = {Position.RB, Position.CB, Position.LB}
-MIDFIELDERS = {Position.DM, Position.CM, Position.AM}
-FORWARDS = {Position.RW, Position.LW, Position.ST}
+__all__ = ["CENTRE", "DEFENDERS", "FORMATION_ANCHORS", "FORWARDS", "MIDFIELDERS", "XY", "clamp", "mirror",
+           "team_shape", "unit_lines"]  # fmt: skip
 
 
 # Units never push or drop beyond these lines (team frame): attackers stay roughly onside against a
@@ -43,10 +42,6 @@ def _unit(pos: Position) -> str:
     if pos in DEFENDERS:
         return "def"
     return "mid" if pos in MIDFIELDERS else "fwd"
-
-
-def mirror(p: XY) -> XY:
-    return (PITCH_LENGTH - p[0], PITCH_WIDTH - p[1])
 
 
 def clamp(p: XY, margin: float = 0.5) -> XY:
@@ -87,9 +82,4 @@ def team_shape(
 
 def unit_lines(shape: list[XY], positions: list[Position]) -> list[float]:
     """Mean x of each outfield unit (defence, midfield, attack) in the same frame as `shape`."""
-    lines = []
-    for unit in (DEFENDERS, MIDFIELDERS, FORWARDS):
-        xs = [p[0] for p, pos in zip(shape, positions, strict=True) if pos in unit]
-        if xs:
-            lines.append(sum(xs) / len(xs))
-    return lines
+    return _unit_lines([(p[0], pos) for p, pos in zip(shape, positions, strict=True)])

@@ -1,0 +1,415 @@
+{
+  "$defs": {
+    "BodyPart": {
+      "enum": [
+        "right_foot",
+        "left_foot",
+        "head",
+        "other"
+      ],
+      "title": "BodyPart",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "match_start",
+        "period_start",
+        "period_end",
+        "match_end",
+        "pass",
+        "carry",
+        "dribble",
+        "shot",
+        "save",
+        "goal",
+        "own_goal",
+        "tackle",
+        "interception",
+        "clearance",
+        "block",
+        "ball_recovery",
+        "pressure",
+        "foul",
+        "card",
+        "substitution",
+        "offside",
+        "corner",
+        "free_kick",
+        "throw_in",
+        "goal_kick",
+        "possession_change",
+        "injury_stop",
+        "var_check"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "Height": {
+      "enum": [
+        "ground",
+        "low",
+        "high"
+      ],
+      "title": "Height",
+      "type": "string"
+    },
+    "MatchEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "event_id": {
+          "title": "Event Id",
+          "type": "string"
+        },
+        "match_id": {
+          "title": "Match Id",
+          "type": "string"
+        },
+        "seq": {
+          "minimum": 0,
+          "title": "Seq",
+          "type": "integer"
+        },
+        "type": {
+          "$ref": "#/$defs/EventType"
+        },
+        "period": {
+          "maximum": 4,
+          "minimum": 1,
+          "title": "Period",
+          "type": "integer"
+        },
+        "match_ms": {
+          "description": "Continuous elapsed play time since kick-off (ms), monotonic.",
+          "minimum": 0,
+          "title": "Match Ms",
+          "type": "integer"
+        },
+        "clock_ms": {
+          "description": "Football clock (ms): period 2 starts at 45:00, so stoppage time reads 45+2.",
+          "minimum": 0,
+          "title": "Clock Ms",
+          "type": "integer"
+        },
+        "team_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Team Id"
+        },
+        "player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Player Id"
+        },
+        "possession_id": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Possession Id"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Point"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "end": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Point"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "outcome": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Outcome"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "recipient_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Recipient Id"
+        },
+        "under_pressure": {
+          "default": false,
+          "title": "Under Pressure",
+          "type": "boolean"
+        },
+        "pressure_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pressure Player Id"
+        },
+        "body_part": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BodyPart"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "height": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Height"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "qualifiers": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Qualifiers",
+          "type": "array"
+        },
+        "ball_speed_kmh": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ball Speed Kmh"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How long the action took (ball travel for passes/shots, run for carries).",
+          "title": "Duration Ms"
+        },
+        "related_player_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Second player involved: tackled player, fouled player, sub coming on.",
+          "title": "Related Player Id"
+        },
+        "ts_utc": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ts Utc"
+        }
+      },
+      "required": [
+        "schema_version",
+        "event_id",
+        "match_id",
+        "seq",
+        "type",
+        "period",
+        "match_ms",
+        "clock_ms",
+        "team_id",
+        "player_id",
+        "possession_id",
+        "start",
+        "end",
+        "outcome",
+        "recipient_id",
+        "under_pressure",
+        "pressure_player_id",
+        "body_part",
+        "height",
+        "qualifiers",
+        "ball_speed_kmh",
+        "duration_ms",
+        "related_player_id",
+        "ts_utc"
+      ],
+      "title": "MatchEvent",
+      "type": "object"
+    },
+    "Outcome": {
+      "enum": [
+        "complete",
+        "incomplete",
+        "out",
+        "offside",
+        "success",
+        "fail",
+        "on_target",
+        "off_target",
+        "blocked",
+        "goal",
+        "yellow",
+        "second_yellow",
+        "red"
+      ],
+      "title": "Outcome",
+      "type": "string"
+    },
+    "Point": {
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "maximum": 105.0,
+          "minimum": 0.0,
+          "title": "X",
+          "type": "number"
+        },
+        "y": {
+          "maximum": 68.0,
+          "minimum": 0.0,
+          "title": "Y",
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "title": "Point",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "event": {
+      "$ref": "#/$defs/MatchEvent"
+    },
+    "metrics": {
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "integer"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "description": "Derived values, e.g. pass_difficulty, lines_broken, xg, shot_speed_kmh.",
+      "title": "Metrics",
+      "type": "object"
+    },
+    "home_score": {
+      "minimum": 0,
+      "title": "Home Score",
+      "type": "integer"
+    },
+    "away_score": {
+      "minimum": 0,
+      "title": "Away Score",
+      "type": "integer"
+    },
+    "possession_team": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Possession Team"
+    }
+  },
+  "required": [
+    "schema_version",
+    "event",
+    "metrics",
+    "home_score",
+    "away_score",
+    "possession_team"
+  ],
+  "title": "EnrichedEvent",
+  "type": "object"
+}

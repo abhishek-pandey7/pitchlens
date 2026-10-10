@@ -11,6 +11,7 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
+from .enriched import EnrichedEvent, PhysicalAlert
 from .events import MatchEvent, MatchMeta, TrackingFrame
 from .insights import Insight
 from .overlays import OverlayCue
@@ -20,6 +21,8 @@ PUBLIC_MODELS: dict[str, type[BaseModel]] = {
     "match_meta": MatchMeta,
     "match_event": MatchEvent,
     "tracking_frame": TrackingFrame,
+    "enriched_event": EnrichedEvent,
+    "physical_alert": PhysicalAlert,
     "insight": Insight,
     "overlay_cue": OverlayCue,
     "profile": Profile,
