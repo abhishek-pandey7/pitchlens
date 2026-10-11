@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AskPanel } from "@/components/AskPanel";
+import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { MatchLauncher } from "@/components/MatchLauncher";
 import { PitchCanvas } from "@/components/PitchCanvas";
@@ -70,6 +71,7 @@ export function WatchClient() {
         </section>
         <div className="flex flex-col gap-4">
           <AskPanel matchId={matchId} profileId={profileId} lang={lang} />
+          <RecapPanel matchId={matchId} profileId={profileId} lang={lang} />
           <section aria-label={t(lang, "feed")}>
             <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">{t(lang, "feed")}</h2>
             <div className="max-h-[60vh] overflow-y-auto pe-1">

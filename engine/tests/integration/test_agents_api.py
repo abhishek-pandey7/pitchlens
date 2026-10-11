@@ -32,3 +32,30 @@ def test_ask_endpoint_and_trace(server: tuple[str, Hub]) -> None:
 
     runs = httpx.get(f"{base}/matches/{match_id}/agents/trace").json()["runs"]
     assert runs[0]["question"] == "¿Quién gana?" and runs[0]["profile_id"] == "p-casual-es"
+
+
+def test_recap_endpoint(server: tuple[str, Hub]) -> None:
+    base, _ = server
+    match_id = httpx.post(
+        f"{base}/matches", json={"seed": 8, "storyline": "comeback", "tracking": False}, timeout=120
+    ).json()["match_id"]
+
+    r = httpx.post(
+        f"{base}/matches/{match_id}/recap", json={"stage": "ft", "profile_id": "p-casual-es"}, timeout=120
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["verdict"] == "approve" and body["stage"] == "ft" and body["player_of_match"]["player"]
+    assert [s["agent"] for s in body["steps"]][:3] == ["editor", "editor", "analyst"]
+    again = httpx.post(f"{base}/matches/{match_id}/recap", json={"stage": "ft", "profile_id": "p-casual-es"})
+    assert again.json()["cached"] and again.json()["headline"] == body["headline"]
+    ht = httpx.post(f"{base}/matches/{match_id}/recap", json={"stage": "ht"}, timeout=120).json()
+    assert ht["minute"].startswith("45") and ht["source"] == "editor"
+
+    runs = httpx.get(f"{base}/matches/{match_id}/agents/trace").json()["runs"]
+    assert [r["kind"] for r in runs] == ["recap", "recap"]  # cached answers are not logged again
+
+    assert httpx.post(f"{base}/matches/{match_id}/recap", json={"stage": "et"}).status_code == 422
+    assert httpx.post(f"{base}/matches/nope/recap", json={"stage": "ft"}).status_code == 404
+    httpx.post(f"{base}/matches/{match_id}/replay", json={"speed": 1})
+    assert httpx.post(f"{base}/matches/{match_id}/recap", json={"stage": "ht"}).status_code == 409

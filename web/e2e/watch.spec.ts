@@ -69,3 +69,25 @@ test("a fan asks the match and gets a verified answer", async ({ page, request }
   await expect(answer.getByText(/Fact-Checker · approve/)).toBeVisible();
   await page.screenshot({ path: "test-results/watch-ask.png", fullPage: true });
 });
+
+test("recaps wait for the whistle, then the Editor's newsroom writes them", async ({ page, request }) => {
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 23, storyline: "comeback", tracking: false } })).json();
+  await page.goto(`/watch?match=${match.match_id}&profile=p-casual-es`);
+  const recaps = page.getByRole("region", { name: "Resúmenes" });
+  await recaps.getByTestId("recap-ht").click(); // the live session is at kick-off: no spoilers
+  await expect(recaps.getByText("Disponible tras el pitido.")).toBeVisible({ timeout: 30_000 });
+
+  await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 600, from_ms: 85 * 60_000 } });
+  await expect
+    .poll(async () => (await (await request.get(`${API}/matches/${match.match_id}/state`)).json()).finished, { timeout: 60_000 })
+    .toBe(true);
+  await recaps.getByTestId("recap-ft").click();
+  const recap = recaps.getByTestId("recap");
+  await expect(recap).toBeVisible({ timeout: 60_000 }); // offline agents in CI: a grounded, approved draft
+  await expect(recap.getByText("✓ Verificado")).toBeVisible();
+  await expect(recap.getByText("Jugador del partido")).toBeVisible();
+  await recap.getByText("Cómo lo escribimos").click();
+  await expect(recap.getByText(/Editor · plan/)).toBeVisible();
+  await expect(recap.getByText(/Fact-Checker · approve/)).toBeVisible();
+  await page.screenshot({ path: "test-results/watch-recap.png", fullPage: true });
+});

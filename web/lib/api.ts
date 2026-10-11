@@ -18,6 +18,9 @@ export type MatchSummary = {
 
 export type AskStep = {
   agent: string;
+  task?: string;
+  lang?: string;
+  round?: number;
   verdict?: string;
   by?: string;
   problems?: string[];
@@ -40,7 +43,31 @@ export type AskResponse = {
   steps: AskStep[];
 };
 
-export type AgentRunTrace = AskResponse & { kind: string; at: number; profile_id: string };
+export type RecapResponse = {
+  stage: "ht" | "ft";
+  minute: string;
+  headline: string;
+  body: string;
+  player_line: string;
+  player_of_match: { player: string; team: string; points: number; stats: Record<string, number> } | null;
+  lang: string;
+  source: "narrator" | "editor" | "facts";
+  verdict: string;
+  revisions: number;
+  ms: number;
+  tokens: number;
+  steps: AskStep[];
+  question: string;
+  answer: string;
+  cached: boolean;
+};
+
+export type AgentRunTrace = Omit<AskResponse, "source"> & {
+  kind: string;
+  at: number;
+  profile_id: string;
+  source: string;
+};
 
 export type LatencyStage = { count: number; p50_ms: number; p95_ms: number; max_ms: number };
 
@@ -70,6 +97,8 @@ export const api = {
     call<{ stages: Record<string, LatencyStage>; subscribers: number }>(`/matches/${id}/latency`),
   ask: (id: string, body: { question: string; profile_id: string }) =>
     call<AskResponse>(`/matches/${id}/ask`, { method: "POST", body: JSON.stringify(body) }),
+  recap: (id: string, body: { stage: "ht" | "ft"; profile_id: string }) =>
+    call<RecapResponse>(`/matches/${id}/recap`, { method: "POST", body: JSON.stringify(body) }),
   streamUrl: (id: string, opts: { profileId?: string | null; frames?: boolean; events?: boolean }) => {
     const params = new URLSearchParams();
     if (opts.profileId) params.set("profile_id", opts.profileId);

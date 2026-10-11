@@ -125,3 +125,31 @@ const ASK: Record<Lang, AskStrings> = {
 export function askStrings(lang: string | null | undefined): AskStrings {
   return ASK[isLang(lang) ? lang : "en"];
 }
+
+type RecapStrings = {
+  title: string;
+  ht: string;
+  ft: string;
+  writing: string;
+  notYet: string;
+  failed: string;
+  potm: string;
+  standout: string;
+  verified: string;
+  verifiedHint: string;
+  facts: string;
+  how: string;
+};
+
+const RECAP: Record<Lang, RecapStrings> = {
+  en: { title: "Recaps", ht: "Half-time", ft: "Full-time", writing: "The newsroom is writing your recap…", notYet: "Available after the whistle.", failed: "Couldn't get the recap. Try again.", potm: "Player of the match", standout: "Standout player", verified: "Fact-checked", verifiedHint: "Written by the Editor's agents; every number was checked against the match data", facts: "Key facts", how: "How we wrote it" },
+  es: { title: "Resúmenes", ht: "Descanso", ft: "Final del partido", writing: "La redacción está escribiendo tu resumen…", notYet: "Disponible tras el pitido.", failed: "No se pudo obtener el resumen. Inténtalo de nuevo.", potm: "Jugador del partido", standout: "Jugador destacado", verified: "Verificado", verifiedHint: "Escrito por los agentes del editor; cada cifra se comprobó con los datos del partido", facts: "Datos clave", how: "Cómo lo escribimos" },
+  fr: { title: "Résumés", ht: "Mi-temps", ft: "Après-match", writing: "La rédaction écrit votre résumé…", notYet: "Disponible après le coup de sifflet.", failed: "Impossible d'obtenir le résumé. Réessayez.", potm: "Homme du match", standout: "Joueur en vue", verified: "Vérifié", verifiedHint: "Écrit par les agents de la rédaction ; chaque chiffre a été vérifié avec les données du match", facts: "L'essentiel", how: "Comment nous l'avons écrit" },
+  pt: { title: "Resumos", ht: "Intervalo", ft: "Pós-jogo", writing: "A redação está escrevendo seu resumo…", notYet: "Disponível após o apito.", failed: "Não foi possível obter o resumo. Tente de novo.", potm: "Melhor em campo", standout: "Destaque", verified: "Verificado", verifiedHint: "Escrito pelos agentes da redação; cada número foi checado com os dados da partida", facts: "Fatos principais", how: "Como escrevemos" },
+  ar: { title: "الملخصات", ht: "الشوط الأول", ft: "المباراة كاملة", writing: "غرفة التحرير تكتب ملخصك…", notYet: "متاح بعد صافرة الحكم.", failed: "تعذّر الحصول على الملخص. حاول مرة أخرى.", potm: "رجل المباراة", standout: "اللاعب الأبرز", verified: "تم التحقق", verifiedHint: "كتبه وكلاء التحرير، وتم التحقق من كل رقم ببيانات المباراة", facts: "أبرز الحقائق", how: "كيف كتبناه" },
+  hi: { title: "रीकैप", ht: "हाफ़-टाइम", ft: "फ़ुल-टाइम", writing: "न्यूज़रूम आपका रीकैप लिख रहा है…", notYet: "सीटी बजने के बाद उपलब्ध।", failed: "रीकैप नहीं मिल सका। फिर से कोशिश करें।", potm: "प्लेयर ऑफ़ द मैच", standout: "सबसे बेहतरीन खिलाड़ी", verified: "तथ्य-जाँचा गया", verifiedHint: "एडिटर के एजेंटों ने लिखा; हर आँकड़ा मैच के डेटा से जाँचा गया", facts: "मुख्य तथ्य", how: "हमने इसे कैसे लिखा" },
+};
+
+export function recapStrings(lang: string | null | undefined): RecapStrings {
+  return RECAP[isLang(lang) ? lang : "en"];
+}

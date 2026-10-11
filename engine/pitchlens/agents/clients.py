@@ -117,8 +117,8 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
     call, and a callable decides from the conversation so far. Without a script, it behaves like a
     cautious analyst: it calls `get_match_state` once, then answers from that result. Every number in
     the answer therefore comes from a tool, so offline runs exercise the whole grounded pipeline.
-    As the Fact-Checker (`role="checker"`) it approves; as the Companion (`role="companion"`) it
-    returns the verified answer it was given unchanged.
+    As the Fact-Checker (`role="checker"`) it approves; as the Companion or Narrator it returns the
+    verified text it was given unchanged. As the Editor it plans, then drafts from the fact sheet.
     """
 
     def __init__(self, script: Sequence[Step] | None = None, *, role: str = "analyst", **kwargs: Any) -> None:
@@ -158,9 +158,11 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
             return (
                 ("get_metric", {"metric": "press_rate"}) if not results else offline_note(results[-1].result)
             )
-        if self.role == "companion":
-            last = next((m.text for m in reversed(messages) if m.role == "user"), "") or ""
+        last = next((m.text for m in reversed(messages) if m.role == "user"), "") or ""
+        if self.role in ("companion", "narrator"):
             return last.split(VERIFIED_MARKER, 1)[-1].strip()
+        if self.role == "editor":
+            return OFFLINE_PLAN if "YOUR TURN (plan)" in last else offline_recap(last)
         results = [c for m in messages for c in m.contents if c.type == "function_result"]
         if not results:
             return ("get_match_state", {})
@@ -180,6 +182,30 @@ def offline_answer(result: Any) -> str:
         )
     except (KeyError, TypeError, ValueError):
         return "I can only answer with live match data, and none is available yet."
+
+
+OFFLINE_PLAN = (
+    "Storylines: the result, how it was built, and the player of the match.\n"
+    "ANALYST: Who was pressing harder right now (press_rate)?"
+)
+
+
+def offline_recap(prompt: str) -> str:
+    """A grounded recap draft (JSON) from the FACT SHEET line of the Editor's brief."""
+    try:
+        line = next(x for x in prompt.splitlines() if x.startswith("FACT SHEET: "))
+        facts = {f["tool"]: f["result"] for f in json.loads(line.removeprefix("FACT SHEET: "))}
+        state, goals = facts["get_match_state"], facts["get_goals"]["goals"]
+        top = facts["player_of_the_match"]["ranking"][0]
+        scorers = ", ".join(f"{g['scorer']} ({g['minute']})" for g in goals) or "nobody"
+        body = (
+            f"At {state['minute']} it is {state['score']}. Goals: {scorers}. Expected goals: "
+            f"{state['home']['team']} {state['home']['xg']}, {state['away']['team']} {state['away']['xg']}."
+        )
+        line = f"{top['player']} of {top['team']} leads the ratings with {top['points']} points."
+        return json.dumps({"headline": state["score"], "body": body, "player_line": line})
+    except (StopIteration, KeyError, IndexError, TypeError, ValueError):
+        return "{}"
 
 
 def offline_note(result: Any) -> str:

@@ -8,7 +8,11 @@ const AGENT: Record<string, { label: string; tone: string }> = {
   analyst: { label: "Analyst", tone: "bg-home" },
   fact_checker: { label: "Fact-Checker", tone: "bg-warning" },
   companion: { label: "Companion", tone: "bg-accent" },
+  editor: { label: "Editor", tone: "bg-away" },
+  narrator: { label: "Narrator", tone: "bg-accent" },
 };
+
+const UNVERIFIED = new Set(["fallback", "guard", "facts", "dropped"]);
 
 /** Agent Trace (T-129): every agent run for this match, newest first, with each step, the tools it
  *  called (and their arguments), the Fact-Checker's verdicts and timings. Polls the engine. */
@@ -33,7 +37,7 @@ export function AgentTrace({ matchId }: { matchId: string }) {
 }
 
 function Run({ run }: { run: AgentRunTrace }) {
-  const verified = run.verdict === "approve" && (run.source === "companion" || run.source === "analyst");
+  const verified = run.verdict === "approve" && !UNVERIFIED.has(run.source);
   return (
     <li className="rounded-lg bg-surface p-3 text-sm" data-testid="trace-run">
       <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
@@ -67,6 +71,8 @@ function Step({ step }: { step: AskStep }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className={`inline-block h-2 w-2 rounded-full ${agent.tone}`} aria-hidden />
         <span className="font-semibold text-foreground">{agent.label}</span>
+        {step.task && <span className="text-muted">{step.task}</span>}
+        {step.agent === "narrator" && step.lang && <span className="text-muted">{step.lang}</span>}
         {step.verdict && (
           <span className={step.verdict === "approve" ? "text-accent" : "text-warning"}>
             {step.verdict}

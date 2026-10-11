@@ -22,7 +22,7 @@ from typing import Any, Literal
 from agent_framework import Agent
 from pydantic import BaseModel, Field
 
-from .runtime import AgentRun, ledger_facts
+from .runtime import FACTS_MAX_CHARS, AgentRun, ledger_facts
 
 FACT_CHECKER_INSTRUCTIONS = """You are the PitchLens Fact-Checker. You review a football analyst's draft
 answer against FACTS, the exact tool results the analyst saw. Judge substance, not style.
@@ -64,15 +64,17 @@ class Check:
         }
 
 
-def facts_json(run: AgentRun) -> str:
-    return ledger_facts(run.ledger)
+def facts_json(run: AgentRun, max_chars: int = FACTS_MAX_CHARS) -> str:
+    return ledger_facts(run.ledger, max_chars)
 
 
-def check_prompt(question: str, run: AgentRun) -> str:
-    return f"QUESTION: {question}\n\nFACTS: {facts_json(run)}\n\nDRAFT: {run.text}"
+def check_prompt(question: str, run: AgentRun, max_chars: int = FACTS_MAX_CHARS) -> str:
+    return f"QUESTION: {question}\n\nFACTS: {facts_json(run, max_chars)}\n\nDRAFT: {run.text}"
 
 
-async def fact_check(checker: Agent | None, question: str, run: AgentRun) -> Check:
+async def fact_check(
+    checker: Agent | None, question: str, run: AgentRun, *, max_chars: int = FACTS_MAX_CHARS
+) -> Check:
     """Rules first; then the model judge when the numbers pass and a checker agent is available."""
     if run.error or not run.text:
         return Check("reject", [run.error or "empty answer"])
@@ -84,7 +86,9 @@ async def fact_check(checker: Agent | None, question: str, run: AgentRun) -> Che
 
     start = time.perf_counter()
     try:
-        response = await checker.run(check_prompt(question, run), options={"response_format": Verdict})
+        response = await checker.run(
+            check_prompt(question, run, max_chars), options={"response_format": Verdict}
+        )
         verdict: Verdict = response.value  # type: ignore[assignment]
         if not isinstance(verdict, Verdict):
             verdict = Verdict.model_validate_json(response.text or "")

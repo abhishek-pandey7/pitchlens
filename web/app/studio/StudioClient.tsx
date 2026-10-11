@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AgentTrace } from "@/components/AgentTrace";
 import { AskPanel } from "@/components/AskPanel";
+import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { LatencyHud } from "@/components/LatencyHud";
 import { MatchLauncher } from "@/components/MatchLauncher";
@@ -69,6 +70,7 @@ export function StudioClient() {
         </section>
         <section className="flex min-w-0 flex-col gap-4">
           <AskPanel matchId={matchId} profileId={profileId} lang={view.profile?.language ?? "en"} />
+          <RecapPanel matchId={matchId} profileId={profileId} lang={view.profile?.language ?? "en"} />
           <div className="max-h-[70vh] overflow-y-auto pe-1">
             <AgentTrace matchId={matchId} />
           </div>

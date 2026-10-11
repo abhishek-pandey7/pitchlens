@@ -310,6 +310,26 @@ def run_smoke(base: str) -> Report:
         "latency: personalise and narration stages recorded",
         {k: v["p95_ms"] for k, v in stages.items()},
     )
+
+    # ---------------------------------------------------------------- agents (offline unless a model is set)
+    ask = client.post(
+        f"/matches/{mid}/ask", json={"question": "Who won?", "profile_id": "p-analyst-en"}, timeout=600
+    ).json()
+    report.check(
+        ask.get("verdict") == "approve" and "2-3" in ask.get("answer", ""),
+        "agents: Ask the Match gives a verified answer",
+        ask.get("answer", ask)[:120],
+    )
+    recap = client.post(
+        f"/matches/{mid}/recap", json={"stage": "ft", "profile_id": "p-casual-es"}, timeout=900
+    ).json()
+    report.check(
+        recap.get("verdict") == "approve" and bool(recap.get("player_of_match")),
+        "agents: Editor group chat writes an approved full-time recap",
+        f"{recap.get('source')} / {recap.get('lang')}: {recap.get('headline')}",
+    )
+    kinds = [r["kind"] for r in client.get(f"/matches/{mid}/agents/trace").json()["runs"]]
+    report.check(kinds[:2] == ["recap", "ask"], "agents: both runs in the trace", kinds)
     return report
 
 

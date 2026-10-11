@@ -16,6 +16,8 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `pitchlens/agents/factcheck.py` | Fact-Checker: rules first, then a model judge with a structured verdict |
 | `pitchlens/agents/ask.py` | "Ask the Match": an Agent Framework workflow of guard → analyst → fact-checker → companion |
 | `pitchlens/agents/notes.py` | Analyst tactical notes: agent-authored insights in the live feed |
+| `pitchlens/agents/editor.py` | Editor recaps: an Agent Framework GroupChat (Editor, Analyst, Fact-Checker), then the Narrator per fan |
+| `pitchlens/agents/views.py` | Match views: live session, stored match, or the match as it stood at a whistle (half-time, full time) |
 | `pitchlens/agents/desk.py` | Shared match-view cache, concurrency limit, recent agent traces per match |
 | `pitchlens/mcpserver/` | MCP server: mounted on the engine at `/mcp`, or over stdio |
 
@@ -32,6 +34,11 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `get_player_card(player)` | One player's match: involvement, passing, shooting, defending, running |
 | `top_players(stat, team?)` | Leaders for a stat (goals, xg, key_passes, tackles, distance_km, top_speed_kmh, ...) |
 | `get_insights(type?, team?, since_minute?)` | Detected key moments with compact evidence ("win_prob Southvale 0.052→0.963") |
+| `get_goals()` | Every goal: minute, team, scorer, assist and the score after it |
+| `player_of_the_match(limit?)` | Player-of-the-match ranking with the stats behind each score (see below) |
+
+Metric descriptions in the tool schema carry their units ("press_rate: pressing actions per opponent
+pass"). Without them, models read press_rate as "presses per minute".
 
 The tools accept team names or club ids, and player full names, surnames or ids. They validate their
 own arguments and report problems ("unknown metric 'shots'; use one of ...", "'Ogunleye' is ambiguous:
@@ -167,6 +174,59 @@ That led to one more grounding rule, shared by all agents: a difference counts a
 its operands are supported numbers stated in the same text. A lone "0.18", or a wrong difference, is
 still flagged.
 
+## Editor recaps (group chat)
+
+Half-time and full-time recaps, with the player of the match, are written by a **GroupChat**
+(`GroupChatBuilder` from `agent-framework-orchestrations`) led by the Editor:
+
+```
+brief: fact sheet from the tools (score, goals, key moments, player-of-the-match ranking)
+  ─► Editor: plans 2–3 storylines; ends with "ANALYST: <requests>" or "ANALYST: none"
+  ─► Analyst: supporting facts with the analyst tools          (only if the Editor asked)
+  ─► Editor: drafts {headline, body, player_line}
+  ─► Fact-Checker: rules (every number backed by a tool result), then the model judge
+       approve ─► done · revise ─► Editor redrafts (up to 2 rounds) · reject ─► fact recap
+```
+
+- **Group chat:** every participant hears the whole conversation. The selection function follows the
+  Editor: after its plan, the Analyst speaks only if the Editor asked for something. Termination comes
+  from the Fact-Checker's verdict.
+- **Participants:** custom group-chat executors (`Seat`) wrapping Agent Framework agents. Each turn
+  keeps our runner's tool caps, the shared fact ledger, the free-tier budget and the trace.
+- **Fact sheet:** four deterministic tool calls are recorded in the ledger before the chat starts, so
+  the Fact-Checker can trace every number back to them.
+- **Narrator:** the approved English recap is written once per match and stage. The Narrator then
+  adapts it to each fan's persona, language and club ("tell it from Southvale's side"). Two checks
+  follow: its numbers must appear in the facts, and the Fact-Checker reads the adaptation beside the
+  verified recap. One revision is allowed; otherwise the fan gets the verified English recap. The
+  English analyst with no club reads the Editor's text as written.
+- **Fallback:** if no recap is approved, or no model is configured, the fan gets a plain **fact recap**
+  (score, scorers, xG, possession, player of the match) in their language. It is always correct.
+- **Stages:** `ht` is analysed from the stored events up to the first half's whistle, so it stays a
+  half-time recap while the second half plays on. During a live replay, both stages answer 409 until
+  the replay reaches that whistle. That keeps recaps spoiler-free, even from the cache.
+- **Caching:** approved recaps are cached per match and stage, and per fan group (language, persona,
+  clubs, verbosity). A failed chat is retried on the next request.
+- **Player of the match:** points = 4×goals + 3×assists + 2×xG + 0.75×key passes + 0.1×progressive
+  passes + 0.1×lines broken + 0.25×(tackles + interceptions) + 0.1×recoveries + 0.15×(blocks +
+  clearances) + 0.2×distance km + 1.5 for the winning (or, at half-time, leading) side − 0.5×yellow −
+  3×red. The ranking shows the stats behind each score, so the Editor can cite them.
+
+**Live check (Groq gpt-oss-120b, comeback seed 7):**
+- **Full time: approved after one revision** (19.5K tokens).
+  - The judge caught "Yilmaz's goal assisted by Leon Becker"; the assist was Jonah Mensah's.
+  - The Editor fixed it, and the redraft was approved.
+  - The Spanish fan's version tells the comeback from Southvale's side.
+- **Half-time: approved first time** (20K tokens). Spanish, Hindi and Arabic adaptations each passed
+  the number check and the judge.
+- **Fixes from these runs:**
+  - The Editor once wrote "control index 70.3%", and the Narrator once said the home side held the
+    ball (it was the away side). That led to the adaptation judge, and to prompt rules: "say which
+    team and period every number belongs to"; "the control index is not a percentage".
+  - The press_rate misreading led to units in the metric schema.
+- **Time:** on Groq's free tier (8K tokens a minute) a recap takes 2–10 minutes, mostly waiting for
+  rate-limit budget. On Foundry the same chat is a handful of model calls with no waiting.
+
 ## Models
 
 `chat_client(tier)` follows the same `LLM_PROVIDER` switch as narration:
@@ -220,6 +280,10 @@ Then ask Copilot, for example, "Using pitchlens, who covered the most distance i
 approve, revise twice, reject, guard), the companion falling back when it invents a number, and the
 closing call. `tests/integration/test_agents_api.py`: `/ask` and `/agents/trace` over HTTP.
 `web/e2e/watch.spec.ts`: a Spanish fan asks a suggested question and gets a verified answer.
+`tests/unit/test_editor.py`: the group chat's speaker order (with and without the Analyst), the
+revision loop, invented numbers never approved, a failing Editor, the Narrator's checks and retry, the
+fact recap in Hindi, and spoiler-free stage views. `tests/integration/test_agents_api.py` also covers
+`/recap` (cache, 404, 409, 422), and `web/e2e/watch.spec.ts` covers a recap that waits for the whistle.
 `tests/unit/test_agents.py`: tool correctness on the comeback match, argument errors logged in the
 ledger, grounding of answers, offline and scripted agents, recovery from a bad tool call, and soft
 failures. `tests/integration/test_mcp.py`: an in-memory MCP client, and a real client against the
