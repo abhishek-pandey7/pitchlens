@@ -38,6 +38,8 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `POST /ingest` | Push `events.v1` batches into an external match. Each event is validated independently, and bad events are returned in `rejected` |
 | `GET/POST /profiles`, `GET/PUT /profiles/{id}` | Fan profiles (demo presets included) |
 | `GET /schema/{name}` | JSON Schema of a public model |
+| `POST /matches/{id}/ask` | **Ask the Match**: `{question, profile_id}` → a verified answer in the fan's language, with every agent step (see [agents.md](agents.md)) |
+| `GET /matches/{id}/agents/trace` | Recent agent runs for the match, newest first |
 
 **MCP:** the engine also serves the PitchLens MCP server at `/mcp` (outside `/api/v1`; streamable HTTP). It exposes the analyst tools to GitHub Copilot, Claude or any MCP client. See [agents.md](agents.md).
 

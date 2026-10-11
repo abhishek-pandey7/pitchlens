@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { AskPanel } from "@/components/AskPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { MatchLauncher } from "@/components/MatchLauncher";
 import { PitchCanvas } from "@/components/PitchCanvas";
@@ -67,12 +68,15 @@ export function WatchClient() {
             </dl>
           )}
         </section>
-        <section aria-label={t(lang, "feed")}>
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">{t(lang, "feed")}</h2>
-          <div className="max-h-[75vh] overflow-y-auto pe-1">
-            <InsightFeed items={view.feed} lang={lang} showEvidence={persona === "analyst" || persona === "tactician"} />
-          </div>
-        </section>
+        <div className="flex flex-col gap-4">
+          <AskPanel matchId={matchId} profileId={profileId} lang={lang} />
+          <section aria-label={t(lang, "feed")}>
+            <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">{t(lang, "feed")}</h2>
+            <div className="max-h-[60vh] overflow-y-auto pe-1">
+              <InsightFeed items={view.feed} lang={lang} showEvidence={persona === "analyst" || persona === "tactician"} />
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );

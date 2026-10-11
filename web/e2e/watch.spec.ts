@@ -52,3 +52,19 @@ test("the launcher simulates a match and lists it", async ({ page }) => {
   await page.getByRole("button", { name: "Simulate match" }).click();
   await expect(page.getByRole("link", { name: "Open" })).toHaveCount(before + 1, { timeout: 150_000 });
 });
+
+test("a fan asks the match and gets a verified answer", async ({ page, request }) => {
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 7, storyline: "comeback", tracking: false } })).json();
+  await page.goto(`/watch?match=${match.match_id}&profile=p-casual-es`);
+  await expect(page.getByRole("region", { name: "Pregunta al partido" })).toBeVisible();
+
+  await page.getByRole("button", { name: "¿Quién domina ahora?" }).click(); // a suggested question
+  const answer = page.getByTestId("ask-answer");
+  // Agents read the live session, which has not kicked off yet: 0-0, not the stored 2-3 (no spoilers).
+  await expect(answer).toContainText("0-0", { timeout: 60_000 }); // offline agents in CI: grounded in tools
+  await expect(answer.getByText("✓ Verificado")).toBeVisible();
+  await answer.getByText("Cómo lo respondimos").click();
+  await expect(answer.getByText(/Analyst · tools: get_match_state/)).toBeVisible();
+  await expect(answer.getByText(/Fact-Checker · approve/)).toBeVisible();
+  await page.screenshot({ path: "test-results/watch-ask.png", fullPage: true });
+});

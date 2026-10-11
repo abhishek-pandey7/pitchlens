@@ -13,6 +13,9 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `pitchlens/agents/tools.py` | Analyst tools: typed, read-only views over a live or stored match. A `Ledger` records every call |
 | `pitchlens/agents/runtime.py` | Builds Agent Framework agents over the tools; `run_agent` runs one turn and checks the answer's numbers against the ledger |
 | `pitchlens/agents/clients.py` | Chat clients per tier from `LLM_PROVIDER`; shared free-tier rate budget; `OfflineChatClient` for tests |
+| `pitchlens/agents/factcheck.py` | Fact-Checker: rules first, then a model judge with a structured verdict |
+| `pitchlens/agents/ask.py` | "Ask the Match": an Agent Framework workflow of guard → analyst → fact-checker → companion |
+| `pitchlens/agents/desk.py` | Shared match-view cache, concurrency limit, recent agent traces per match |
 | `pitchlens/mcpserver/` | MCP server: mounted on the engine at `/mcp`, or over stdio |
 
 ## Analyst tools
@@ -48,6 +51,71 @@ scored 7 goals" when 7 is Northbridge's shots); that is the Fact-Checker agent's
 Failures are soft. A provider error, spent rate budget or malformed tool call returns an `AgentRun` with
 `error` set and no text, and callers fall back. Each run produces a `trace()`: question, answer, tool
 calls with arguments and timings, grounding verdict and tokens, for the Agent Trace panel.
+
+## Fact-Checker (reflection)
+
+Two stages, cheapest first:
+1. **Rules.** Any number not backed by a tool result means `revise` with the numbers listed, and no
+   model call is needed.
+2. **Judge.** A model reads the draft beside FACTS (the tool results, compact JSON) and returns a
+   structured verdict (`approve` / `revise` with problems / `reject`). It checks the right team, player,
+   metric, direction and moment. If FACTS is empty it rejects any claim about the match, including
+   "the data is missing", which a model can otherwise say without looking.
+
+If the judge call fails, a draft whose numbers all check out is still approved, marked
+`by: "rules (judge unavailable)"`. Live on Groq, each judgement costs about 800 tokens:
+
+| Draft | Number check | Judge |
+|---|---|---|
+| "Southvale scored 7 goals and won." (7 is Northbridge's shots) | passes | **revise**: "FACTS show Southvale City scored 3 goals" |
+| "Southvale won 3-2 with 2.07 xG against Northbridge's 1.5." | passes | approve |
+| "Northbridge had the better xG, 2.07 to 1.5." | passes | **revise**: "the xG values are reversed" |
+
+## Ask the Match
+
+`POST /api/v1/matches/{id}/ask` `{question, profile_id}` runs an Agent Framework workflow
+(`WorkflowBuilder`, conditional edges):
+
+```
+guard ──► analyst ──► fact_checker ──approve──► companion ──► answer
+             ▲              │
+             └───revise─────┤ (one revision round)
+                            └──reject / failure──► fallback ──► honest "couldn't verify"
+```
+
+- **Guard:** fan text is data, never instructions. It must be at most 300 characters, control
+  characters are stripped, and it only ever appears in a user message.
+- **Analyst:** the tool-using agent above, answering in English.
+- **Fact-Checker:** the reflection loop. A revision feeds the problems back, and the analyst keeps the
+  facts it already gathered.
+- **Companion:** rewrites the approved answer for the fan's persona and language (no tools, no new
+  facts; probabilities as percentages). Its numbers are checked again. If they fail, or the rewrite
+  fails, the fan gets the verified English answer. English analysts skip this step.
+- **Fallback:** "Sorry, I couldn't verify an answer to that from the match data", in the fan's language.
+
+Agents read the match **as the fan sees it**. If a live session is running, answers reflect the
+replay's current minute, so asking at 60' never reveals the 90th-minute winner. Stored matches with no
+live session are answered at full time.
+
+If the analyst's tool loop fails after gathering facts (for example a provider rejecting a forced
+text-only turn), one **closing call with no tools** answers from the facts gathered so far.
+
+The response carries `answer`, `lang`, `source` (companion / analyst / fallback / guard), `verdict`,
+`revisions`, `ms`, `tokens` and every `step` (tool calls, verdicts, grounding).
+`GET /api/v1/matches/{id}/agents/trace` returns the most recent 25 runs for the Agent Trace panel. At most
+`ASK_CONCURRENCY` (default 2) questions run at once; others queue for up to 2 minutes, then get a 503.
+
+In `/watch`, the **Ask the match** panel offers three suggested questions in the fan's language, marks
+approved answers "✓ Verified", and shows "How we answered" (each agent, the tools it called, the
+verdict and timings).
+
+**Live check (Groq):**
+
+| Fan | Question | Outcome |
+|---|---|---|
+| p-casual-es | ¿Cómo remontó Southvale el partido? | Analyst → approved → Spanish rewrite (9 s) |
+| p-casual-hi | सबसे तेज़ शॉट किसका था? | `top_players(max_shot_speed_kmh)` → "Bilal Okafor, 108.3 km/h" in Hindi (3 s) |
+| p-analyst-en | Did Northbridge press less after the 60th minute? | Round 1 invented "0.418" → **revise** → round 2 cited the tool's own change → approved |
 
 ## Models
 
@@ -98,6 +166,10 @@ Then ask Copilot, for example, "Using pitchlens, who covered the most distance i
 
 ## Tests
 
+`tests/unit/test_ask.py`: the Fact-Checker's two stages, every workflow route (approve, revise then
+approve, revise twice, reject, guard), the companion falling back when it invents a number, and the
+closing call. `tests/integration/test_agents_api.py`: `/ask` and `/agents/trace` over HTTP.
+`web/e2e/watch.spec.ts`: a Spanish fan asks a suggested question and gets a verified answer.
 `tests/unit/test_agents.py`: tool correctness on the comeback match, argument errors logged in the
 ledger, grounding of answers, offline and scripted agents, recovery from a bad tool call, and soft
 failures. `tests/integration/test_mcp.py`: an in-memory MCP client, and a real client against the

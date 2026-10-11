@@ -40,3 +40,88 @@ export function typeLabel(lang: string | null | undefined, type: string): string
   const labels = TYPE_LABELS[isLang(lang) ? lang : "en"];
   return labels[type] ?? TYPE_LABELS.en[type] ?? type.replaceAll("_", " ");
 }
+
+type AskStrings = {
+  title: string;
+  placeholder: string;
+  send: string;
+  thinking: string;
+  failed: string;
+  verified: string;
+  verifiedHint: string;
+  how: string;
+  suggestions: string[];
+};
+
+const ASK: Record<Lang, AskStrings> = {
+  en: {
+    title: "Ask the match",
+    placeholder: "Ask anything about this match…",
+    send: "Ask",
+    thinking: "Checking the match data…",
+    failed: "Couldn't reach the match companion. Try again.",
+    verified: "Verified",
+    verifiedHint: "Every number comes from the match data and was checked by the Fact-Checker agent",
+    how: "How we answered",
+    suggestions: ["Who is on top right now?", "How did the pressing change after 60'?", "Who had the fastest shot?"],
+  },
+  es: {
+    title: "Pregunta al partido",
+    placeholder: "Pregunta lo que quieras sobre el partido…",
+    send: "Preguntar",
+    thinking: "Revisando los datos del partido…",
+    failed: "No se pudo contactar con el asistente. Inténtalo de nuevo.",
+    verified: "Verificado",
+    verifiedHint: "Cada cifra sale de los datos del partido y la ha comprobado el agente verificador",
+    how: "Cómo lo respondimos",
+    suggestions: ["¿Quién domina ahora?", "¿Cómo cambió la presión tras el 60'?", "¿Quién hizo el disparo más rápido?"],
+  },
+  fr: {
+    title: "Interrogez le match",
+    placeholder: "Posez une question sur ce match…",
+    send: "Demander",
+    thinking: "Vérification des données du match…",
+    failed: "Impossible de joindre l'assistant. Réessayez.",
+    verified: "Vérifié",
+    verifiedHint: "Chaque chiffre vient des données du match et a été vérifié par l'agent de vérification",
+    how: "Comment nous avons répondu",
+    suggestions: ["Qui domine en ce moment ?", "Comment le pressing a-t-il changé après la 60e ?", "Qui a frappé le plus fort ?"],
+  },
+  pt: {
+    title: "Pergunte à partida",
+    placeholder: "Pergunte algo sobre esta partida…",
+    send: "Perguntar",
+    thinking: "Verificando os dados da partida…",
+    failed: "Não foi possível falar com o assistente. Tente de novo.",
+    verified: "Verificado",
+    verifiedHint: "Cada número vem dos dados da partida e foi checado pelo agente verificador",
+    how: "Como respondemos",
+    suggestions: ["Quem está melhor agora?", "Como mudou a pressão depois dos 60'?", "Quem deu o chute mais rápido?"],
+  },
+  ar: {
+    title: "اسأل المباراة",
+    placeholder: "اسأل أي شيء عن هذه المباراة…",
+    send: "اسأل",
+    thinking: "جارٍ التحقق من بيانات المباراة…",
+    failed: "تعذّر الوصول إلى المساعد. حاول مرة أخرى.",
+    verified: "تم التحقق",
+    verifiedHint: "كل رقم مأخوذ من بيانات المباراة وتحقق منه وكيل التدقيق",
+    how: "كيف أجبنا",
+    suggestions: ["من المسيطر الآن؟", "كيف تغيّر الضغط بعد الدقيقة 60؟", "من صاحب أسرع تسديدة؟"],
+  },
+  hi: {
+    title: "मैच से पूछें",
+    placeholder: "इस मैच के बारे में कुछ भी पूछें…",
+    send: "पूछें",
+    thinking: "मैच का डेटा जाँचा जा रहा है…",
+    failed: "सहायक से संपर्क नहीं हो सका। फिर से कोशिश करें।",
+    verified: "सत्यापित",
+    verifiedHint: "हर आँकड़ा मैच के डेटा से है और फ़ैक्ट-चेकर एजेंट ने उसे जाँचा है",
+    how: "हमने कैसे जवाब दिया",
+    suggestions: ["अभी कौन हावी है?", "60' के बाद प्रेसिंग कैसे बदली?", "सबसे तेज़ शॉट किसका था?"],
+  },
+};
+
+export function askStrings(lang: string | null | undefined): AskStrings {
+  return ASK[isLang(lang) ? lang : "en"];
+}

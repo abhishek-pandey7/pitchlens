@@ -32,6 +32,7 @@ from pitchlens.narrate.openai_compat import GROQ_BASE_URL, RateBudget, groq_budg
 from pitchlens.narrate.provider import LLMError, Tier
 
 AI_SERVICES_SCOPE = "https://cognitiveservices.azure.com/.default"
+VERIFIED_MARKER = "VERIFIED ANSWER:"  # the Companion's input ends with this marker and the approved answer
 # An agent turn makes several model calls of 2-4K tokens each, which a free tier (Groq: 8K tokens a
 # minute) cannot serve in one burst. Agents wait for budget up to this long, then give up cleanly.
 AGENT_MAX_WAIT_S = float(os.environ.get("AGENT_MAX_WAIT_S", "70"))
@@ -55,7 +56,7 @@ def budget_middleware(budget: RateBudget, max_wait_s: float = AGENT_MAX_WAIT_S) 
     return _budget
 
 
-def chat_client(tier: Tier = Tier.FAST, provider: str | None = None) -> Any:
+def chat_client(tier: Tier = Tier.FAST, provider: str | None = None, *, role: str = "analyst") -> Any:
     """A chat client for the configured provider; falls back to the offline client without credentials."""
     name = provider or os.environ.get("LLM_PROVIDER", "mock")
     if name == "groq" and os.environ.get("GROQ_API_KEY"):
@@ -102,7 +103,7 @@ def chat_client(tier: Tier = Tier.FAST, provider: str | None = None) -> Any:
             function_invocation_configuration=TOOL_LIMITS,
             **auth,
         )
-    return OfflineChatClient()
+    return OfflineChatClient(role=role)
 
 
 # ---------------------------------------------------------------- offline client
@@ -116,11 +117,14 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
     call, and a callable decides from the conversation so far. Without a script, it behaves like a
     cautious analyst: it calls `get_match_state` once, then answers from that result. Every number in
     the answer therefore comes from a tool, so offline runs exercise the whole grounded pipeline.
+    As the Fact-Checker (`role="checker"`) it approves; as the Companion (`role="companion"`) it
+    returns the verified answer it was given unchanged.
     """
 
-    def __init__(self, script: Sequence[Step] | None = None, **kwargs: Any) -> None:
+    def __init__(self, script: Sequence[Step] | None = None, *, role: str = "analyst", **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.script = list(script) if script is not None else None
+        self.role = role
         self.requests: list[list[Message]] = []
 
     def _inner_get_response(
@@ -147,6 +151,11 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
             if not self.script:
                 raise LLMError("offline script exhausted")
             return self.script.pop(0)
+        if self.role == "checker":
+            return json.dumps({"verdict": "approve", "problems": []})
+        if self.role == "companion":
+            last = next((m.text for m in reversed(messages) if m.role == "user"), "") or ""
+            return last.split(VERIFIED_MARKER, 1)[-1].strip()
         results = [c for m in messages for c in m.contents if c.type == "function_result"]
         if not results:
             return ("get_match_state", {})

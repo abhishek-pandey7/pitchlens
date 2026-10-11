@@ -35,9 +35,10 @@ class Metric(StrEnum):
 
 
 PLAYER_STATS = (
-    "goals", "assists", "xg", "shots", "shots_on_target", "passes", "pass_accuracy", "key_passes",
-    "progressive_passes", "lines_broken", "hardest_completed_pass", "tackles", "interceptions",
-    "recoveries", "pressures", "distance_km", "top_speed_kmh", "sprints",
+    "goals", "assists", "xg", "shots", "shots_on_target", "max_shot_speed_kmh", "touches", "passes",
+    "pass_accuracy", "avg_pass_difficulty", "hardest_completed_pass", "key_passes", "progressive_passes",
+    "lines_broken", "tackles", "interceptions", "recoveries", "pressures", "fouls", "distance_km",
+    "top_speed_kmh", "sprints",
 )  # fmt: skip
 PHYSICAL_STATS = ("distance_km", "top_speed_kmh", "sprints")
 PlayerStat = Annotated[str, Field(description=f"One of: {', '.join(PLAYER_STATS)}")]
