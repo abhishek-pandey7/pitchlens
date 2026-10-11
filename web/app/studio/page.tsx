@@ -1,11 +1,13 @@
-import { RouteStub } from "@/components/RouteStub";
+import { Suspense } from "react";
+import { StudioClient } from "./StudioClient";
 
-export default function Page() {
+export const metadata = { title: "Studio · PitchLens" };
+
+// /studio?match=…&profile=… — the producer's console.
+export default function StudioPage() {
   return (
-    <RouteStub
-      title="Studio"
-      audience="Producers"
-      description="Replay control, insight queue with approval, overlay preview, agent trace and recap generation."
-    />
+    <Suspense fallback={<div className="p-8 text-muted">Loading…</div>}>
+      <StudioClient />
+    </Suspense>
   );
 }

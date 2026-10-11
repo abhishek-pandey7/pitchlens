@@ -625,7 +625,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-64 (F)** `/overlay` route (transparent, OBS-ready). Deps: T-60, T-63.
 - [ ] **T-65 (F)** `/watch` fan app + ProfilePicker + player-focus panel + personal recap. Deps: T-56, T-57. *(In progress: live feed, pitch, scoreboard, profiles, i18n/RTL done; player-focus panel and personal recap pending.)*
 - [ ] **T-66 (F)** `/analyst` charts + evidence inspector. Deps: T-24…T-26.
-- [ ] **T-67 (F)** `/studio` console (replay controls, insight queue, recap triggers, latency HUD). Deps: T-40, T-58.
+- [ ] **T-67 (F)** `/studio` console (replay controls, insight queue, recap triggers, latency HUD). Deps: T-40, T-58. *(Partly done: replay controls, programme/overlay preview, insight queue, latency HUD, Ask panel and agent trace. Approve mode comes with T-125, recap triggers with T-126.)*
 - [x] **T-68 (F)** `/compare` side-by-side view. Deps: T-65.
 
 ### Phase 7: Azure (days 12–17)
@@ -657,7 +657,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [ ] **T-126 (A)** Editor Agent group chat for HT/FT recap, player of the match, pundit sheet and chapter titles. Deps: T-58, T-122, T-124. *Supersedes the single-call recap in T-58.*
 - [x] **T-127 (A/F)** Fan Companion Agent with handoff, profile memory and Content Safety. Deps: T-121, T-76. *This is T-91, implemented as an agent.* *(Built as an Agent Framework workflow: guard → analyst → fact-checker → companion, plus a /watch panel. Azure AI Content Safety comes with T-76; until then a local guard runs.)*
 - [x] **T-128 (E)** `pitchlens-mcp` server + Container App + README snippet for connecting from GitHub Copilot / VS Code. Deps: T-121. *(Mounted on the engine at `/mcp` rather than a separate Container App, so it reads live sessions directly; also runs over stdio. See docs/agents.md.)*
-- [ ] **T-129 (F)** `/studio` Agent Trace panel (live agent/tool timeline + Fact-Checker verdicts). Deps: T-120, T-67.
+- [x] **T-129 (F)** `/studio` Agent Trace panel (live agent/tool timeline + Fact-Checker verdicts). Deps: T-120, T-67.
 - [ ] **T-130 (A)** Agent eval suite (§10A) → `docs/eval.md`. Deps: T-124, T-127.
 
 ### Phase 9: Plus features (§23), worked in parallel from mid-week 2
