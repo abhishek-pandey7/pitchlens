@@ -57,7 +57,9 @@ Minute = Annotated[float, Field(description="Match minute, e.g. 60 or 92.5")]
 MetricName = Annotated[
     str,
     Field(
-        description="One of: possession (share 0..1), field_tilt (share of final-third touches 0..1), "
+        description="One of: possession (share of the ball over the last 5 minutes, 0..1; the whole-match "
+        "share is in get_match_state), field_tilt (share of final-third touches over the last 10 "
+        "minutes, 0..1), "
         "ppda (opponent passes per defensive action; lower = more pressing), press_rate (pressing "
         "actions per opponent pass; higher = more pressing), momentum (home minus away, -1..1), xg "
         "(cumulative expected goals), win_probability (0..1), control (index 0 chaos..100 control), "

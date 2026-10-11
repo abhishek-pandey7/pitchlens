@@ -184,6 +184,7 @@ async def run(*, limit: int | None = None, fresh: bool = False, client: Any = No
             "revisions": result.revisions, "tools": tools, "expected_tools": sorted(case.tools),
             "tools_ok": tools_ok, "correct": correct, "verified": verified, "grounded": grounded,
             "passed": passed, "ms": round((time.perf_counter() - start) * 1000), "tokens": result.tokens,
+            "errors": [s["error"] for s in result.steps if s.get("error")],
         })  # fmt: skip
     results.write_meta(cases=len(cases), match=f"{MATCH[0]}-{MATCH[1]}")
     return results

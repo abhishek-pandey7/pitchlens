@@ -168,10 +168,38 @@ offline client, which is how CI keeps them working (`tests/unit/test_evals.py`).
 """
 
 
+FINDINGS = """## Findings and next steps
+
+- **The Fact-Checker meets both targets** after one instruction fix the eval itself found: judge what a
+  draft claims, not what it omits.
+- **Ask the Match fails safe, but not always fully.** No failed case stated a wrong number. The failures
+  were a false "data missing" claim (team pass accuracy is in `get_match_state`; the analyst looked in
+  `top_players`, and the judge accepted the claim), a counterfactual question answered without calling
+  `what_if`, an honest "couldn't verify" after one revision, and a Hindi rewrite that kept the winner
+  but dropped one side of the scoreline. One passing answer also mangled an accented name ("Tom Á
+  Mehta" for Tomás Mehta), which the surname check does not catch. Next: list the team stats in
+  `get_match_state`'s description, have the judge treat "the data doesn't show X" as a claim to
+  verify, and re-measure on Foundry.
+- **A tool-description bug found while running the suite.** `get_metric(possession)` is a rolling
+  5-minute share, but its description did not say so, and an answer quoted it as the whole match's
+  share. Metric descriptions now state their windows.
+- **The Director paces within the limit and never delays a goal,** and it holds stories for variety
+  with readable reasons. It did not reduce back-to-back repeats against the rules alone (1 vs 1) on this
+  half. Its latency (p95 about 27 s on the free tier) is the reason approve mode and expiry exist.
+- **A harness incident, kept on record.** Three copies of the resume loop once ran at the same time and
+  shared one rate budget. Seven Ask cases failed with no tool call at all, which is an infrastructure
+  failure, not an answer. Those cases were re-run; the original rows are in `ask-run1.jsonl`. Results are
+  now de-duplicated by case, and provider errors stop a run instead of being scored.
+- **All numbers come from Groq's free tier** (`gpt-oss-120b`), which caps tokens a minute and a day, so
+  latencies include rate-limit waits. The suites will be re-run on Microsoft Foundry at deployment.
+"""
+
+
 def write(directory: Path = RESULTS_DIR, doc: Path = DOC) -> Path:
     parts = [INTRO]
     parts += factcheck_section(*load("factcheck", directory), directory)
     parts += ask_section(*load("ask", directory))
     parts += director_section(*load("director", directory))
+    parts.append(FINDINGS)
     doc.write_text("\n".join(parts).rstrip() + "\n", encoding="utf-8")
     return doc

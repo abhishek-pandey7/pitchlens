@@ -1,0 +1,8 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "python": "3.12.10",
+  "updated": "2026-10-11 23:02",
+  "cases": 30,
+  "match": "comeback-7"
+}

@@ -314,6 +314,12 @@ VS Code / GitHub Copilot agent mode (`.vscode/mcp.json`):
 
 Then ask Copilot, for example, "Using pitchlens, who covered the most distance in SYN-NHR-SVC-7?".
 
+## Evaluation
+
+`docs/eval.md` has the measured results (T-130): Fact-Checker precision and recall on 100 drafts with
+seeded hallucinations, 30 Ask the Match questions with expected answers computed from the tools, and the
+Director's pacing against the rules alone. Run with `python -m pitchlens.evals {factcheck|ask|director}`.
+
 ## Tests
 
 `tests/unit/test_ask.py`: the Fact-Checker's two stages, every workflow route (approve, revise then

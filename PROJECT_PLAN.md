@@ -652,13 +652,13 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-121 (A)** Analyst tools (`agents/tools.py`) wrapping interpret/explain functions with typed schemas. Deps: T-26, T-31.
 - [x] **T-122 (A)** Analyst Agent + periodic and salience-triggered runs → `tactical_note` insights with citations. Deps: T-121.
 - [ ] **T-123 (A)** Narrator + Localization agents with concurrent fan-out per persona-language group. Deps: T-120, T-52. *Replaces the direct-LLM path in T-55; the template fallback is kept.*
-- [x] **T-124 (A)** Fact-Checker reflection loop (approve / revise / reject) using `grounding.validate`. Deps: T-54, T-123. *Done when:* ≥ 95% of seeded hallucinations are caught and < 5% of good narrations are rejected. *(Rules + model judge built and live-tested; the 95%/5% measurement is part of the T-130 eval.)*
+- [x] **T-124 (A)** Fact-Checker reflection loop (approve / revise / reject) using `grounding.validate`. Deps: T-54, T-123. *Done when:* ≥ 95% of seeded hallucinations are caught and < 5% of good narrations are rejected. *(Measured in T-130: 100% caught, 0% rejected, after an instruction fix the eval found.)*
 - [x] **T-125 (A/F)** Director Agent + `/studio` approve/auto mode. Deps: T-60, T-67. *(Director agent with cue tools over a programme gate: off, auto or approve; goals and red cards never wait; stale cues expire; the producer approves or overrides in /studio. Fan feeds stay deterministic.)*
 - [x] **T-126 (A)** Editor Agent group chat for HT/FT recap, player of the match, pundit sheet and chapter titles. Deps: T-58, T-122, T-124. *Supersedes the single-call recap in T-58.* *(HT/FT recaps, player of the match and personal recaps done: GroupChatBuilder with Editor, Analyst and Fact-Checker, then the Narrator per fan; `POST /matches/{id}/recap`; recap panel in /watch and /studio. The pundit sheet (T-94) and chapter titles (T-93) will reuse the Editor's room.)*
 - [x] **T-127 (A/F)** Fan Companion Agent with handoff, profile memory and Content Safety. Deps: T-121, T-76. *This is T-91, implemented as an agent.* *(Built as an Agent Framework workflow: guard → analyst → fact-checker → companion, plus a /watch panel. Azure AI Content Safety comes with T-76; until then a local guard runs.)*
 - [x] **T-128 (E)** `pitchlens-mcp` server + Container App + README snippet for connecting from GitHub Copilot / VS Code. Deps: T-121. *(Mounted on the engine at `/mcp` rather than a separate Container App, so it reads live sessions directly; also runs over stdio. See docs/agents.md.)*
 - [x] **T-129 (F)** `/studio` Agent Trace panel (live agent/tool timeline + Fact-Checker verdicts). Deps: T-120, T-67.
-- [ ] **T-130 (A)** Agent eval suite (§10A) → `docs/eval.md`. Deps: T-124, T-127.
+- [x] **T-130 (A)** Agent eval suite (§10A) → `docs/eval.md`. Deps: T-124, T-127. *(Groq gpt-oss-120b: Fact-Checker 50/50 seeded errors caught, 0/50 correct drafts rejected; Ask the Match 26/30; Director within the rate limit, no goal delayed. `python -m pitchlens.evals`; to be re-run on Foundry at deployment.)*
 
 ### Phase 9: Plus features (§23), worked in parallel from mid-week 2
 **P1**

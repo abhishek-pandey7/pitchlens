@@ -99,7 +99,8 @@ def load(suite: str, directory: Path = RESULTS_DIR) -> tuple[list[dict[str, Any]
     rows = (
         [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x] if path.exists() else []
     )
-    return rows, json.loads(meta.read_text(encoding="utf-8")) if meta.exists() else {}
+    latest = {row["case_id"]: row for row in rows}  # a resumed run may repeat a case: the last one counts
+    return list(latest.values()), json.loads(meta.read_text(encoding="utf-8")) if meta.exists() else {}
 
 
 def pct(n: int, d: int) -> str:

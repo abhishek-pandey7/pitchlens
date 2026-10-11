@@ -1,0 +1,9 @@
+{
+  "provider": "groq",
+  "model": "openai/gpt-oss-120b",
+  "python": "3.12.10",
+  "updated": "2026-10-11 23:20",
+  "match": "comeback-7",
+  "profile": "p-tactician-en",
+  "from_min": 45
+}
