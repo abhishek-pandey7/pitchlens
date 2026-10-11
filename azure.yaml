@@ -1,0 +1,26 @@
+# Azure Developer CLI: `azd up` provisions infra/ and deploys both services (see docs/deploy.md).
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+name: pitchlens
+metadata:
+  template: pitchlens@0.1.0
+infra:
+  provider: bicep
+  path: infra
+services:
+  engine:
+    project: ./engine
+    language: python
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      context: ..          # the image also needs data/ (rosters, stored matches)
+  web:
+    project: ./web
+    language: js
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      context: .
+      buildArgs:
+        # The browser bundle calls the engine directly; provisioning outputs its URL.
+        - NEXT_PUBLIC_API_BASE=${API_BASE_URL}

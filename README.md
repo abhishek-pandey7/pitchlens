@@ -36,7 +36,7 @@ cd engine
 python -m venv .venv && source .venv/Scripts/activate   # Windows Git Bash; use .venv/bin/activate on macOS/Linux
 pip install -e ".[dev]"
 pytest
-python scripts/e2e_smoke.py   # whole system, start to finish (33 checks)
+python scripts/e2e_smoke.py   # whole system, start to finish (36 checks)
 
 # API (http://localhost:8000/docs) - see docs/api.md
 uvicorn pitchlens.api.main:app --reload --port 8000
@@ -47,6 +47,22 @@ npm install
 npm run dev            # http://localhost:3000/watch
 npm run e2e            # browser end-to-end tests (boots engine + web, drives Chromium)
 ```
+
+## Run with Docker
+
+```bash
+docker compose up --build      # web on http://localhost:3000, engine on http://localhost:8000
+```
+
+## Deploy to Azure
+
+```bash
+azd auth login
+azd env new pitchlens-dev && azd env set AZURE_LOCATION swedencentral
+azd up                         # Microsoft Foundry, Container Apps, Content Safety, Key Vault, App Insights
+```
+
+See [`docs/deploy.md`](docs/deploy.md) for what gets created, quota, cost and teardown.
 
 ## License
 

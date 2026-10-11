@@ -629,7 +629,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-68 (F)** `/compare` side-by-side view. Deps: T-65.
 
 ### Phase 7: Azure (days 12–17)
-- [ ] **T-70 (I)** Bicep modules + `azure.yaml`; Dockerfiles for engine and web. *Done when:* `azd up` deploys from clean.
+- [ ] **T-70 (I)** Bicep modules + `azure.yaml`; Dockerfiles for engine and web. *Done when:* `azd up` deploys from clean. *(Built and validated locally: both images build, run healthy as non-root on 8080 and serve the app together; `compose.yaml`; Bicep compiles and lints clean; CI builds both images and the templates. The `azd up` from clean runs at deployment, 21–23 Oct.)*
 - [ ] **T-71 (I)** Event Hubs bus implementation + config switch. Deps: T-14.
 - [ ] **T-72 (I)** Cosmos store implementation (profiles, matches, insights, narrations). Deps: T-40.
 - [ ] **T-73 (I)** Foundry/OpenAI deployments + managed identity wiring. Deps: T-51.

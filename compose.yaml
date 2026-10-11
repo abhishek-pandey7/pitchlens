@@ -1,0 +1,29 @@
+# The whole stack locally in containers: http://localhost:3000 (web) and http://localhost:8000 (engine).
+#   docker compose up --build
+# Keys and switches come from .env if present (LLM_PROVIDER, GROQ_API_KEY, ...); without it, everything
+# runs offline on the mock model and the local safety screen.
+services:
+  engine:
+    build:
+      context: .
+      dockerfile: engine/Dockerfile
+    ports:
+      - "8000:8080"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      CORS_ORIGINS: http://localhost:3000
+      MCP_ALLOWED_HOSTS: localhost:8000
+      TRUST_PROXY_HEADERS: "0"
+
+  web:
+    build:
+      context: web
+      args:
+        NEXT_PUBLIC_API_BASE: http://localhost:8000/api/v1
+    ports:
+      - "3000:8080"
+    depends_on:
+      engine:
+        condition: service_healthy

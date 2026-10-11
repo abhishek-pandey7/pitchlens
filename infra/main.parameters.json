@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environmentName": {
+      "value": "${AZURE_ENV_NAME}"
+    },
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "principalId": {
+      "value": "${AZURE_PRINCIPAL_ID}"
+    },
+    "llmProvider": {
+      "value": "${PITCHLENS_LLM_PROVIDER=azure_openai}"
+    },
+    "fastModelName": {
+      "value": "${PITCHLENS_FAST_MODEL=gpt-4.1-mini}"
+    },
+    "fastModelVersion": {
+      "value": "${PITCHLENS_FAST_MODEL_VERSION=2025-04-14}"
+    },
+    "qualityModelName": {
+      "value": "${PITCHLENS_QUALITY_MODEL=gpt-4.1-mini}"
+    },
+    "qualityModelVersion": {
+      "value": "${PITCHLENS_QUALITY_MODEL_VERSION=2025-04-14}"
+    },
+    "groqApiKey": {
+      "value": "${GROQ_API_KEY=}"
+    },
+    "engineImageName": {
+      "value": "${SERVICE_ENGINE_IMAGE_NAME=}"
+    },
+    "webImageName": {
+      "value": "${SERVICE_WEB_IMAGE_NAME=}"
+    }
+  }
+}
