@@ -69,6 +69,43 @@ export type AgentRunTrace = Omit<AskResponse, "source"> & {
   source: string;
 };
 
+export type DirectorMode = "off" | "auto" | "approve";
+
+export type PendingCue = {
+  cue_id: string;
+  insight_id: string | null;
+  template: string;
+  region: string;
+  priority: number;
+  headline: string;
+  waiting_s: number;
+  held: boolean;
+  proposal: "air" | "hold" | "drop" | null;
+  reason: string;
+};
+
+export type ProgrammeLogEntry = {
+  at: number;
+  minute: string;
+  cue_id: string;
+  headline: string;
+  action: "air" | "hold" | "drop";
+  by: "director" | "producer" | "rules";
+  reason: string;
+  ok: boolean;
+  result: string;
+  detail: string;
+};
+
+export type ProgrammeState = {
+  match_id: string;
+  profile_id: string | null;
+  mode: DirectorMode;
+  pending: PendingCue[];
+  on_air?: { busy_regions_s: Record<string, number>; cues_last_minute: number; max_per_minute: number };
+  log: ProgrammeLogEntry[];
+};
+
 export type LatencyStage = { count: number; p50_ms: number; p95_ms: number; max_ms: number };
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -99,6 +136,14 @@ export const api = {
     call<AskResponse>(`/matches/${id}/ask`, { method: "POST", body: JSON.stringify(body) }),
   recap: (id: string, body: { stage: "ht" | "ft"; profile_id: string }) =>
     call<RecapResponse>(`/matches/${id}/recap`, { method: "POST", body: JSON.stringify(body) }),
+  director: (id: string) => call<ProgrammeState>(`/matches/${id}/director`),
+  setDirector: (id: string, body: { mode: DirectorMode; profile_id: string }) =>
+    call<ProgrammeState>(`/matches/${id}/director`, { method: "PUT", body: JSON.stringify(body) }),
+  produce: (id: string, cueId: string, action: "air" | "hold" | "drop" | "approve") =>
+    call<ProgrammeState & { outcome: { ok: boolean; result: string; detail: string } }>(
+      `/matches/${id}/director/cues/${encodeURIComponent(cueId)}`,
+      { method: "POST", body: JSON.stringify({ action }) },
+    ),
   streamUrl: (id: string, opts: { profileId?: string | null; frames?: boolean; events?: boolean }) => {
     const params = new URLSearchParams();
     if (opts.profileId) params.set("profile_id", opts.profileId);

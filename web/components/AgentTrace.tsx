@@ -10,6 +10,7 @@ const AGENT: Record<string, { label: string; tone: string }> = {
   companion: { label: "Companion", tone: "bg-accent" },
   editor: { label: "Editor", tone: "bg-away" },
   narrator: { label: "Narrator", tone: "bg-accent" },
+  director: { label: "Director", tone: "bg-away" },
 };
 
 const UNVERIFIED = new Set(["fallback", "guard", "facts", "dropped"]);

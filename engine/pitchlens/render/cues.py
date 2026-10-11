@@ -99,22 +99,29 @@ class CueScheduler:
 
     def __init__(self, max_per_min: int) -> None:
         self.max_per_min = max_per_min
-        self._regions: dict[Region, tuple[int, int]] = {}  # region -> (busy until ms, priority)
-        self._recent: deque[int] = deque()
+        self.regions: dict[Region, tuple[int, int]] = {}  # region -> (busy until ms, priority)
+        self.recent: deque[int] = deque()
         self.dropped = 0
+        self.last_refusal = ""
 
     def admit(self, cue: OverlayCue) -> bool:
         now = cue.start_ms
-        while self._recent and now - self._recent[0] >= RATE_WINDOW_MS:
-            self._recent.popleft()
+        while self.recent and now - self.recent[0] >= RATE_WINDOW_MS:
+            self.recent.popleft()
         forced = cue.priority >= ALWAYS_SHOW_PRIORITY
-        if not forced and len(self._recent) >= self.max_per_min:
+        if not forced and len(self.recent) >= self.max_per_min:
             self.dropped += 1
+            self.last_refusal = f"rate limit: {self.max_per_min} cues a minute already on air"
             return False
-        busy_until, busy_priority = self._regions.get(cue.region, (0, 0))
+        busy_until, busy_priority = self.regions.get(cue.region, (0, 0))
         if cue.region is not Region.PLAYER_ANCHOR and now < busy_until and cue.priority <= busy_priority:
             self.dropped += 1
+            self.last_refusal = (
+                f"{cue.region.value} busy for {round((busy_until - now) / 1000)} more seconds "
+                f"with a cue of priority {busy_priority}"
+            )
             return False
-        self._regions[cue.region] = (now + cue.duration_ms, cue.priority)
-        self._recent.append(now)
+        self.regions[cue.region] = (now + cue.duration_ms, cue.priority)
+        self.recent.append(now)
+        self.last_refusal = ""
         return True

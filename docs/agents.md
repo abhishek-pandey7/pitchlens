@@ -17,6 +17,8 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `pitchlens/agents/ask.py` | "Ask the Match": an Agent Framework workflow of guard → analyst → fact-checker → companion |
 | `pitchlens/agents/notes.py` | Analyst tactical notes: agent-authored insights in the live feed |
 | `pitchlens/agents/editor.py` | Editor recaps: an Agent Framework GroupChat (Editor, Analyst, Fact-Checker), then the Narrator per fan |
+| `pitchlens/agents/director.py` | Director: curates the programme feed with cue tools, in auto or approve mode |
+| `pitchlens/render/programme.py` | Programme gate: pending cues, decisions within the scheduler's rules, the decision log |
 | `pitchlens/agents/views.py` | Match views: live session, stored match, or the match as it stood at a whistle (half-time, full time) |
 | `pitchlens/agents/desk.py` | Shared match-view cache, concurrency limit, recent agent traces per match |
 | `pitchlens/mcpserver/` | MCP server: mounted on the engine at `/mcp`, or over stdio |
@@ -227,6 +229,44 @@ brief: fact sheet from the tools (score, goals, key moments, player-of-the-match
 - **Time:** on Groq's free tier (8K tokens a minute) a recap takes 2–10 minutes, mostly waiting for
   rate-limit budget. On Foundry the same chat is a handful of model calls with no waiting.
 
+## Director (programme feed, human in the loop)
+
+Fan feeds stay deterministic: a cue airs the moment its insight lands, so overlays never wait on an agent.
+One fan channel per match can be made the **programme**, the feed the studio puts on air. Its cues pass
+through a gate (`render/programme.py`), and the Director decides what goes on air.
+
+| Mode | What happens to a programme cue |
+|---|---|
+| `off` | Airs by the scheduler's rules, as on any feed |
+| `auto` | Waits for the Director; its decisions apply at once |
+| `approve` | The Director proposes; the producer airs, holds or drops it in `/studio` |
+
+- **Tools:** `list_pending_cues` (the queue, busy regions, the per-minute budget, recent stories),
+  `get_match_phase`, and the levers `schedule_cue`, `hold_cue` and `drop_cue`, each with a short reason
+  the producer reads. These are the only write tools any agent has, and they act within the scheduler's
+  rules: airing into a busy region or past the rate limit is refused, and the Director is told why.
+- **Never waits:** goals and red cards (priority 90 and up) bypass the gate.
+- **Expiry:** a pending cue expires after 3 minutes of match time; a story that missed its moment is not
+  aired late.
+- **Proposals:** in approve mode a proposal stands until the producer acts. The Director cannot flip it.
+- **Fallback:** if the Director fails in auto mode, fresh cues air by the rules; cues it left undecided
+  do too. In approve mode they wait for the producer.
+- **Batching:** one Director turn decides every cue waiting at that moment. There is one turn at a time
+  per match, at least `DIRECTOR_MIN_GAP_S` (6) apart; cues that arrive in between join the next turn.
+  Held cues come back when new cues arrive. A seek cancels the turn and clears the queue.
+- **Visibility:** every turn appears in the Agent Trace (`kind: "director"`) with its tool calls. Every
+  decision (Director, producer or rules) is in the programme log in `/studio`.
+
+**Live check (Groq gpt-oss-120b, comeback from 60' at 15×):**
+- **Turns:** each was 2–3 tool calls of about 2.5K tokens. A typical one was `list_pending_cues` →
+  `schedule_cue("Fresh tactical update, screen free, adds variety")`.
+- **Approve mode:** the Director proposed holding "What a pass from Mensah to find Yilmaz" right
+  after Yilmaz's goal: "avoid back-to-back Yilmaz stories".
+- **Expiry:** two turns waited 30–40 s for free-tier budget, and their cues expired instead of airing
+  late.
+- **Fix:** the Director once re-proposed a cue it had already proposed, so proposals are now fixed
+  until the producer acts.
+
 ## Models
 
 `chat_client(tier)` follows the same `LLM_PROVIDER` switch as narration:
@@ -280,6 +320,9 @@ Then ask Copilot, for example, "Using pitchlens, who covered the most distance i
 approve, revise twice, reject, guard), the companion falling back when it invents a number, and the
 closing call. `tests/integration/test_agents_api.py`: `/ask` and `/agents/trace` over HTTP.
 `web/e2e/watch.spec.ts`: a Spanish fan asks a suggested question and gets a verified answer.
+`tests/unit/test_director.py`: the gate's rules (open gate, must-show cues, refusals with reasons,
+hold, drop, expiry, fallback, fixed proposals) and Director turns on a live replay in auto mode,
+approve mode and with a failing model. `web/e2e/studio.spec.ts`: the producer approves a proposal.
 `tests/unit/test_editor.py`: the group chat's speaker order (with and without the Analyst), the
 revision loop, invented numbers never approved, a failing Editor, the Narrator's checks and retry, the
 fact recap in Hindi, and spoiler-free stage views. `tests/integration/test_agents_api.py` also covers
