@@ -54,7 +54,8 @@ test("the launcher simulates a match and lists it", async ({ page }) => {
 });
 
 test("a fan asks the match and gets a verified answer", async ({ page, request }) => {
-  const match = await (await request.post(`${API}/matches`, { data: { seed: 7, storyline: "comeback", tracking: false } })).json();
+  // Its own match: other tests replay seed 7 to full time, and agents answer from the live session.
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 21, storyline: "comeback", tracking: false } })).json();
   await page.goto(`/watch?match=${match.match_id}&profile=p-casual-es`);
   await expect(page.getByRole("region", { name: "Pregunta al partido" })).toBeVisible();
 
