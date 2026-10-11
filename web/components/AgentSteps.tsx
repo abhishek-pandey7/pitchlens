@@ -8,6 +8,7 @@ const AGENT_LABEL: Record<string, string> = {
   editor: "Editor",
   narrator: "Narrator",
   director: "Director",
+  safety: "Safety",
 };
 
 /** The steps of one agent run, compact, for a fan who asks "how did you get this?". */
@@ -18,6 +19,7 @@ export function AgentSteps({ steps }: { steps: AskStep[] }) {
         <li key={i} className="font-mono">
           <span className="text-foreground">{AGENT_LABEL[step.agent] ?? step.agent}</span>
           {step.task ? ` · ${step.task}` : ""}
+          {step.agent === "safety" ? ` · ${step.stage} ${step.allowed ? "passed" : `blocked (${(step.categories ?? []).join(", ")})`}` : ""}
           {step.lang && step.agent === "narrator" ? ` · ${step.lang}` : ""}
           {step.tool_calls?.length ? ` · tools: ${step.tool_calls.map((c) => c.tool).join(", ")}` : ""}
           {step.verdict ? ` · ${step.verdict}${step.by ? ` (${step.by})` : ""}` : ""}

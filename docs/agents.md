@@ -267,6 +267,21 @@ through a gate (`render/programme.py`), and the Director decides what goes on ai
 - **Fix:** the Director once re-proposed a cue it had already proposed, so proposals are now fixed
   until the producer acts.
 
+## Content safety
+
+`agents/safety.py` screens fan input (questions, display names) and generated output (answers, recaps,
+tactical notes) before anything acts on it or shows it.
+
+- **Azure AI Content Safety** (`CONTENT_SAFETY_ENDPOINT`): text analysis (hate, sexual, violence,
+  self-harm) and **Prompt Shields** for jailbreaks, with a key or managed identity. Fan text is blocked at
+  medium severity and up; our own output at low and up.
+- **Local screen**, always on: prompt injection, self-harm and violent threats against people. It is
+  tuned for football talk, so "shoot", "attack the left side" and "kill the game off" pass, while "how do
+  I hurt the referee" does not. It is the fallback when Azure is not configured or unreachable.
+- **Outcomes:** a blocked question gets a friendly message in the fan's language and never reaches a
+  model; an unsafe answer becomes "couldn't verify"; an unsafe recap becomes the fact recap; an unsafe
+  tactical note is dropped. Each check appears in the trace as a `safety` step.
+
 ## Models
 
 `chat_client(tier)` follows the same `LLM_PROVIDER` switch as narration:

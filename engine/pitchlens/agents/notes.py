@@ -38,6 +38,7 @@ from pitchlens.schema.insights import Entities, Evidence, Insight, InsightType
 from .clients import chat_client
 from .factcheck import FACT_CHECKER_INSTRUCTIONS, fact_check
 from .runtime import AgentRun, build_agent, run_agent, supported_numbers
+from .safety import ContentSafety, default_safety
 from .tools import MatchTools, MatchView, ToolError
 
 if TYPE_CHECKING:
@@ -132,7 +133,10 @@ class TacticalNotes:
         min_gap_s: float = NOTE_MIN_GAP_S,
         min_match_min: float = NOTE_MIN_MATCH_MIN,
         max_notes: int = NOTE_MAX,
+        safety: ContentSafety | None = None,
     ) -> None:
+        self.safety = safety or default_safety()
+        self.budget: Callable[[str], str | None] | None = None  # set by the desk: cost caps
         self._client = client or (lambda role, tier: chat_client(tier, role=role))
         self.on_trace = on_trace
         self.min_gap_s, self.min_match_min, self.max_notes = min_gap_s, min_match_min, max_notes
@@ -145,6 +149,8 @@ class TacticalNotes:
         state = session.state
         if notes.running or notes.count >= self.max_notes or state.finished:
             return None
+        if self.budget is not None and self.budget(session.match_id):
+            return None  # over the agents' cost cap
         if state.match_ms - notes.last_match_ms < self.min_match_min * 60_000:
             return None
         if time.monotonic() - notes.last_wall < self.min_gap_s:
@@ -222,6 +228,10 @@ class TacticalNotes:
             check = await fact_check(checker, prompt, checked)
             steps.append(check.trace())
             if check.approved:
+                screened = await self.safety.screen_output(checked.text)
+                steps.append(screened.trace("output"))
+                if not screened.allowed:
+                    return done(checked.text, "dropped", "safety")
                 return done(checked.text, "published", "approve", self._insight(tools, note, number))
             if check.verdict != "revise" or revisions >= MAX_REVISIONS:
                 return done(checked.text, "dropped", check.verdict)

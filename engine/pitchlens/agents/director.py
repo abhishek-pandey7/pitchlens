@@ -133,6 +133,7 @@ class Director:
         self._client = client or (lambda role, tier: chat_client(tier, role=role))
         self.on_trace = on_trace
         self.min_gap_s = min_gap_s
+        self.budget: Callable[[str], str | None] | None = None  # set by the desk: cost caps
         self._programmes: dict[str, _Programme] = {}
 
     def configure(self, session: MatchSession, profile_id: str, mode: Mode) -> ProgrammeGate:
@@ -171,6 +172,11 @@ class Director:
         start = time.perf_counter()
         presented = [p.cue.cue_id for p in gate.undecided()]
         mode = gate.mode
+        over = self.budget(session.match_id) if self.budget is not None else None
+        if over:  # over the cost cap: the scheduler's rules decide, no model call
+            if mode is Mode.AUTO:
+                gate.fallback(over)
+            return {"kind": "director", "skipped": over}
         tools = DirectorTools(gate, session)
         agent = Agent(
             self._client("director", Tier.FAST),

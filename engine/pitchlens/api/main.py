@@ -16,6 +16,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from pitchlens import __version__, telemetry
 from pitchlens.agents.desk import AgentDesk
+from pitchlens.api.ratelimit import RateLimitMiddleware
 from pitchlens.config import Settings
 from pitchlens.live.hub import Hub
 from pitchlens.live.store import MatchStore
@@ -63,12 +64,15 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         description="Explainable, personalized match intelligence from synthetic football events.",
         lifespan=lifespan,
     )
+    # Starlette wraps later middleware around earlier ones: CORS stays outermost, so even a 429 from
+    # the rate limiter carries CORS headers the browser can read.
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.cors_origins,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["*"],
+        allow_origins=settings.cors_origins,  # an allow-list from CORS_ORIGINS
+        allow_methods=["GET", "POST", "PUT", "OPTIONS"],
+        allow_headers=["Content-Type", "Last-Event-ID", "Authorization", "Mcp-Session-Id"],
+        expose_headers=["Retry-After"],
     )
     for router in (misc.router, matches.router, streams.router, agents.router):
         app.include_router(router, prefix=API_PREFIX)

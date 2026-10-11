@@ -21,6 +21,9 @@ export type AskStep = {
   task?: string;
   lang?: string;
   round?: number;
+  stage?: "input" | "output";
+  allowed?: boolean;
+  categories?: string[];
   verdict?: string;
   by?: string;
   problems?: string[];

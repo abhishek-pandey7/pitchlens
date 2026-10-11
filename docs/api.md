@@ -21,7 +21,8 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 
 | Method & path | Purpose |
 |---|---|
-| `GET /health` | Status, version, bus, LLM provider |
+| `GET /health` | Liveness: status, version, bus, LLM provider |
+| `GET /health/ready` | Readiness: `200` when the configured model provider has what it needs, else `503`; reports loaded matches, content-safety mode (`azure` or `local`) and the agent token budget |
 | `GET /matches` | Stored, generated and external matches, with replay state |
 | `GET /matches/storylines` | Available scripted storylines |
 | `POST /matches` | Simulate a match: `{seed, storyline?, home?, away?, tracking=true}` |
@@ -76,3 +77,12 @@ Measured during a 300× replay of the comeback storyline on a laptop:
 | **Event → broadcast** | **0.21 ms** | **0.59 ms** |
 
 The §17 budget for event → overlay cue is 300 ms. Stages are also OpenTelemetry spans; set `APPLICATIONINSIGHTS_CONNECTION_STRING` (with the `azure` extra installed) to export them to Application Insights.
+
+## Limits and safety
+
+- **Rate limits** per client and minute: `POST …/ask` and `…/recap` 20, other writes 120, `/ingest` 600,
+  `/mcp` 120. Over a limit the API answers `429` with `Retry-After`. Reads and streams are not limited.
+- **Agent budget:** when the per-match or daily token cap is reached, `/ask` and `/recap` answer `503`
+  ("the agents' budget … is used up"); the live pipeline is unaffected.
+- **Content safety:** a blocked question gets `200` with `source: "safety"` and a friendly message in the
+  fan's language; an unsafe display name gets `422`. See [responsible-ai.md](responsible-ai.md).

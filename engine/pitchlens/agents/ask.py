@@ -7,13 +7,15 @@ An Agent Framework workflow (WorkflowBuilder graph with conditional edges):
                  └───revise─────┤ (one revision round)
                                 └──reject / failure──► fallback ──► honest "couldn't verify"
 
-- **guard**: fan text is data, never instructions. Length and character checks; the question only
-  ever reaches a user message, never a system prompt.
+- **guard**: fan text is data, never instructions. Length and character checks, then content safety
+  (Azure AI Content Safety with Prompt Shields, or the local screen); the question only ever reaches a
+  user message, never a system prompt. A blocked question gets a friendly message.
 - **analyst**: Agent Framework agent with the analyst tools; answers in English with grounded numbers.
 - **fact_checker**: rules first (every number backed by a tool result), then a model judge for claims
   (reflection: approve, revise or reject).
 - **companion**: rewrites the approved answer for the fan's persona and language. No tools, no new
-  facts. Its numbers are checked again; if they fail, the fan gets the verified English answer.
+  facts. Its numbers are checked again; if they fail, the fan gets the verified English answer. The final
+  answer is screened by content safety before the fan sees it.
 
 Every step is recorded in the result's trace for the Agent Trace panel.
 """
@@ -37,6 +39,7 @@ from pitchlens.schema.profiles import Persona, Profile
 from .clients import VERIFIED_MARKER, chat_client
 from .factcheck import FACT_CHECKER_INSTRUCTIONS, Check, fact_check
 from .runtime import ANALYST_INSTRUCTIONS, AgentRun, build_agent, run_agent, supported_numbers
+from .safety import ContentSafety, blocked_message, default_safety
 from .tools import MatchTools, MatchView
 
 MAX_QUESTION_CHARS = 300
@@ -91,7 +94,7 @@ class AskState:
     check: Check | None = None
     revisions: int = 0
     answer: str = ""
-    source: str = ""  # companion | analyst | fallback | guard
+    source: str = ""  # companion | analyst | fallback | guard | safety
     next: str = ""  # routing decided by the last step: analyst | fact_checker | companion | fallback
     steps: list[dict[str, Any]] = field(default_factory=list)
 
@@ -142,8 +145,10 @@ class AskTheMatch:
         profile: Profile,
         *,
         client: Callable[[str, Tier], Any] | None = None,
+        safety: ContentSafety | None = None,
     ) -> None:
         make = client or (lambda role, tier: chat_client(tier, role=role))
+        self.safety = safety or default_safety()
         self.tools = MatchTools(view)
         self.profile = profile
         state = view().state
@@ -162,9 +167,15 @@ class AskTheMatch:
         async def guard_step(s: AskState, ctx: WorkflowContext[AskState]) -> None:
             cleaned = guard(s.question)
             s.steps.append({"agent": "guard", "passed": cleaned is not None})
+            verdict = await self.safety.screen_input(cleaned) if cleaned is not None else None
+            if verdict is not None:
+                s.steps.append(verdict.trace("input"))
             if cleaned is None:
                 s.answer = NOT_A_QUESTION.get(s.profile.language, NOT_A_QUESTION["en"])
                 s.source, s.next = "guard", "fallback"
+            elif verdict is not None and not verdict.allowed:
+                s.answer = blocked_message(s.profile.language)
+                s.source, s.next = "safety", "fallback"
             else:
                 s.question = s.analyst_prompt = cleaned
                 s.next = "analyst"
@@ -221,11 +232,16 @@ class AskTheMatch:
                 s.answer, s.source = (text, "companion") if ok else (verified, "analyst")
             else:
                 s.answer, s.source = verified, "analyst"
+            screened = await self.safety.screen_output(s.answer)
+            s.steps.append(screened.trace("output"))
+            if not screened.allowed:
+                s.answer = COULD_NOT_VERIFY.get(self.profile.language, COULD_NOT_VERIFY["en"])
+                s.source = "safety"
             await ctx.yield_output(s)
 
         @executor(id="fallback")
         async def fallback_step(s: AskState, ctx: WorkflowContext[AskState, AskState]) -> None:
-            if s.source != "guard":
+            if s.source not in ("guard", "safety"):
                 s.answer = COULD_NOT_VERIFY.get(self.profile.language, COULD_NOT_VERIFY["en"])
                 s.source = "fallback"
             await ctx.yield_output(s)
