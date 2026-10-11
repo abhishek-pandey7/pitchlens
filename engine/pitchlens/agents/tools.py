@@ -57,7 +57,9 @@ Minute = Annotated[float, Field(description="Match minute, e.g. 60 or 92.5")]
 MetricName = Annotated[
     str,
     Field(
-        description="One of: possession (share 0..1), field_tilt (share of final-third touches 0..1), "
+        description="One of: possession (share of the ball over the last 5 minutes, 0..1; the whole-match "
+        "share is in get_match_state), field_tilt (share of final-third touches over the last 10 "
+        "minutes, 0..1), "
         "ppda (opponent passes per defensive action; lower = more pressing), press_rate (pressing "
         "actions per opponent pass; higher = more pressing), momentum (home minus away, -1..1), xg "
         "(cumulative expected goals), win_probability (0..1), control (index 0 chaos..100 control), "
@@ -484,7 +486,6 @@ class MatchTools:
 
         def run() -> dict[str, Any]:
             club = self._team(team) if team else None
-            s = self.state
             items = [
                 i for i in self._view().insights
                 if (insight_type is None or i.type == insight_type)
@@ -495,18 +496,7 @@ class MatchTools:
             # Compact rows: free-tier models re-read every tool result on each step of a run.
             return {
                 "count": len(items),
-                "insights": [
-                    {
-                        "minute": minute_label(i.clock_ms, i.period),
-                        "headline": i.headline_key,
-                        "who": ", ".join(
-                            [s.players[p].name for p in i.entities.players if p in s.players]
-                            + [s.teams[t].name for t in i.entities.teams if t in s.teams]
-                        ),
-                        "evidence": "; ".join(self._evidence(e) for e in i.evidence),
-                    }
-                    for i in items[: max(1, min(limit, 15))]
-                ],
+                "insights": [self.insight_row(i) for i in items[: max(1, min(limit, 15))]],
             }
 
         args = {
@@ -516,6 +506,19 @@ class MatchTools:
             "limit": limit,
         }
         return self._record("get_insights", args, run)
+
+    def insight_row(self, i: Insight) -> dict[str, Any]:
+        """One insight as the agents see it: minute, headline key, who, and compact evidence."""
+        s = self.state
+        return {
+            "minute": minute_label(i.clock_ms, i.period),
+            "headline": i.headline_key,
+            "who": ", ".join(
+                [s.players[p].name for p in i.entities.players if p in s.players]
+                + [s.teams[t].name for t in i.entities.teams if t in s.teams]
+            ),
+            "evidence": "; ".join(self._evidence(e) for e in i.evidence),
+        }
 
     def _evidence(self, e: Any) -> str:
         s = self.state

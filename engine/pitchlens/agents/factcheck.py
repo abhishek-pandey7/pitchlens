@@ -33,6 +33,7 @@ answer against FACTS, the exact tool results the analyst saw. Judge substance, n
 - reject: the draft mostly does not follow from FACTS, or answers a different question.
 If FACTS is empty, the analyst consulted no tools: approve only if the draft makes no claim about the
 match at all (including claims that data is missing); otherwise revise ("call the tools first").
+Judge only what the draft claims, never what it leaves out: a short answer that omits facts is fine.
 Never use outside knowledge. Reply in JSON only."""
 
 
