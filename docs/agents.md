@@ -105,6 +105,8 @@ The response carries `answer`, `lang`, `source` (companion / analyst / fallback 
 `GET /api/v1/matches/{id}/agents/trace` returns the most recent 25 runs for the Agent Trace panel. At most
 `ASK_CONCURRENCY` (default 2) questions run at once; others queue for up to 2 minutes, then get a 503.
 
+In `/studio`, the **Agent trace** panel polls `/agents/trace` and shows every run as a timeline: each agent, the tools it called with their arguments, the Fact-Checker's verdict and problems, and timings and tokens. The producer can ask questions from the same console.
+
 In `/watch`, the **Ask the match** panel offers three suggested questions in the fan's language, marks
 approved answers "✓ Verified", and shows "How we answered" (each agent, the tools it called, the
 verdict and timings).

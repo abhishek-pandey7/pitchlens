@@ -40,6 +40,10 @@ export type AskResponse = {
   steps: AskStep[];
 };
 
+export type AgentRunTrace = AskResponse & { kind: string; at: number; profile_id: string };
+
+export type LatencyStage = { count: number; p50_ms: number; p95_ms: number; max_ms: number };
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
@@ -61,6 +65,9 @@ export const api = {
   control: (id: string, body: { action: "pause" | "resume" | "seek" | "speed"; to_ms?: number; speed?: number }) =>
     call<MatchSummary["replay"]>(`/matches/${id}/control`, { method: "POST", body: JSON.stringify(body) }),
   profiles: () => call<Profile[]>("/profiles"),
+  agentTrace: (id: string) => call<{ match_id: string; runs: AgentRunTrace[] }>(`/matches/${id}/agents/trace`),
+  latency: (id: string) =>
+    call<{ stages: Record<string, LatencyStage>; subscribers: number }>(`/matches/${id}/latency`),
   ask: (id: string, body: { question: string; profile_id: string }) =>
     call<AskResponse>(`/matches/${id}/ask`, { method: "POST", body: JSON.stringify(body) }),
   streamUrl: (id: string, opts: { profileId?: string | null; frames?: boolean; events?: boolean }) => {
