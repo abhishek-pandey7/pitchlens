@@ -13,7 +13,6 @@ engine, never from a model.
 
 from __future__ import annotations
 
-import asyncio
 import functools
 import inspect
 import typing
@@ -23,49 +22,14 @@ from typing import Any
 from mcp.server.mcpserver import MCPServer
 
 from pitchlens.agents.tools import MatchTools, MatchView, ToolError
-from pitchlens.explain.engine import explain_match
-from pitchlens.live.hub import Hub, HubError
+from pitchlens.agents.views import MatchViews
+from pitchlens.live.hub import Hub
 
 INSTRUCTIONS = (
     "PitchLens explains synthetic football matches with deterministic metrics. Call list_matches "
     "first, then pass a match_id to the other tools. Every number comes from the engine; quote "
     "numbers from tool results only. Probabilities and shares are 0..1."
 )
-
-
-class MatchViews:
-    """Resolve a match_id to a MatchView: the live session if one is running, else the stored match
-    analysed once (with tracking when available) and cached."""
-
-    def __init__(self, hub: Callable[[], Hub]) -> None:
-        self._hub = hub
-        self._stored: dict[str, MatchView] = {}
-        self._locks: dict[str, asyncio.Lock] = {}
-
-    async def view(self, match_id: str) -> Callable[[], MatchView]:
-        hub = self._hub()
-        session = hub.live_session(match_id)
-        if session is not None:
-            return lambda: MatchView(session.state, session.engine.insights)
-        lock = self._locks.setdefault(match_id, asyncio.Lock())
-        async with lock:
-            if match_id not in self._stored:
-                try:
-                    record = hub.record(match_id)
-                except HubError as exc:
-                    raise ToolError(str(exc)) from None
-                if not record.events:
-                    raise ToolError(f"match {match_id!r} has no events yet")
-                self._stored[match_id] = await asyncio.to_thread(self._analyse, record)
-        stored = self._stored[match_id]
-        return lambda: stored
-
-    @staticmethod
-    def _analyse(record: Any) -> MatchView:
-        tracking = record.tracking
-        frames = [tracking.frame(i) for i in range(len(tracking))] if tracking is not None else []
-        state, insights = explain_match(record.meta, record.events, frames)
-        return MatchView(state, insights)
 
 
 def _with_match_id(method_name: str, template: Callable[..., Any], views: MatchViews) -> Callable[..., Any]:
@@ -97,8 +61,8 @@ def _with_match_id(method_name: str, template: Callable[..., Any], views: MatchV
     return call
 
 
-def build_server(hub: Callable[[], Hub]) -> MCPServer:
-    views = MatchViews(hub)
+def build_server(hub: Callable[[], Hub], views: MatchViews | None = None) -> MCPServer:
+    views = views or MatchViews(hub)
     server = MCPServer("pitchlens", title="PitchLens match intelligence", instructions=INSTRUCTIONS)
 
     def list_matches() -> dict[str, Any]:

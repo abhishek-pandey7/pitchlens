@@ -8,6 +8,8 @@ version of the narration grounding validator, which the Fact-Checker agent build
 from __future__ import annotations
 
 import functools
+import json
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -67,6 +69,7 @@ class AgentRun:
     tokens: int = 0
     unsupported: list[str] = field(default_factory=list)
     error: str | None = None
+    closed: bool = False  # answered by the no-tools closing call after the tool loop failed
 
     @property
     def grounded(self) -> bool:
@@ -81,6 +84,7 @@ class AgentRun:
             "grounded": self.grounded,
             "unsupported_numbers": self.unsupported,
             "error": self.error,
+            "closed": self.closed,
             "ms": round(self.ms),
             "tokens": self.tokens,
             "tool_calls": [
@@ -88,6 +92,10 @@ class AgentRun:
                 for c in self.ledger.calls
             ],
         }
+
+
+# Some models append citation markers such as "【compare_periods】"; the trace already shows the tools.
+_CITATION = re.compile(r"\s*【[^】]*】")
 
 
 def _collect(value: Any, out: set[float]) -> None:
@@ -127,21 +135,52 @@ def supported_numbers(ledger: Ledger, question: str = "") -> set[float]:
     return allowed
 
 
-async def run_agent(agent: Agent, tools: MatchTools, question: str) -> AgentRun:
-    """One agent turn with a fresh ledger; the answer is checked against what the tools returned."""
-    tools.ledger.calls.clear()
+async def run_agent(agent: Agent, tools: MatchTools, question: str, *, keep_ledger: bool = False) -> AgentRun:
+    """One agent turn; the answer is checked against what the tools returned. The ledger starts empty
+    unless `keep_ledger` (a revision round may cite facts it gathered in the first round)."""
+    if not keep_ledger:
+        tools.ledger.calls.clear()
     start = time.perf_counter()
+    closed = False
     try:
         response = await agent.run(question)
-    except Exception as exc:  # provider down, budget spent, malformed tool call: fail soft
-        ms = (time.perf_counter() - start) * 1000
-        return AgentRun(
-            agent.name or "agent", question, "", Ledger(list(tools.ledger.calls)), ms, error=str(exc)[:300]
-        )
+    except Exception as exc:  # provider down, budget spent, tool-call cap hit, malformed tool call
+        error = str(exc)[:300]
+        response = None
+        if tools.ledger.results():
+            # The facts gathered so far are still good. Ask once more with no tools attached, so the
+            # model must answer from them (forcing tool_choice=none is rejected by some providers
+            # when the model calls a tool anyway).
+            try:
+                closer = Agent(agent.client, CLOSING_INSTRUCTIONS, name=agent.name)
+                response = await closer.run(f"QUESTION: {question}\n\nFACTS: {ledger_facts(tools.ledger)}")
+                closed = True
+            except Exception as closing_exc:
+                error = f"{error} | closing call: {str(closing_exc)[:150]}"
+        if response is None:
+            ms = (time.perf_counter() - start) * 1000
+            return AgentRun(
+                agent.name or "agent", question, "", Ledger(list(tools.ledger.calls)), ms, error=error
+            )
     ms = (time.perf_counter() - start) * 1000
-    text = (response.text or "").strip()
+    text = _CITATION.sub("", response.text or "").strip()
     usage = response.usage_details or {}
     tokens = int(usage.get("total_token_count") or 0) if isinstance(usage, dict) else 0
     run = AgentRun(agent.name or "agent", question, text, Ledger(list(tools.ledger.calls)), ms, tokens)
+    run.closed = closed
     run.unsupported = unsupported_numbers(text, supported_numbers(run.ledger, question))
     return run
+
+
+CLOSING_INSTRUCTIONS = """You are the PitchLens Analyst. Answer the QUESTION using only FACTS, the tool
+results already gathered. Every number must come from FACTS; 0..1 values may be written as
+percentages. If FACTS cannot answer it, say so. At most three sentences."""
+
+FACTS_MAX_CHARS = 6000  # free-tier friendly; tool results are compact already
+
+
+def ledger_facts(ledger: Ledger, max_chars: int = FACTS_MAX_CHARS) -> str:
+    """The successful tool calls of a run as compact JSON (truncated for free tiers)."""
+    facts = [{"tool": c.tool, "args": c.args, "result": c.result} for c in ledger.calls if c.error is None]
+    text = json.dumps(facts, ensure_ascii=False, default=str, separators=(",", ":"))
+    return text if len(text) <= max_chars else text[:max_chars] + "…(truncated)"

@@ -16,6 +16,30 @@ export type MatchSummary = {
   replay: { state: string; speed?: number; match_ms?: number };
 };
 
+export type AskStep = {
+  agent: string;
+  verdict?: string;
+  by?: string;
+  problems?: string[];
+  grounded?: boolean;
+  unchanged?: boolean;
+  ms?: number;
+  tool_calls?: { tool: string; args: Record<string, unknown>; ms: number; error: string | null }[];
+  answer?: string;
+};
+
+export type AskResponse = {
+  question: string;
+  answer: string;
+  lang: string;
+  source: "companion" | "analyst" | "fallback" | "guard";
+  verdict: string;
+  revisions: number;
+  ms: number;
+  tokens: number;
+  steps: AskStep[];
+};
+
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
@@ -37,6 +61,8 @@ export const api = {
   control: (id: string, body: { action: "pause" | "resume" | "seek" | "speed"; to_ms?: number; speed?: number }) =>
     call<MatchSummary["replay"]>(`/matches/${id}/control`, { method: "POST", body: JSON.stringify(body) }),
   profiles: () => call<Profile[]>("/profiles"),
+  ask: (id: string, body: { question: string; profile_id: string }) =>
+    call<AskResponse>(`/matches/${id}/ask`, { method: "POST", body: JSON.stringify(body) }),
   streamUrl: (id: string, opts: { profileId?: string | null; frames?: boolean; events?: boolean }) => {
     const params = new URLSearchParams();
     if (opts.profileId) params.set("profile_id", opts.profileId);

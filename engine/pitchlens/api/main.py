@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from mcp.server.transport_security import TransportSecuritySettings
 
 from pitchlens import __version__, telemetry
+from pitchlens.agents.desk import AgentDesk
 from pitchlens.config import Settings
 from pitchlens.live.hub import Hub
 from pitchlens.live.store import MatchStore
@@ -22,7 +23,7 @@ from pitchlens.mcpserver.server import build_server
 from pitchlens.narrate.provider import LLMProvider
 from pitchlens.narrate.providers import build_provider
 
-from .routes import matches, misc, streams
+from .routes import agents, matches, misc, streams
 
 API_PREFIX = "/api/v1"
 log = logging.getLogger("pitchlens")
@@ -36,7 +37,8 @@ def provider_from(settings: Settings) -> LLMProvider:
 def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> FastAPI:
     settings = settings or Settings.from_env()
 
-    mcp = build_server(lambda: app.state.hub)
+    desk = AgentDesk(lambda: app.state.hub)  # Ask the Match and the MCP server share its match cache
+    mcp = build_server(lambda: app.state.hub, desk.views)
     # Mounted at exactly /mcp (no redirect to /mcp/). Stateless so any engine replica can answer.
     hosts = [h.strip() for h in os.environ.get("MCP_ALLOWED_HOSTS", "").split(",") if h.strip()]
     security = TransportSecuritySettings(allowed_hosts=hosts, allowed_origins=[f"https://{h}" for h in hosts])
@@ -49,6 +51,7 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         telemetry.configure(settings.appinsights_connection_string)
         app.state.settings = settings
         app.state.hub = hub or Hub(MatchStore(settings.data_dirs), provider=provider_from(settings))
+        app.state.agents = desk
         async with mcp.session_manager.run():
             yield
         await app.state.hub.shutdown()
@@ -66,7 +69,7 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         allow_headers=["*"],
         expose_headers=["*"],
     )
-    for router in (misc.router, matches.router, streams.router):
+    for router in (misc.router, matches.router, streams.router, agents.router):
         app.include_router(router, prefix=API_PREFIX)
     app.mount("/", mcp_app)  # last, so the API routes match first; serves POST/GET /mcp
     return app
