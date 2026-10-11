@@ -7,9 +7,11 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from pitchlens.api.deps import get_hub, session_or_404
+from pitchlens.api.deps import get_hub, get_profiles, session_or_404
 from pitchlens.api.models import ControlRequest, CreateMatch, ExternalMatch, ReplayRequest
 from pitchlens.live.hub import Hub, HubError
+from pitchlens.personalize.player_focus import focus_card
+from pitchlens.personalize.profiles import ProfileStore
 from pitchlens.sim.storylines import STORYLINES
 
 router = APIRouter(prefix="/matches", tags=["matches"])
@@ -118,6 +120,23 @@ async def player(match_id: str, player_id: str, hub: Hub = Depends(get_hub)) -> 
         "minutes": round(stats.minutes(state.match_ms), 1),
         "physical": physical,
     }
+
+
+@router.get("/{match_id}/players/{player_id}/focus")
+async def player_focus(
+    match_id: str,
+    player_id: str,
+    profile_id: str | None = None,
+    hub: Hub = Depends(get_hub),
+    profiles: ProfileStore = Depends(get_profiles),
+) -> dict[str, Any]:
+    """Player-focus card (T-57): the player's numbers so far, a touch map in their attacking direction,
+    and their moments in the fan's language (`profile_id`)."""
+    session = session_or_404(hub, match_id)
+    try:
+        return focus_card(session.state, session.engine.insights, player_id, profiles.get(profile_id or ""))
+    except KeyError:
+        raise HTTPException(404, f"unknown player {player_id!r}") from None
 
 
 @router.get("/{match_id}/latency")

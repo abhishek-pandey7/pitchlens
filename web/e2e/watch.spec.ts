@@ -104,3 +104,20 @@ test("a harmful question is blocked with a friendly message", async ({ page, req
   await answer.getByText("Cómo lo respondimos").click();
   await expect(answer.getByText(/Safety · input blocked \(Violence\)/)).toBeVisible();
 });
+
+test("a fan follows one player: card, touch map and moments in Spanish", async ({ page, request }) => {
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 27, storyline: "comeback", tracking: true } })).json();
+  await page.goto(`/watch?match=${match.match_id}&profile=p-casual-es`);
+  await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 600, from_ms: 0, frames: false } });
+  const focus = page.getByRole("region", { name: "Jugador en foco" });
+  await expect(focus.getByText("Elige un jugador para seguir su partido.")).toBeVisible();
+  const meta = (await (await request.get(`${API}/matches/${match.match_id}`)).json()).meta;
+  const striker = meta.lineups[meta.away.club_id].find((p: { pos: string; starter: boolean }) => p.pos === "ST" && p.starter);
+  const playerId = striker.player_id;
+  await focus.getByRole("combobox", { name: "Sigue a un jugador" }).selectOption(playerId);
+  await expect(focus.getByTestId("focus-stats")).toContainText("Toques", { timeout: 30_000 });
+  await expect(focus.getByTestId("touch-map")).toBeVisible();
+  await expect(focus.getByRole("heading", { name: "Momentos" })).toBeVisible();
+  await expect(focus.locator("ol li").first()).toBeVisible({ timeout: 60_000 }); // their moments, in Spanish
+  await page.screenshot({ path: "test-results/watch-focus.png", fullPage: true });
+});

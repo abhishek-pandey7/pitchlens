@@ -10,7 +10,7 @@ from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
-from pitchlens.schema.common import PITCH_LENGTH
+from pitchlens.schema.common import PITCH_LENGTH, PITCH_WIDTH
 from pitchlens.schema.enriched import EnrichedEvent, MetricValue, PhysicalAlert
 from pitchlens.schema.events import (
     BodyPart,
@@ -34,8 +34,16 @@ from .win_prob import WinProbability, remaining_minutes, scoring_rate_per_90, wi
 
 FRAME_MAX_AGE_MS = 1000  # tracking older than this is not used for pass context
 SAMPLE_EVERY_MS = 30_000  # time-series resolution for charts and change-point detection
+ZONE_COLS, ZONE_ROWS = 6, 4  # touch map: 6 bands along the pitch x 4 across (17.5 m x 17 m)
 WP_EVENTS = {EventType.GOAL, EventType.SHOT, EventType.CARD}
 GOAL: tuple[float, float] = (PITCH_LENGTH, 34.0)
+
+
+def zone_index(x: float, y: float) -> int:
+    """The touch-map cell for a location in a team's attacking frame (metres; own goal line at x=0)."""
+    col = min(ZONE_COLS - 1, max(0, int(x / (PITCH_LENGTH / ZONE_COLS))))
+    row = min(ZONE_ROWS - 1, max(0, int(y / (PITCH_WIDTH / ZONE_ROWS))))
+    return row * ZONE_COLS + col
 
 
 @dataclass
@@ -76,6 +84,8 @@ class PlayerStats:
     carry_distance_m: float = 0.0
     yellow_cards: int = 0
     sent_off: bool = False
+    # Touches per pitch zone in the player's attacking direction (own goal at x=0), row-major.
+    zones: list[int] = field(default_factory=lambda: [0] * (ZONE_COLS * ZONE_ROWS))
 
     @property
     def pass_accuracy(self) -> float | None:
@@ -212,6 +222,8 @@ class MatchState:
         player = self.players.get(e.player_id or "")
         if player is not None and e.type not in (EventType.SUBSTITUTION, EventType.CARD, EventType.FOUL):
             player.touches += 1
+            if e.start is not None:  # in the player's attacking direction, so both halves line up
+                player.zones[zone_index(*self.attacking(player.team_id, e.start.x, e.start.y, e.period))] += 1
 
         t = e.type
         if t is EventType.PERIOD_START:
