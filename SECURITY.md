@@ -17,6 +17,9 @@ reproduce and the impact you see. We aim to acknowledge reports within three wor
   deployment templates.
 - **Leak prevention.** gitleaks runs in CI on every push and pull request (with GitHub secret scanning and
   push protection on the repository). Engine and web dependencies are pinned.
+- **Documented false positives only.** `.gitleaks.toml` allowlists exactly one value: the public ID of
+  Azure's built-in *Key Vault Secrets User* role, which generic rules mistake for a key. The same finding
+  was resolved as a false positive in GitGuardian.
 
 ## What the running service protects against
 

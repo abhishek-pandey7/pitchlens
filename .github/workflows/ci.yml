@@ -88,6 +88,36 @@ jobs:
           path: web/test-results
           retention-days: 7
 
+  infra:
+    # The Azure deployment templates compile and pass the Bicep linter (no Azure login needed).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: az bicep install
+      - run: az bicep build --file infra/main.bicep --stdout > /dev/null
+      - run: az bicep lint --file infra/main.bicep
+
+  containers:
+    # Both images build, and the engine container serves a match end to end.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f engine/Dockerfile -t pitchlens-engine .
+      - run: docker build -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1 web
+      - name: Engine container smoke test
+        run: |
+          docker run -d --name engine -p 8000:8080 pitchlens-engine
+          for i in $(seq 1 30); do curl -sf http://localhost:8000/api/v1/health && break; sleep 1; done
+          curl -sf http://localhost:8000/api/v1/health/ready
+          id=$(curl -sf -X POST http://localhost:8000/api/v1/matches -H 'content-type: application/json'             -d '{"seed":7,"storyline":"comeback","tracking":false}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["match_id"])')
+          curl -sf -X POST "http://localhost:8000/api/v1/matches/$id/ask" -H 'content-type: application/json'             -d '{"question":"Who won?"}' | grep -q '2-3'
+      - name: Web container serves the app
+        run: |
+          docker run -d --name web -p 3000:8080 pitchlens-web
+          for i in $(seq 1 30); do curl -sf http://localhost:3000/ > /dev/null && break; sleep 1; done
+          curl -sf "http://localhost:3000/watch" > /dev/null
+
   secrets:
     runs-on: ubuntu-latest
     env:
