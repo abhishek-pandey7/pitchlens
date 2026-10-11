@@ -153,6 +153,11 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
             return self.script.pop(0)
         if self.role == "checker":
             return json.dumps({"verdict": "approve", "problems": []})
+        if self.role == "tactical":
+            results = [c for m in messages for c in m.contents if c.type == "function_result"]
+            return (
+                ("get_metric", {"metric": "press_rate"}) if not results else offline_note(results[-1].result)
+            )
         if self.role == "companion":
             last = next((m.text for m in reversed(messages) if m.role == "user"), "") or ""
             return last.split(VERIFIED_MARKER, 1)[-1].strip()
@@ -175,3 +180,14 @@ def offline_answer(result: Any) -> str:
         )
     except (KeyError, TypeError, ValueError):
         return "I can only answer with live match data, and none is available yet."
+
+
+def offline_note(result: Any) -> str:
+    """A grounded tactical note from a get_metric(press_rate) result: who is pressing harder."""
+    try:
+        data = json.loads(result) if isinstance(result, str) else result
+        (team_a, a), (team_b, b) = sorted(data["value"].items(), key=lambda kv: -float(kv[1]))
+        note = f"{team_a} are pressing harder: press rate {a} against {b} for {team_b}."
+        return json.dumps({"found": True, "team": team_a, "note": note})
+    except (KeyError, TypeError, ValueError):
+        return json.dumps({"found": False})

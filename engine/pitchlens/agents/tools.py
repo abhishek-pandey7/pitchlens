@@ -145,6 +145,10 @@ class MatchTools:
             self.ledger.calls.append(ToolCall(tool, args, None, 0.0, str(exc)))
             raise
 
+    def resolve_team(self, team: str) -> str:
+        """A club id from a club id or team name (ToolError if unknown)."""
+        return self._team(team)
+
     def _team(self, team: str) -> str:
         s = self.state
         wanted = team.strip().lower()

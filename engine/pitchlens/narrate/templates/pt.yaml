@@ -106,3 +106,6 @@ distance_milestone.km:
   headline: "{player} já percorreu {distance} km."
 distance_milestone.sprints:
   headline: "{player} soma {sprint_count} piques."
+# Written by the Analyst agent and approved by the Fact-Checker; the note itself is in English.
+tactical_note.agent:
+  headline: "Análise: {note}"

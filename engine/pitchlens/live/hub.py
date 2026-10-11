@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pitchlens.ingest.bus import BusMessage, MessageKind
@@ -49,6 +50,7 @@ class Hub:
         self.provider = provider or MockProvider()
         self.narrate = narrate
         self._live: dict[str, Live] = {}
+        self.session_hooks: list[Callable[[MatchSession], None]] = []  # e.g. agents attaching observers
 
     def record(self, match_id: str) -> MatchRecord:
         record = self.store.get(match_id)
@@ -69,6 +71,8 @@ class Hub:
             worker = NarrationWorker(Narrator(self.provider)) if self.narrate else None
             session = MatchSession(record.meta, self.bus, profiles=self.profiles, worker=worker)
             live = self._live[match_id] = Live(session)
+            for hook in self.session_hooks:
+                hook(session)
             live.session.start()
         return live.session
 

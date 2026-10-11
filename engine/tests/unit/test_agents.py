@@ -149,3 +149,11 @@ def test_chat_client_is_offline_without_credentials(monkeypatch: pytest.MonkeyPa
     assert isinstance(chat_client(provider="mock"), OfflineChatClient)
     monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
     assert not isinstance(chat_client(provider="groq"), OfflineChatClient)
+
+
+def test_differences_between_stated_supported_numbers_are_allowed() -> None:
+    allowed = {1.18, 1.0, 35.44, 27.09}
+    assert unsupported_numbers("Press rate fell from 1.18 to 1.0, a drop of 0.18.", allowed) == []
+    assert unsupported_numbers("Control fell from 35.44 to 27.09, about 8.3 points.", allowed) == []
+    assert unsupported_numbers("A drop of 0.18.", allowed) == ["0.18"]  # operands not stated
+    assert unsupported_numbers("From 1.18 to 1.0, a drop of 0.5.", allowed) == ["0.5"]

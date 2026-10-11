@@ -52,6 +52,7 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         app.state.settings = settings
         app.state.hub = hub or Hub(MatchStore(settings.data_dirs), provider=provider_from(settings))
         app.state.agents = desk
+        app.state.hub.session_hooks.append(desk.attach)
         async with mcp.session_manager.run():
             yield
         await app.state.hub.shutdown()
