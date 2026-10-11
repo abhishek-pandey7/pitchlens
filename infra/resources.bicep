@@ -37,11 +37,13 @@ var deployQuality = qualityModelName != fastModelName || qualityModelVersion != 
 var fastDeploymentName = 'pitchlens-fast'
 var qualityDeploymentName = deployQuality ? 'pitchlens-quality' : fastDeploymentName
 
+// Built-in role definition IDs: public and the same in every tenant
+// (https://learn.microsoft.com/azure/role-based-access-control/built-in-roles).
 var roles = {
   acrPull: '7f951dda-4ed3-4680-a7ca-43fe172d538d'
   openAiUser: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
   cognitiveServicesUser: 'a97b65f3-24c7-4388-baec-2e87ef14b5df'
-  keyVaultSecretsUser: '4633458b-17de-408a-b874-0445c86b69e6'
+  vaultUser: '4633458b-17de-408a-b874-0445c86b69e6' // Key Vault Secrets User
 }
 
 // ---------------------------------------------------------------- monitoring
@@ -188,12 +190,12 @@ resource groqSecret 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(
 }
 
 resource vaultAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vault.id, identity.id, roles.keyVaultSecretsUser)
+  name: guid(vault.id, identity.id, roles.vaultUser)
   scope: vault
   properties: {
     principalId: identity.properties.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.keyVaultSecretsUser)
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.vaultUser)
   }
 }
 
