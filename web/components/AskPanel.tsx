@@ -3,15 +3,9 @@
 import { useState } from "react";
 import { api, type AskResponse } from "@/lib/api";
 import { askStrings } from "@/lib/i18n";
+import { AgentSteps } from "./AgentSteps";
 
 type Entry = { id: number; question: string; result?: AskResponse; error?: string };
-
-const AGENT_LABEL: Record<string, string> = {
-  guard: "Guard",
-  analyst: "Analyst",
-  fact_checker: "Fact-Checker",
-  companion: "Companion",
-};
 
 /** "Ask the Match": a fan's question answered by the Analyst, checked by the Fact-Checker and
  *  personalised by the Companion (see docs/agents.md). */
@@ -106,18 +100,7 @@ function Answer({ result, lang }: { result: AskResponse; lang: string }) {
         )}
         <details>
           <summary className="cursor-pointer">{s.how}</summary>
-          <ol className="mt-1 flex flex-col gap-1 ps-3" dir="ltr">
-            {result.steps.map((step, i) => (
-              <li key={i} className="font-mono">
-                <span className="text-foreground">{AGENT_LABEL[step.agent] ?? step.agent}</span>
-                {step.tool_calls?.length ? ` · tools: ${step.tool_calls.map((c) => c.tool).join(", ")}` : ""}
-                {step.verdict ? ` · ${step.verdict}${step.by ? ` (${step.by})` : ""}` : ""}
-                {step.problems?.length ? ` · ${step.problems.join("; ")}` : ""}
-                {step.unchanged ? " · unchanged" : typeof step.grounded === "boolean" ? ` · ${step.grounded ? "grounded" : "not grounded"}` : ""}
-                {typeof step.ms === "number" ? ` · ${step.ms} ms` : ""}
-              </li>
-            ))}
-          </ol>
+          <AgentSteps steps={result.steps} />
         </details>
       </div>
     </div>

@@ -41,6 +41,14 @@ PLAYER_STATS = (
     "top_speed_kmh", "sprints",
 )  # fmt: skip
 PHYSICAL_STATS = ("distance_km", "top_speed_kmh", "sprints")
+# Player of the match (§10): goal contributions, chance quality and creation, progression, defending
+# and running, minus discipline. Points per unit of each stat.
+POTM_WEIGHTS = {
+    "goals": 4.0, "assists": 3.0, "xg": 2.0, "key_passes": 0.75, "progressive_passes": 0.1,
+    "lines_broken": 0.1, "tackles": 0.25, "interceptions": 0.25, "recoveries": 0.1, "blocks": 0.15,
+    "distance_km": 0.2, "on_winning_side": 1.5, "yellow_cards": -0.5, "red_cards": -3.0,
+}  # fmt: skip
+POTM_METHOD = "points = " + " + ".join(f"{w:g}*{k}" for k, w in POTM_WEIGHTS.items()).replace("+ -", "- ")
 PlayerStat = Annotated[str, Field(description=f"One of: {', '.join(PLAYER_STATS)}")]
 # Parameters are plain strings and numbers on purpose: some providers (Groq) reject a whole request
 # when a generated argument breaks an enum or range in the schema. Our tools validate instead and
@@ -49,8 +57,11 @@ Minute = Annotated[float, Field(description="Match minute, e.g. 60 or 92.5")]
 MetricName = Annotated[
     str,
     Field(
-        description="One of: possession, field_tilt, ppda, press_rate, momentum, xg, win_probability, "
-        "control, tempo"
+        description="One of: possession (share 0..1), field_tilt (share of final-third touches 0..1), "
+        "ppda (opponent passes per defensive action; lower = more pressing), press_rate (pressing "
+        "actions per opponent pass; higher = more pressing), momentum (home minus away, -1..1), xg "
+        "(cumulative expected goals), win_probability (0..1), control (index 0 chaos..100 control), "
+        "tempo (events per minute)"
     ),
 ]
 InsightTypeName = Annotated[
@@ -399,6 +410,64 @@ class MatchTools:
 
         return self._record("top_players", {"stat": stat, "team": team, "limit": limit}, run)
 
+    def get_goals(self) -> dict[str, Any]:
+        """Every goal so far: minute, team, scorer, assist and the score after it."""
+
+        def run() -> dict[str, Any]:
+            s = self.state
+            home, away = self._names()
+
+            def name(pid: str | None) -> str | None:
+                return s.players[pid].name if pid in s.players else None
+
+            return {
+                "score": f"{home} {s.score[0]}-{s.score[1]} {away}",
+                "goals": [
+                    {
+                        "minute": minute_label(g.clock_ms, g.period),
+                        "team": s.teams[g.team_id].name,
+                        "scorer": name(g.scorer_id),
+                        "assist": name(g.assist_id),
+                        "score_after": f"{home} {g.home_score}-{g.away_score} {away}",
+                    }
+                    for g in s.goals
+                ],
+            }
+
+        return self._record("get_goals", {}, run)
+
+    def player_of_the_match(self, limit: int = 3) -> dict[str, Any]:
+        """Player-of-the-match ranking: a points score from goals, assists, chance creation, passing,
+        defending and running, with the stats behind it."""
+
+        def run() -> dict[str, Any]:
+            s = self.state
+            tracked = s.last_frame is not None
+            home_goals, away_goals = s.score
+            leader = s.home_id if home_goals > away_goals else s.away_id if away_goals > home_goals else None
+            rows = []
+            for pid, p in s.players.items():
+                if p.on_ms is None and not p.touches:
+                    continue  # unused substitute
+                stats = {
+                    "goals": p.goals, "assists": p.assists, "xg": _r(p.xg), "key_passes": p.key_passes,
+                    "progressive_passes": p.progressive_passes, "lines_broken": p.lines_broken,
+                    "tackles": p.tackles, "interceptions": p.interceptions, "recoveries": p.recoveries,
+                    "blocks": p.blocks + p.clearances, "yellow_cards": p.yellow_cards,
+                    "red_cards": int(p.sent_off), "on_winning_side": int(p.team_id == leader),
+                }  # fmt: skip
+                if tracked:
+                    stats["distance_km"] = _r(s.physical.player(pid).distance_m / 1000, 2)
+                points = sum(POTM_WEIGHTS[k] * float(v or 0) for k, v in stats.items())
+                rows.append({
+                    "player": p.name, "team": s.teams[p.team_id].name, "points": round(points, 1),
+                    "stats": {k: v for k, v in stats.items() if v},
+                })  # fmt: skip
+            rows.sort(key=lambda r: -r["points"])
+            return {"method": POTM_METHOD, "ranking": rows[: max(1, min(limit, 5))]}
+
+        return self._record("player_of_the_match", {"limit": limit}, run)
+
     def get_insights(
         self,
         insight_type: InsightTypeName = None,
@@ -469,5 +538,6 @@ class MatchTools:
         """The tool callables, in the order agents see them."""
         return [
             self.get_match_state, self.get_metric, self.get_window, self.compare_periods, self.win_prob_at,
-            self.what_if, self.get_player_card, self.top_players, self.get_insights,
+            self.what_if, self.get_player_card, self.top_players, self.get_insights, self.get_goals,
+            self.player_of_the_match,
         ]  # fmt: skip

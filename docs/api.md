@@ -39,7 +39,8 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `GET/POST /profiles`, `GET/PUT /profiles/{id}` | Fan profiles (demo presets included) |
 | `GET /schema/{name}` | JSON Schema of a public model |
 | `POST /matches/{id}/ask` | **Ask the Match**: `{question, profile_id}` → a verified answer in the fan's language, with every agent step (see [agents.md](agents.md)) |
-| `GET /matches/{id}/agents/trace` | Recent agent runs for the match, newest first |
+| `POST /matches/{id}/recap` | **Editor recap**: `{stage: "ht"\|"ft", profile_id}` → `{headline, body, player_line, player_of_match, lang, source, verdict, steps, cached}`. Written by the Editor's group chat and adapted to the fan. 409 before the whistle (see [agents.md](agents.md)) |
+| `GET /matches/{id}/agents/trace` | Recent agent runs for the match, newest first (`kind`: ask, tactical_note, recap) |
 
 **MCP:** the engine also serves the PitchLens MCP server at `/mcp` (outside `/api/v1`; streamable HTTP). It exposes the analyst tools to GitHub Copilot, Claude or any MCP client. See [agents.md](agents.md).
 

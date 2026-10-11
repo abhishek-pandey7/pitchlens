@@ -615,7 +615,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-55 (A)** Narration worker: cache, concurrency limit, backpressure. Deps: T-54, T-41.
 - [x] **T-56 (A)** Profiles + ranker + spoiler-safe + focus metric. Deps: T-32.
 - [ ] **T-57 (A)** Player-focus mode card + boost. Deps: T-56, T-23.
-- [ ] **T-58 (A)** Recaps: HT, FT, player of the match, personal recap. Deps: T-54.
+- [x] **T-58 (A)** Recaps: HT, FT, player of the match, personal recap. Deps: T-54. *(Delivered by T-126: the Editor's group chat, with the Narrator per fan.)*
 
 ### Phase 6: Render & frontend (days 6–15)
 - [x] **T-60 (E)** Overlay cue generator + scheduler (regions, priority, preemption, rate limit). Deps: T-56.
@@ -623,9 +623,9 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-62 (F)** PitchCanvas with 60 fps interpolation. Deps: T-61.
 - [x] **T-63 (F)** Overlay components: PlayerTag, PassCard, ShotSpeedCard, MomentumBar, LowerThird, ChaosMeter, WP swing. Deps: T-61.
 - [x] **T-64 (F)** `/overlay` route (transparent, OBS-ready). Deps: T-60, T-63.
-- [ ] **T-65 (F)** `/watch` fan app + ProfilePicker + player-focus panel + personal recap. Deps: T-56, T-57. *(In progress: live feed, pitch, scoreboard, profiles, i18n/RTL done; player-focus panel and personal recap pending.)*
+- [ ] **T-65 (F)** `/watch` fan app + ProfilePicker + player-focus panel + personal recap. Deps: T-56, T-57. *(In progress: live feed, pitch, scoreboard, profiles, i18n/RTL and personal recap done; player-focus panel pending.)*
 - [ ] **T-66 (F)** `/analyst` charts + evidence inspector. Deps: T-24…T-26.
-- [ ] **T-67 (F)** `/studio` console (replay controls, insight queue, recap triggers, latency HUD). Deps: T-40, T-58. *(Partly done: replay controls, programme/overlay preview, insight queue, latency HUD, Ask panel and agent trace. Approve mode comes with T-125, recap triggers with T-126.)*
+- [ ] **T-67 (F)** `/studio` console (replay controls, insight queue, recap triggers, latency HUD). Deps: T-40, T-58. *(Partly done: replay controls, programme/overlay preview, insight queue, latency HUD, Ask panel and agent trace. Recap panel done with T-126. Approve mode comes with T-125.)*
 - [x] **T-68 (F)** `/compare` side-by-side view. Deps: T-65.
 
 ### Phase 7: Azure (days 12–17)
@@ -654,7 +654,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [ ] **T-123 (A)** Narrator + Localization agents with concurrent fan-out per persona-language group. Deps: T-120, T-52. *Replaces the direct-LLM path in T-55; the template fallback is kept.*
 - [x] **T-124 (A)** Fact-Checker reflection loop (approve / revise / reject) using `grounding.validate`. Deps: T-54, T-123. *Done when:* ≥ 95% of seeded hallucinations are caught and < 5% of good narrations are rejected. *(Rules + model judge built and live-tested; the 95%/5% measurement is part of the T-130 eval.)*
 - [ ] **T-125 (A/F)** Director Agent + `/studio` approve/auto mode. Deps: T-60, T-67.
-- [ ] **T-126 (A)** Editor Agent group chat for HT/FT recap, player of the match, pundit sheet and chapter titles. Deps: T-58, T-122, T-124. *Supersedes the single-call recap in T-58.*
+- [x] **T-126 (A)** Editor Agent group chat for HT/FT recap, player of the match, pundit sheet and chapter titles. Deps: T-58, T-122, T-124. *Supersedes the single-call recap in T-58.* *(HT/FT recaps, player of the match and personal recaps done: GroupChatBuilder with Editor, Analyst and Fact-Checker, then the Narrator per fan; `POST /matches/{id}/recap`; recap panel in /watch and /studio. The pundit sheet (T-94) and chapter titles (T-93) will reuse the Editor's room.)*
 - [x] **T-127 (A/F)** Fan Companion Agent with handoff, profile memory and Content Safety. Deps: T-121, T-76. *This is T-91, implemented as an agent.* *(Built as an Agent Framework workflow: guard → analyst → fact-checker → companion, plus a /watch panel. Azure AI Content Safety comes with T-76; until then a local guard runs.)*
 - [x] **T-128 (E)** `pitchlens-mcp` server + Container App + README snippet for connecting from GitHub Copilot / VS Code. Deps: T-121. *(Mounted on the engine at `/mcp` rather than a separate Container App, so it reads live sessions directly; also runs over stdio. See docs/agents.md.)*
 - [x] **T-129 (F)** `/studio` Agent Trace panel (live agent/tool timeline + Fact-Checker verdicts). Deps: T-120, T-67.
