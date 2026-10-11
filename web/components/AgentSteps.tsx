@@ -7,6 +7,7 @@ const AGENT_LABEL: Record<string, string> = {
   companion: "Companion",
   editor: "Editor",
   narrator: "Narrator",
+  director: "Director",
 };
 
 /** The steps of one agent run, compact, for a fan who asks "how did you get this?". */

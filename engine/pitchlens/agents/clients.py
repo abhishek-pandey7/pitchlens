@@ -161,6 +161,8 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
         last = next((m.text for m in reversed(messages) if m.role == "user"), "") or ""
         if self.role in ("companion", "narrator"):
             return last.split(VERIFIED_MARKER, 1)[-1].strip()
+        if self.role == "director":
+            return offline_direct(messages)
         if self.role == "editor":
             return OFFLINE_PLAN if "YOUR TURN (plan)" in last else offline_recap(last)
         results = [c for m in messages for c in m.contents if c.type == "function_result"]
@@ -206,6 +208,22 @@ def offline_recap(prompt: str) -> str:
         return json.dumps({"headline": state["score"], "body": body, "player_line": line})
     except (StopIteration, KeyError, IndexError, TypeError, ValueError):
         return "{}"
+
+
+def offline_direct(messages: Sequence[Message]) -> Step:
+    """The offline Director: list the queue, then air every pending cue in order, then stop."""
+    results = [c.result for m in messages for c in m.contents if c.type == "function_result"]
+    if not results:
+        return ("list_pending_cues", {})
+    try:
+        first = json.loads(results[0]) if isinstance(results[0], str) else results[0]
+        pending = [p["cue_id"] for p in first["pending"]]
+    except (KeyError, TypeError, ValueError):
+        return "done"
+    decided = len(results) - 1
+    if decided < len(pending):
+        return ("schedule_cue", {"cue_id": pending[decided], "reason": "fresh story, screen is free"})
+    return "done"
 
 
 def offline_note(result: Any) -> str:

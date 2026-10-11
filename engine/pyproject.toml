@@ -52,7 +52,8 @@ packages = ["pitchlens"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-addopts = "-q"
+addopts = "-q --durations=10"
+faulthandler_timeout = 120  # a test stuck for 2 minutes dumps every thread's stack
 
 [tool.ruff]
 line-length = 110

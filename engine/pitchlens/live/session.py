@@ -30,8 +30,10 @@ from pitchlens.narrate.worker import NarrationWorker
 from pitchlens.personalize.profiles import ProfileStore
 from pitchlens.personalize.ranker import rank
 from pitchlens.render.cues import CueScheduler, build_cue
+from pitchlens.render.programme import Mode, ProgrammeGate
 from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
 from pitchlens.schema.insights import Insight
+from pitchlens.schema.overlays import OverlayCue
 from pitchlens.schema.profiles import Persona, Profile
 from pitchlens.telemetry import LatencyRecorder
 
@@ -79,10 +81,17 @@ class Channel:
         self.delivered: list[dict[str, Any]] = []
         self.scheduler = CueScheduler(self.profile.max_overlays_per_min)
         self.stats: Counter[str] = Counter()
+        self.gate: ProgrammeGate | None = None  # set when this channel is the directed programme
 
     def reset(self) -> None:
         self.delivered = []
         self.scheduler = CueScheduler(self.profile.max_overlays_per_min)
+        if self.gate is not None:
+            self.gate.scheduler = self.scheduler
+            self.gate.reset()
+
+    def send_cue(self, cue: OverlayCue) -> None:
+        self.send("cue", _json(cue.model_dump(mode="json", by_alias=True)))
 
     def send(self, event: str, data: str, *, ephemeral: bool = False) -> None:
         if ephemeral:
@@ -270,8 +279,10 @@ class MatchSession:
                     headline=item["narration"]["headline"],
                     body=item["narration"]["body"],
                 )
-                if channel.scheduler.admit(cue):
-                    channel.send("cue", _json(cue.model_dump(mode="json", by_alias=True)))
+                if channel.gate is not None:
+                    channel.gate.offer(cue)  # the directed programme: the Director (or producer) decides
+                elif channel.scheduler.admit(cue):
+                    channel.send_cue(cue)
                 else:
                     channel.stats["cue_dropped"] += 1
             if self.worker is not None and decision is not None:
@@ -359,6 +370,26 @@ class MatchSession:
         else:
             channel.profile = profile  # pick up profile edits
         return channel
+
+    def programme(self, profile_id: str, mode: Mode) -> ProgrammeGate:
+        """Make this fan channel the directed programme (one per match) and set its mode."""
+        channel = self.channel(profile_id)
+        for other in self.channels.values():
+            if other is not channel and other.gate is not None:
+                other.gate.set_mode(Mode.OFF)  # releases its pending cues
+                other.gate = None
+        if channel.gate is None:
+            channel.gate = ProgrammeGate(
+                channel.scheduler,
+                channel.send_cue,
+                lambda: (self.state.match_ms, self.state.clock_ms, self.state.period),
+            )
+        channel.gate.set_mode(mode)
+        return channel.gate
+
+    @property
+    def gate(self) -> ProgrammeGate | None:
+        return next((c.gate for c in self.channels.values() if c.gate is not None), None)
 
     def subscribe(
         self,
