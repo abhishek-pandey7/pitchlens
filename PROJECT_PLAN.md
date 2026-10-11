@@ -644,8 +644,8 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 
 ### Phase 7B: Production readiness (runs alongside Phase 7)
 - [ ] **T-75 (I)** GitHub Actions: lint (ruff, eslint), type-check (mypy/pyright, tsc), tests, Docker build → ACR, `azd deploy` on main; gitleaks, CodeQL, Dependabot. *Done when:* a green pipeline deploys main to Azure.
-- [ ] **T-76 (I)** Content Safety integration (`agents/safety.py`) on fan input and generated output. *Done when:* a harmful test question is blocked with a friendly message.
-- [ ] **T-77 (I)** Hardening: Key Vault, rate limiting on public endpoints, CORS allow-list, cost caps, health probes, `SECURITY.md`, `CODE_OF_CONDUCT.md`, responsible-AI note in `docs/responsible-ai.md`.
+- [x] **T-76 (I)** Content Safety integration (`agents/safety.py`) on fan input and generated output. *Done when:* a harmful test question is blocked with a friendly message. *(Azure AI Content Safety with Prompt Shields, plus an always-on local screen; questions, display names, answers, recaps and tactical notes.)*
+- [ ] **T-77 (I)** Hardening: Key Vault, rate limiting on public endpoints, CORS allow-list, cost caps, health probes, `SECURITY.md`, `CODE_OF_CONDUCT.md`, responsible-AI note in `docs/responsible-ai.md`. *(Done: rate limits, CORS allow-list, agent cost caps, liveness and readiness probes, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `docs/responsible-ai.md`. Key Vault references land with the Bicep templates in T-70.)*
 
 ### Phase 10: Agent layer (§10A), days 6–16, owned by track A
 - [x] **T-120 (A)** Agent Framework setup: pin version, Foundry model clients (fast/quality) behind the pluggable provider, `mock` client for tests, tracing → App Insights. Deps: T-50. *Done when:* a hello-world agent with one tool runs locally (mock) and in Azure. *(Done locally on the offline client and Groq, pinned at agent-framework-core 1.21.0. The Azure run lands with T-73.)*

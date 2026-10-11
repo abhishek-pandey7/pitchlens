@@ -11,9 +11,10 @@ const AGENT: Record<string, { label: string; tone: string }> = {
   editor: { label: "Editor", tone: "bg-away" },
   narrator: { label: "Narrator", tone: "bg-accent" },
   director: { label: "Director", tone: "bg-away" },
+  safety: { label: "Safety", tone: "bg-muted" },
 };
 
-const UNVERIFIED = new Set(["fallback", "guard", "facts", "dropped"]);
+const UNVERIFIED = new Set(["fallback", "guard", "facts", "dropped", "safety"]);
 
 /** Agent Trace (T-129): every agent run for this match, newest first, with each step, the tools it
  *  called (and their arguments), the Fact-Checker's verdicts and timings. Polls the engine. */
@@ -73,6 +74,11 @@ function Step({ step }: { step: AskStep }) {
         <span className={`inline-block h-2 w-2 rounded-full ${agent.tone}`} aria-hidden />
         <span className="font-semibold text-foreground">{agent.label}</span>
         {step.task && <span className="text-muted">{step.task}</span>}
+        {step.agent === "safety" && (
+          <span className={step.allowed ? "text-muted" : "text-warning"}>
+            {step.stage} · {step.allowed ? "passed" : `blocked: ${(step.categories ?? []).join(", ")}`}
+          </span>
+        )}
         {step.agent === "narrator" && step.lang && <span className="text-muted">{step.lang}</span>}
         {step.verdict && (
           <span className={step.verdict === "approve" ? "text-accent" : "text-warning"}>

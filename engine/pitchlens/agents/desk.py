@@ -16,7 +16,7 @@ import time
 from collections import defaultdict, deque
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
 from pitchlens.live.hub import HubError
@@ -25,8 +25,9 @@ from pitchlens.schema.profiles import Profile
 
 from .ask import AskResult, AskTheMatch
 from .director import Director
-from .editor import EditorRoom, Master, RecapResult, adapt
+from .editor import EditorRoom, Master, RecapResult, adapt, fact_recap
 from .notes import TacticalNotes, note_enabled
+from .safety import ContentSafety, default_safety
 from .tools import ToolError
 from .views import MatchViews
 
@@ -39,7 +40,43 @@ QUEUE_TIMEOUT_S = 120.0
 
 
 class DeskBusy(RuntimeError):
-    """Too many questions in flight for too long."""
+    """Too many questions in flight for too long, or the agent budget is used up."""
+
+
+@dataclass
+class CostCaps:
+    """Model tokens spent by agents, per match and per day (T-77). Over a cap, agents stand down: fans get
+    a "busy" answer, tactical notes stop, and the Director hands decisions back to the scheduler's rules.
+    The deterministic pipeline (insights, templates, overlays) is unaffected."""
+
+    per_match: int = int(os.environ.get("AGENT_MATCH_TOKEN_CAP", "400000"))
+    per_day: int = int(os.environ.get("AGENT_DAILY_TOKEN_CAP", "2000000"))
+    spent: dict[str, int] = field(default_factory=lambda: defaultdict(int))
+    day: str = ""
+    today: int = 0
+
+    def add(self, match_id: str, tokens: int) -> None:
+        self._roll()
+        self.spent[match_id] += tokens
+        self.today += tokens
+
+    def exceeded(self, match_id: str) -> str | None:
+        """Why agents should stand down for this match now, or None."""
+        self._roll()
+        if self.per_day and self.today >= self.per_day:
+            return "the agents' daily budget is used up"
+        if self.per_match and self.spent[match_id] >= self.per_match:
+            return "the agents' budget for this match is used up"
+        return None
+
+    def _roll(self) -> None:
+        today = time.strftime("%Y-%m-%d")
+        if today != self.day:
+            self.day, self.today = today, 0
+
+    def snapshot(self) -> dict[str, Any]:
+        self._roll()
+        return {"per_match": self.per_match, "per_day": self.per_day, "spent_today": self.today}
 
 
 class AgentDesk:
@@ -49,10 +86,14 @@ class AgentDesk:
         *,
         concurrency: int | None = None,
         notes: TacticalNotes | bool | None = None,
+        safety: ContentSafety | None = None,
     ) -> None:
+        self.safety = safety or default_safety()
         self._hub = hub
         self.views = MatchViews(hub)
+        self.caps = CostCaps()
         self.director = Director(on_trace=self.record)
+        self.director.budget = self.caps.exceeded
         self._slots = asyncio.Semaphore(concurrency or int(os.environ.get("ASK_CONCURRENCY", "2")))
         self._traces: dict[str, deque[dict[str, Any]]] = defaultdict(lambda: deque(maxlen=TRACE_KEEP))
         self._masters: dict[tuple[str, str], Master] = {}
@@ -65,6 +106,7 @@ class AgentDesk:
         self.notes: TacticalNotes | None = notes or None
         if self.notes is not None:
             self.notes.on_trace = self.record
+            self.notes.budget = self.caps.exceeded
 
     def attach(self, session: MatchSession) -> None:
         """Hub hook: let the Analyst watch each live session for tactical notes."""
@@ -73,6 +115,12 @@ class AgentDesk:
 
     def record(self, match_id: str, trace: dict[str, Any]) -> None:
         self._traces[match_id].appendleft(trace)
+        self.caps.add(match_id, int(trace.get("tokens") or 0))
+
+    def _check_budget(self, match_id: str) -> None:
+        reason = self.caps.exceeded(match_id)
+        if reason:
+            raise DeskBusy(f"{reason}; try again later")
 
     @asynccontextmanager
     async def _slot(self) -> AsyncIterator[None]:
@@ -87,6 +135,7 @@ class AgentDesk:
 
     async def ask(self, match_id: str, question: str, profile: Profile) -> AskResult:
         view = await self.views.view(match_id)  # ToolError for an unknown match
+        self._check_budget(match_id)
         async with self._slot():
             result = await AskTheMatch(view, profile).run(question)
         self.record(
@@ -104,6 +153,7 @@ class AgentDesk:
         async with self._recap_locks[(match_id, stage)]:
             if fan in self._recaps:
                 return replace(self._recaps[fan], cached=True)
+            self._check_budget(match_id)
             master = self._masters.get((match_id, stage))
             if master is None:
                 async with self._slot():
@@ -112,6 +162,7 @@ class AgentDesk:
                     self._masters[(match_id, stage)] = master
             async with self._slot():
                 result = await adapt(master, profile, clubs)
+            result = await self._screen_recap(master, result)
             if master.approved:
                 self._recaps[fan] = result
         trace = {"kind": "recap", "at": time.time(), "profile_id": profile.profile_id, **result.to_dict()}
@@ -153,6 +204,19 @@ class AgentDesk:
         else:
             outcome = gate.decide(cue_id, Action(action), by="producer")
         return {"outcome": outcome.to_dict(), **self.programme(match_id)}
+
+    async def _screen_recap(self, master: Master, result: RecapResult) -> RecapResult:
+        """Content safety on the recap a fan will read; if it is withheld, the fact recap stands in."""
+        text = " ".join((result.headline, result.body, result.player_line))
+        verdict = await self.safety.screen_output(text)
+        steps = [*result.steps, verdict.trace("output")]
+        if verdict.allowed:
+            return replace(result, steps=steps)
+        facts = fact_recap(master, result.lang)
+        return replace(
+            result, headline=facts.headline, body=facts.body, player_line=facts.player_line,
+            source="safety", steps=steps,
+        )  # fmt: skip
 
     def traces(self, match_id: str) -> list[dict[str, Any]]:
         return list(self._traces.get(match_id, ()))

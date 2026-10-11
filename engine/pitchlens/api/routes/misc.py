@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
 from pitchlens import __version__
+from pitchlens.agents.safety import default_safety
 from pitchlens.api.deps import get_hub, get_profiles
 from pitchlens.api.models import IngestBatch
 from pitchlens.ingest.validator import validate_batch
@@ -29,14 +31,51 @@ def health(request: Request) -> dict[str, Any]:
     }
 
 
+@router.get("/health/ready", tags=["ops"])
+def ready(request: Request, response: Response) -> dict[str, Any]:
+    """Readiness probe: the configured model provider has what it needs (503 if not, so the platform
+    keeps traffic away), with the loaded matches, content safety mode and agent budget for operators."""
+    settings = request.app.state.settings
+    hub: Hub = request.app.state.hub
+    env = os.environ
+    llm_ok = {
+        "mock": True,
+        "groq": bool(env.get("GROQ_API_KEY")),
+        "openai_compat": bool(env.get("OPENAI_COMPAT_BASE_URL")),
+        "azure_openai": bool(env.get("AZURE_OPENAI_ENDPOINT")),
+        "foundry_claude": bool(
+            env.get("ANTHROPIC_FOUNDRY_RESOURCE") or env.get("ANTHROPIC_FOUNDRY_BASE_URL")
+        ),
+    }.get(settings.llm_provider, False)
+    desk = getattr(request.app.state, "agents", None)
+    checks = {
+        "matches": len(hub.store.list()),
+        "llm": {"provider": settings.llm_provider, "configured": llm_ok},
+        "content_safety": "azure" if default_safety().azure else "local",
+        "agent_budget": desk.caps.snapshot() if desk is not None else None,
+    }
+    ok = llm_ok  # an empty store is still ready: matches can be generated or ingested
+    response.status_code = 200 if ok else 503
+    return {"status": "ready" if ok else "not ready", "checks": checks}
+
+
 @router.get("/profiles", tags=["profiles"])
 def list_profiles(profiles: ProfileStore = Depends(get_profiles)) -> list[Profile]:
     return profiles.list()
 
 
+async def _screen_name(name: str | None) -> None:
+    """Fan-supplied names are shown to others (studio, traces): content safety first."""
+    if name:
+        verdict = await default_safety().screen_input(name)
+        if not verdict.allowed:
+            raise HTTPException(422, "Please choose a different display name.")
+
+
 @router.post("/profiles", status_code=201, tags=["profiles"])
-def create_profile(body: dict[str, Any], profiles: ProfileStore = Depends(get_profiles)) -> Profile:
+async def create_profile(body: dict[str, Any], profiles: ProfileStore = Depends(get_profiles)) -> Profile:
     body.pop("profile_id", None)
+    await _screen_name(body.get("display_name"))
     try:
         return profiles.create(**body)
     except ValueError as exc:
@@ -52,9 +91,12 @@ def get_profile(profile_id: str, profiles: ProfileStore = Depends(get_profiles))
 
 
 @router.put("/profiles/{profile_id}", tags=["profiles"])
-def put_profile(profile_id: str, body: Profile, profiles: ProfileStore = Depends(get_profiles)) -> Profile:
+async def put_profile(
+    profile_id: str, body: Profile, profiles: ProfileStore = Depends(get_profiles)
+) -> Profile:
     if body.profile_id != profile_id:
         raise HTTPException(422, "profile_id in the body must match the URL")
+    await _screen_name(body.display_name)
     return profiles.put(body)
 
 

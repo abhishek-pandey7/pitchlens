@@ -114,7 +114,7 @@ async def test_offline_note_is_published_as_an_agent_insight(view: MatchView) ->
     assert insight.author == "agent:analyst" and insight.headline_key == NOTE_KEY
     assert insight.insight_id.endswith("-note-3") and insight.entities.teams
     assert "pressing harder" in insight.evidence[0].value and insight.evidence[0].source == "agent:analyst"
-    assert [s["agent"] for s in outcome.trace["steps"]] == ["analyst", "fact_checker"]
+    assert [s["agent"] for s in outcome.trace["steps"]] == ["analyst", "fact_checker", "safety"]
     assert outcome.trace["source"] == "published"
 
 

@@ -21,7 +21,7 @@ def test_ask_endpoint_and_trace(server: tuple[str, Hub]) -> None:
     assert r.status_code == 200
     body = r.json()
     assert "2-3" in body["answer"] and body["verdict"] == "approve"
-    assert [s["agent"] for s in body["steps"]][:3] == ["guard", "analyst", "fact_checker"]
+    assert [s["agent"] for s in body["steps"]][:4] == ["guard", "safety", "analyst", "fact_checker"]
 
     assert (
         httpx.post(f"{base}/matches/{match_id}/ask", json={"question": "x", "profile_id": "nope"}).status_code
@@ -59,3 +59,24 @@ def test_recap_endpoint(server: tuple[str, Hub]) -> None:
     assert httpx.post(f"{base}/matches/nope/recap", json={"stage": "ft"}).status_code == 404
     httpx.post(f"{base}/matches/{match_id}/replay", json={"speed": 1})
     assert httpx.post(f"{base}/matches/{match_id}/recap", json={"stage": "ht"}).status_code == 409
+
+
+def test_unsafe_display_names_are_refused(server: tuple[str, Hub]) -> None:
+    base, _ = server
+    bad = httpx.post(
+        f"{base}/profiles", json={"persona": "casual", "language": "en", "display_name": "I will kill him"}
+    )
+    assert bad.status_code == 422 and "display name" in bad.json()["detail"]
+    ok = httpx.post(
+        f"{base}/profiles", json={"persona": "casual", "language": "en", "display_name": "Southvale ultra"}
+    )
+    assert ok.status_code == 201
+
+
+def test_readiness_probe(server: tuple[str, Hub]) -> None:
+    base, _ = server
+    ready = httpx.get(f"{base}/health/ready")
+    body = ready.json()
+    assert ready.status_code == 200 and body["status"] == "ready"
+    assert body["checks"]["content_safety"] == "local" and body["checks"]["llm"]["provider"] == "mock"
+    assert body["checks"]["agent_budget"]["per_match"] > 0
