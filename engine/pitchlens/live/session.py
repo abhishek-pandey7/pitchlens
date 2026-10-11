@@ -18,6 +18,7 @@ import contextlib
 import json
 import time
 from collections import Counter, deque
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -29,7 +30,7 @@ from pitchlens.narrate.worker import NarrationWorker
 from pitchlens.personalize.profiles import ProfileStore
 from pitchlens.personalize.ranker import rank
 from pitchlens.render.cues import CueScheduler, build_cue
-from pitchlens.schema.events import EventType, MatchMeta
+from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
 from pitchlens.schema.insights import Insight
 from pitchlens.schema.profiles import Persona, Profile
 from pitchlens.telemetry import LatencyRecorder
@@ -152,6 +153,8 @@ class MatchSession:
         self._narrations: set[asyncio.Task[None]] = set()
         self._finishing: asyncio.Future[None] | None = None
         self.messages_in = 0
+        # Called after each live (not catch-up) event with the insights it produced; agents hook in here.
+        self.observers: list[Callable[[MatchSession, list[Insight], MatchEvent | None], None]] = []
 
     @property
     def match_id(self) -> str:
@@ -233,6 +236,8 @@ class MatchSession:
                 with self.latency.stage("personalize"):
                     for insight in insights:
                         self.publish_insight(insight)
+                for observe in self.observers:
+                    observe(self, insights, message.event)
                 self._maybe_state(force=message.event.type in STATE_NOW)
                 self.latency.record("event_to_broadcast", (time.perf_counter() - start) * 1000)
         elif message.kind is MessageKind.FRAME and message.frame is not None:
@@ -273,6 +278,17 @@ class MatchSession:
                 task = asyncio.ensure_future(self._narrate(channel, insight, ctx, decision.personal_salience))
                 self._narrations.add(task)
                 task.add_done_callback(self._narrations.discard)
+
+    def track(self, work: Coroutine[Any, Any, None]) -> None:
+        """Run background work for this match (e.g. an agent). A seek cancels it; full time waits for it."""
+        task = asyncio.ensure_future(work)
+        self._narrations.add(task)
+        task.add_done_callback(self._narrations.discard)
+
+    def add_insight(self, insight: Insight) -> None:
+        """An insight from outside the rule engine (an agent): recorded with the match, then published."""
+        self.engine.insights.append(insight)
+        self.publish_insight(insight)
 
     async def _narrate(
         self, channel: Channel, insight: Insight, ctx: NarrationContext, salience: float

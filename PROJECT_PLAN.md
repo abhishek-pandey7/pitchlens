@@ -650,7 +650,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 ### Phase 10: Agent layer (§10A), days 6–16, owned by track A
 - [x] **T-120 (A)** Agent Framework setup: pin version, Foundry model clients (fast/quality) behind the pluggable provider, `mock` client for tests, tracing → App Insights. Deps: T-50. *Done when:* a hello-world agent with one tool runs locally (mock) and in Azure. *(Done locally on the offline client and Groq, pinned at agent-framework-core 1.21.0. The Azure run lands with T-73.)*
 - [x] **T-121 (A)** Analyst tools (`agents/tools.py`) wrapping interpret/explain functions with typed schemas. Deps: T-26, T-31.
-- [ ] **T-122 (A)** Analyst Agent + periodic and salience-triggered runs → `tactical_note` insights with citations. Deps: T-121.
+- [x] **T-122 (A)** Analyst Agent + periodic and salience-triggered runs → `tactical_note` insights with citations. Deps: T-121.
 - [ ] **T-123 (A)** Narrator + Localization agents with concurrent fan-out per persona-language group. Deps: T-120, T-52. *Replaces the direct-LLM path in T-55; the template fallback is kept.*
 - [x] **T-124 (A)** Fact-Checker reflection loop (approve / revise / reject) using `grounding.validate`. Deps: T-54, T-123. *Done when:* ≥ 95% of seeded hallucinations are caught and < 5% of good narrations are rejected. *(Rules + model judge built and live-tested; the 95%/5% measurement is part of the T-130 eval.)*
 - [ ] **T-125 (A/F)** Director Agent + `/studio` approve/auto mode. Deps: T-60, T-67.

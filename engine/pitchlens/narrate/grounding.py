@@ -69,8 +69,15 @@ def _matches(n: float, decimals: int, allowed: set[float]) -> bool:
 
 
 def unsupported_numbers(text: str, allowed: set[float]) -> list[str]:
-    """Numbers in the text that no allowed value supports at the precision written (agents reuse this)."""
-    return [f"{n:g}" for n, decimals in numbers_with_precision(text) if not _matches(n, decimals, allowed)]
+    """Numbers in the text that no allowed value supports at the precision written (agents reuse this).
+
+    A difference is also supported when both of its operands are supported numbers stated in the same
+    text ("from 1.18 to 1.0, a drop of 0.18"): the reader can check it from the sentence itself.
+    """
+    found = numbers_with_precision(text)
+    stated = [n for n, decimals in found if _matches(n, decimals, allowed)]
+    derived = {round(abs(a - b), 6) for i, a in enumerate(stated) for b in stated[i + 1 :]}
+    return [f"{n:g}" for n, decimals in found if not _matches(n, decimals, allowed | derived)]
 
 
 def validate(text: str, insight: Insight, ctx: NarrationContext, lang: str = "en") -> Grounding:

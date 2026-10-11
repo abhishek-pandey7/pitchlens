@@ -106,3 +106,6 @@ distance_milestone.km:
   headline: "{player} قطع {distance} كم."
 distance_milestone.sprints:
   headline: "{player} نفذ {sprint_count} انطلاقة سريعة."
+# Written by the Analyst agent and approved by the Fact-Checker; the note itself is in English.
+tactical_note.agent:
+  headline: "تحليل: {note}"

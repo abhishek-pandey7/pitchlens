@@ -15,6 +15,7 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `pitchlens/agents/clients.py` | Chat clients per tier from `LLM_PROVIDER`; shared free-tier rate budget; `OfflineChatClient` for tests |
 | `pitchlens/agents/factcheck.py` | Fact-Checker: rules first, then a model judge with a structured verdict |
 | `pitchlens/agents/ask.py` | "Ask the Match": an Agent Framework workflow of guard → analyst → fact-checker → companion |
+| `pitchlens/agents/notes.py` | Analyst tactical notes: agent-authored insights in the live feed |
 | `pitchlens/agents/desk.py` | Shared match-view cache, concurrency limit, recent agent traces per match |
 | `pitchlens/mcpserver/` | MCP server: mounted on the engine at `/mcp`, or over stdio |
 
@@ -43,7 +44,8 @@ explains them rather than retrying until the framework disables tools.
 
 `run_agent` collects every number the tools returned in a turn: values, percentage forms of 0..1 values,
 numbers inside strings ("2-3", "90+4'", "0.052→0.963"), and differences between sibling values in one
-result ("press rate rose 0.66"). Any number in the answer that isn't supported, at the precision it is
+result ("press rate rose 0.66"). A difference between two supported numbers that the answer itself
+states also passes ("from 1.18 to 1.0, a drop of 0.18"). Any number in the answer that isn't supported, at the precision it is
 written, is flagged (`AgentRun.unsupported`). Unrelated numbers never combine, so an invented "41 shots"
 is caught. A number check alone cannot catch a real number attached to the wrong fact ("Southvale
 scored 7 goals" when 7 is Northbridge's shots); that is the Fact-Checker agent's job (T-124).
@@ -118,6 +120,52 @@ verdict and timings).
 | p-casual-es | ¿Cómo remontó Southvale el partido? | Analyst → approved → Spanish rewrite (9 s) |
 | p-casual-hi | सबसे तेज़ शॉट किसका था? | `top_players(max_shot_speed_kmh)` → "Bilal Okafor, 108.3 km/h" in Hindi (3 s) |
 | p-analyst-en | Did Northbridge press less after the 60th minute? | Round 1 invented "0.418" → **revise** → round 2 cited the tool's own change → approved |
+
+## Tactical notes (Analyst in the live feed)
+
+The rule detectors fire on clear signals. The Analyst looks for the pattern **behind** them and adds it to
+the live feed as a `tactical_note` insight (`author: "agent:analyst"`, key `tactical_note.agent`). It is
+then personalised, narrated in each fan's language and eligible for the lower third, like any insight.
+
+```
+trigger ──► analyst (tools) ──► number check ──► fact_checker ──approve──► live feed
+                 ▲                                    │
+                 └──────────── revise (once) ─────────┘   otherwise dropped, with the reason in the trace
+```
+
+- **Triggers:** half-time, and tactical moments (momentum, pressing, control, xG and win-probability
+  swings) with salience ≥ 0.4.
+- **Budget:**
+  - at least `NOTE_MIN_MATCH_MIN` (10) match minutes and `NOTE_MIN_GAP_S` (45) real seconds apart;
+  - at most `NOTE_MAX` (5) per match;
+  - one at a time;
+  - never during a seek's catch-up.
+- **Switch:** `AGENT_NOTES=auto|on|off`. The default `auto` turns notes on when a real model is
+  configured and off for the offline mock.
+- **Reply format:** Groq does not combine tool calls with structured output, so the Analyst replies with
+  JSON text (`{found, team, note}`). A plain-prose reply is taken as the note; it is still checked and
+  judged.
+- **Templates:** "Analysis: {note}" in all six languages. The LLM narrator rewrites the note in each
+  fan's language. Numbers inside the note are allowed by narration grounding because the note is
+  evidence.
+- **Traces:** every attempt appears in the Agent Trace panel (`kind: "tactical_note"`), including
+  dropped notes and why they were dropped.
+
+**Live check (Groq, comeback replayed at 30×):**
+- **22': published.** "Northbridge's press rate jumped from 0.56 in the first 15 minutes to 1.54
+  between minutes 20–25", from one tool call, approved in 5.7 s.
+- **Half-time: dropped by the Fact-Checker.** "The draft says 'in the second half', but the press_rate
+  data compares two intervals within the first half." A number check alone could not have caught that.
+
+**Second run (from 40' at 20×), after adding a revision round:**
+- **Half-time: published.** "Northbridge have lifted their press_rate from 0.56 in the first 15 minutes
+  to 1.40 in minutes 30–45, a rise of 0.84".
+- **74' and 90+6': dropped,** over honest arithmetic: "1.18 to 1.0, a drop of 0.18"; "35.44 to 27.09,
+  about 8.3 points".
+
+That led to one more grounding rule, shared by all agents: a difference counts as supported when both of
+its operands are supported numbers stated in the same text. A lone "0.18", or a wrong difference, is
+still flagged.
 
 ## Models
 
