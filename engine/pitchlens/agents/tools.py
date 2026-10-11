@@ -484,7 +484,6 @@ class MatchTools:
 
         def run() -> dict[str, Any]:
             club = self._team(team) if team else None
-            s = self.state
             items = [
                 i for i in self._view().insights
                 if (insight_type is None or i.type == insight_type)
@@ -495,18 +494,7 @@ class MatchTools:
             # Compact rows: free-tier models re-read every tool result on each step of a run.
             return {
                 "count": len(items),
-                "insights": [
-                    {
-                        "minute": minute_label(i.clock_ms, i.period),
-                        "headline": i.headline_key,
-                        "who": ", ".join(
-                            [s.players[p].name for p in i.entities.players if p in s.players]
-                            + [s.teams[t].name for t in i.entities.teams if t in s.teams]
-                        ),
-                        "evidence": "; ".join(self._evidence(e) for e in i.evidence),
-                    }
-                    for i in items[: max(1, min(limit, 15))]
-                ],
+                "insights": [self.insight_row(i) for i in items[: max(1, min(limit, 15))]],
             }
 
         args = {
@@ -516,6 +504,19 @@ class MatchTools:
             "limit": limit,
         }
         return self._record("get_insights", args, run)
+
+    def insight_row(self, i: Insight) -> dict[str, Any]:
+        """One insight as the agents see it: minute, headline key, who, and compact evidence."""
+        s = self.state
+        return {
+            "minute": minute_label(i.clock_ms, i.period),
+            "headline": i.headline_key,
+            "who": ", ".join(
+                [s.players[p].name for p in i.entities.players if p in s.players]
+                + [s.teams[t].name for t in i.entities.teams if t in s.teams]
+            ),
+            "evidence": "; ".join(self._evidence(e) for e in i.evidence),
+        }
 
     def _evidence(self, e: Any) -> str:
         s = self.state
