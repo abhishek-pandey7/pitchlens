@@ -5,6 +5,9 @@ deploys both containers. Without Azure, `docker compose up --build` runs the sam
 
 ## What gets created
 
+The Azure band of the [architecture diagram](architecture.html) shows these resources in context.
+
+
 One resource group, `rg-<environment>`:
 
 | Resource | Purpose |
