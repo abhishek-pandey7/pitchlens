@@ -25,7 +25,9 @@ from pitchlens.schema.profiles import SUPPORTED_LANGUAGES, Persona, Profile, Ver
 TEMPLATE_DIR = Path(__file__).with_name("templates")
 DETAIL_PERSONAS = {Persona.ANALYST, Persona.TACTICIAN}
 DECIMAL_COMMA = {"es", "fr", "pt"}
-PCT_METRICS = {"win_prob", "field_tilt", "possession_5m", "stoppage_share"}
+PCT_METRICS = {
+    "win_prob", "field_tilt", "possession_5m", "stoppage_share", "what_if_win_prob", "no_red_win_prob",
+}  # fmt: skip
 # Decimal places per metric (default: 1). Integers always print without decimals.
 PRECISION = {
     "xg": 2, "xg_difference": 2, "momentum": 2,

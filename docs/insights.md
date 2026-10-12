@@ -25,11 +25,11 @@ Source: `engine/pitchlens/explain/`. Entry points: `ExplainEngine.on_event / on_
 |---|---|---|---|
 | `goal` (`.go_ahead`, `.equaliser`, `.extends_lead`, `.pulls_back`) | goal event | score, scoring shot's xG and speed, assist-pass difficulty, win probability before → after; `late_drama` tag at 85'+ in a one-goal game | — |
 | `career_milestone` (`.goals`, `.first_goal`, `.appearances`, `.debut`) | career goals reach 1 or a multiple of 25; appearances reach 1 or a multiple of 100 (from pre-match lineup totals) | the career total | — |
-| `big_chance` (`.saved`, `.missed`, `.blocked`) | non-goal shot with xG ≥ 0.35 | xG, distance, shot speed | 1 min per team |
+| `big_chance` (`.saved`, `.missed`, `.blocked`) | non-goal shot with xG ≥ 0.35 | xG, distance, shot speed, **what if it had gone in** (`what_if_win_prob`: win probability now → with that goal) | 1 min per team |
 | `shot_speed_record` | fastest shot so far (≥ 95 km/h, after 3 shots), or any shot ≥ 110 km/h | speed, previous record | 5 min |
 | `pass_of_note` (`.line_breaking`, `.difficult`) | completed pass with difficulty ≥ 62 (about the top 1%), or ≥ 50 while breaking 2+ lines | difficulty, distance, lines broken, into box | 2 min |
 | `player_streak` (`.passes`, `.tackles`) | 20 / 30 / 45 consecutive completed passes; 3 tackles won in 5 min | streak length | 10 min (tackles) |
-| `card` (`.yellow`, `.second_yellow`, `.red`) | card event | card, win probability before → after, players left on the pitch | — |
+| `card` (`.yellow`, `.second_yellow`, `.red`) | card event | card, win probability before → after, players left on the pitch; for dismissals, **what if still eleven** (`no_red_win_prob`) | — |
 | `win_prob_swing` | a non-goal, non-card, non-shot event moves win probability ≥ 10 points | win probability before → after | 3 min |
 | `momentum_shift` | momentum changes sides (|momentum| > 0.2) and holds for 3 min | momentum and field tilt, before → after | 8 min |
 | `pressure_change` (`.press_intensified`, `.press_eased`) | sliding two-window Poisson likelihood-ratio test (below) | pressing actions per 10 opponent passes, PPDA, window start | 12 min per team |
@@ -50,6 +50,17 @@ What works is counting the pressing team's **pressures, tackles and interception
 `LLR = cA·ln(rA/p) + cB·ln(rB/p)`. A shift is reported when LLR ≥ 3 and the rate ratio is ≥ 1.6 (or ≤ 1/1.6).
 
 On the `pressure_surge` storyline (away press switched on at 55') this fired between 57' and 64' in 10 of 10 seeds, with about 1.4 detections per organic match.
+
+## What if (counterfactual win probability)
+
+`explain/counterfactual.py` re-runs the live win-probability model with one thing changed (T-92):
+
+- **big chances** (missed, saved or blocked): one more goal for the shooting team;
+- **red cards**: the dismissed team's red card taken away.
+
+The result is evidence (`from` = what happened, `to` = the what-if), so it is grounded like every other
+number. Detail templates in all six languages narrate it ("What if it had gone in? Stonegate would be at
+65% to win, not 33%"), and the overlay's lower third shows a "What if" strip with both values.
 
 ## Salience
 

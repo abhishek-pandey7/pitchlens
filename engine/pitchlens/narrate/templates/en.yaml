@@ -31,6 +31,7 @@ big_chance.saved:
   detail: &chance_detail
     - "It was a {xg} xG chance from {shot_distance_m} m."
     - "Shot speed {shot_speed_kmh} km/h."
+    - "What if it had gone in? {team} would be at {what_if_win_prob_to_pct} to win, not {what_if_win_prob_from_pct}."
 big_chance.missed:
   headline: "{player} misses a big chance for {team}."
   detail: *chance_detail
@@ -59,6 +60,7 @@ card.second_yellow:
   headline: "Second yellow! {player} is sent off and {team} are down to {players_on_pitch}."
   detail: &card_detail
     - "{team} win probability: {win_prob_from_pct} → {win_prob_to_pct}."
+    - "With eleven players, {team} would be at {no_red_win_prob_to_pct} to win."
 card.red:
   headline: "Red card! {player} is sent off and {team} are down to {players_on_pitch}."
   detail: *card_detail

@@ -326,8 +326,11 @@ class MatchState:
         self.control.observe(e)
         self.rhythm.observe(e)
 
-    def compute_win_probability(self, score: tuple[int, int] | None = None) -> WinProbability:
-        """Win probability now; `score` overrides the scoreline for what-if questions."""
+    def compute_win_probability(
+        self, score: tuple[int, int] | None = None, reds: tuple[int, int] | None = None
+    ) -> WinProbability:
+        """Win probability now; `score` and `reds` (home, away) override the scoreline and dismissals for
+        what-if questions."""
         home_goals, away_goals = score or self.score
         if self.finished:
             return win_probability(home_goals, away_goals, home_rate_90=0, away_rate_90=0, minutes_left=0)
@@ -343,8 +346,8 @@ class MatchState:
             home_rate_90=scoring_rate_per_90(self.meta.pre_match.home_strength, home.xg, played),
             away_rate_90=scoring_rate_per_90(self.meta.pre_match.away_strength, away.xg, played),
             minutes_left=left,
-            home_reds=home.red_cards,
-            away_reds=away.red_cards,
+            home_reds=reds[0] if reds else home.red_cards,
+            away_reds=reds[1] if reds else away.red_cards,
         )
 
     def readings(self) -> dict[str, Any]:

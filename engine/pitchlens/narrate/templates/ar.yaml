@@ -29,6 +29,7 @@ big_chance.saved:
   detail: &chance_detail
     - "كانت فرصة بقيمة {xg} من الأهداف المتوقعة من مسافة {shot_distance_m} م."
     - "سرعة التسديدة {shot_speed_kmh} كم/س."
+    - "ماذا لو دخلت؟ كان احتمال فوز {team} سيصبح {what_if_win_prob_to_pct} بدلًا من {what_if_win_prob_from_pct}."
 big_chance.missed:
   headline: "{player} يهدر فرصة كبيرة لـ{team}."
   detail: *chance_detail
@@ -57,6 +58,7 @@ card.second_yellow:
   headline: "إنذار ثانٍ! طرد {player} و{team} يلعب بـ{players_on_pitch} لاعبين."
   detail: &card_detail
     - "احتمال فوز {team}: {win_prob_from_pct} ← {win_prob_to_pct}."
+    - "لو بقي {team} بأحد عشر لاعبًا لكان احتمال فوزه {no_red_win_prob_to_pct}."
 card.red:
   headline: "بطاقة حمراء! طرد {player} و{team} يلعب بـ{players_on_pitch} لاعبين."
   detail: *card_detail

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AgentTrace } from "@/components/AgentTrace";
 import { AskPanel } from "@/components/AskPanel";
 import { DirectorPanel } from "@/components/DirectorPanel";
+import { ExportLinks } from "@/components/ExportLinks";
 import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { LatencyHud } from "@/components/LatencyHud";
@@ -62,6 +63,7 @@ export function StudioClient() {
             <OverlayStage view={view} pitch />
           </div>
           <DirectorPanel matchId={matchId} profileId={profileId} />
+          <ExportLinks matchId={matchId} profileId={profileId} lang={view.profile?.language ?? "en"} />
           <LatencyHud matchId={matchId} />
         </section>
         <section className="min-w-0" aria-label="Insight queue">

@@ -45,6 +45,9 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `GET /matches/{id}/director` | The directed programme: `mode`, `profile_id`, `pending` cues (with the Director's proposals), `on_air`, `log` |
 | `PUT /matches/{id}/director` | `{mode: off\|auto\|approve, profile_id}`: make that fan channel the programme and set the Director's mode |
 | `POST /matches/{id}/director/cues/{cue_id}` | The producer's call: `{action: air\|hold\|drop\|approve}` (approve takes the Director's proposal). Airing still follows the scheduler's rules |
+| `GET /matches/{id}/export/chapters?lang=` | **WebVTT chapters**: kick-off, goals, red cards, half-time, the biggest other moments, full time; titles in `lang` |
+| `GET /matches/{id}/export/captions?profile_id=&lang=` | **WebVTT captions**: the narration that fan's feed shows, in their language (or `lang`) |
+| `GET /matches/{id}/export/cues?profile_id=` | **Overlay cues** (JSON) for the whole match, scheduled under the live rules. Timestamps in all three are match time (`match_ms`); a live match exports what has happened so far |
 | `GET /matches/{id}/agents/trace` | Recent agent runs for the match, newest first (`kind`: ask, tactical_note, recap) |
 
 **MCP:** the engine also serves the PitchLens MCP server at `/mcp` (outside `/api/v1`; streamable HTTP). It exposes the analyst tools to GitHub Copilot, Claude or any MCP client. See [agents.md](agents.md).

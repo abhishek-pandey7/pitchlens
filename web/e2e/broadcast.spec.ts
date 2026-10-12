@@ -44,3 +44,23 @@ test("compare: the same match as two genuinely different experiences", async ({ 
   expect(counts[1]).toBeGreaterThan(counts[0]);
   await page.screenshot({ path: "test-results/compare.png", fullPage: true });
 });
+
+test("a red card's what-if strip goes on air, and the studio exports the match", async ({ page, request }) => {
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 4, storyline: "red_card_turn", tracking: false } })).json();
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto(`/overlay?match=${match.match_id}&profile=p-analyst-en`);
+  await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 20, from_ms: 37 * 60_000, frames: false } });
+  const whatIf = page.getByTestId("what-if");
+  await expect(whatIf).toBeVisible({ timeout: 60_000 }); // the 38' red card: "with eleven players"
+  await expect(whatIf).toContainText("What if");
+  await expect(page.getByTestId("lower-third")).toContainText("Red card!");
+  await page.screenshot({ path: "test-results/overlay-what-if.png" });
+
+  await page.goto(`/studio?match=${match.match_id}&profile=p-casual-es`);
+  const link = page.getByTestId("export-chapters");
+  await expect(link).toHaveAttribute("href", /lang=es/, { timeout: 30_000 }); // the fan's language once synced
+  const chapters = await link.getAttribute("href");
+  const vtt = await (await request.get(chapters ?? "")).text();
+  expect(vtt.startsWith("WEBVTT")).toBe(true);
+  expect(vtt).toContain("Roja directa");
+});
