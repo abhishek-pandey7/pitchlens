@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PitchLens architecture</title>
+<style>
+  /* Light, flat palette: white surfaces, dark blue text and lines, no gradients. */
+  :root {
+    --bg: #ffffff; --surface: #ffffff; --surface-2: #f2f5fa; --line: #c9d3e3;
+    --fg: #0b2545; --muted: #3e5675; --strong: #0b2545;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.4 "Segoe UI", "Inter", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  .page { width: 1600px; margin: 0 auto; padding: 36px 40px 40px; background: var(--bg); }
+  header { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 22px; }
+  h1 { margin: 0; font-size: 30px; letter-spacing: .5px; color: var(--strong); }
+  .tag { color: var(--muted); font-size: 15px; max-width: 760px; }
+  .tag b { color: var(--strong); }
+  .legend { margin-left: auto; display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+  .legend i { display: inline-block; width: 22px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; border: 2px solid var(--strong); }
+  .legend .l-agent { border-style: dashed; }
+  .legend .l-azure { border-style: double; border-width: 3px; }
+
+  .flow { display: grid; grid-template-columns: 210px 24px 150px 24px 1fr 24px 230px 24px 230px; align-items: stretch; }
+  .arrow { display: flex; align-items: center; justify-content: center; color: var(--strong); font-size: 22px; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+  .col-title { font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--strong); margin: 0 0 2px 2px; }
+  .box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .box h3 { margin: 0 0 4px; font-size: 14px; color: var(--strong); }
+  .box p { margin: 0; color: var(--muted); font-size: 12.5px; }
+  .box code, .mono { font-family: "Cascadia Code", Consolas, "SFMono-Regular", monospace; font-size: 11.5px; color: var(--strong); background: var(--surface-2); border-radius: 3px; padding: 0 3px; }
+
+  .hot { border-color: var(--line); }
+  .hot-band { border: 2px solid var(--strong); border-radius: 14px; padding: 12px; position: relative; }
+  .band-label { position: absolute; top: -10px; left: 14px; background: var(--bg); padding: 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; color: var(--strong); }
+  .stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .stage ul { margin: 6px 0 0; padding-left: 16px; color: var(--muted); font-size: 12px; }
+  .stage li { margin: 1px 0; }
+  .budget { margin-top: 10px; display: flex; gap: 10px; font-size: 12px; color: var(--muted); }
+  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--surface-2); }
+  .pill b { color: var(--strong); }
+
+  .agents { margin-top: 26px; border: 2px dashed var(--strong); border-radius: 14px; padding: 16px 12px 12px; position: relative; }
+  .agent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .pattern { display: inline-block; margin-top: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #ffffff; background: var(--strong); border-radius: 4px; padding: 1px 6px; }
+  .agent-foot { margin-top: 10px; display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 10px; }
+  .connector { display: flex; justify-content: center; gap: 120px; color: var(--muted); font-size: 12px; margin: 8px 0 -14px; }
+  .connector span::before { content: "⇅ "; color: var(--strong); }
+
+  .azure { margin-top: 26px; border: 4px double var(--strong); border-radius: 14px; padding: 16px 12px 12px; position: relative; }
+  .azure-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  .note { margin: 10px 2px 0; color: var(--muted); font-size: 12px; }
+
+  .bottom { margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .guard ul { margin: 6px 0 0; padding-left: 16px; color: var(--muted); font-size: 12.5px; columns: 2; column-gap: 22px; }
+  .guard li { break-inside: avoid; margin: 2px 0; }
+  .stat { display: flex; gap: 10px; margin-top: 8px; }
+  .stat div { flex: 1; background: var(--surface-2); border-radius: 8px; padding: 8px; text-align: center; }
+  .stat b { display: block; font-size: 20px; color: var(--strong); }
+  .stat span { font-size: 11px; color: var(--muted); }
+  footer { margin-top: 18px; color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div>
+      <h1>PitchLens architecture</h1>
+      <div class="tag">Synthetic football events in; explainable, personalised match intelligence out, live, in six
+        languages. <b>Facts first, words second:</b> deterministic code computes every number,
+        agents put them into words, and nothing reaches a fan unchecked.</div>
+    </div>
+    <div class="legend">
+      <span><i></i>Deterministic hot path</span>
+      <span><i class="l-agent"></i>AI agents (warm path)</span>
+      <span><i class="l-azure"></i>Azure services</span>
+    </div>
+  </header>
+
+  <!-- ============================================================ main flow -->
+  <div class="flow">
+    <div class="col">
+      <div class="col-title">Sources</div>
+      <div class="box"><h3>Match simulator</h3><p>Seeded possession-chain model, 20 fictional clubs, 5 storylines, ~2,500 events a match</p></div>
+      <div class="box"><h3>Tracking frames</h3><p>Ball and 22 players at 5 Hz, consistent with the events</p></div>
+      <div class="box"><h3>Replay</h3><p>1–600×, pause, seek with catch-up</p></div>
+      <div class="box"><h3>External feeds</h3><p><code>POST /ingest</code>: schema-validated <code>events.v1</code> batches (partners, CV)</p></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="col">
+      <div class="col-title">Ingest</div>
+      <div class="box" style="flex:1; display:flex; flex-direction:column; justify-content:center">
+        <h3>Event bus</h3><p>Ordered, sequenced messages per match</p>
+        <p style="margin-top:8px"><code>memory</code> today<br><code>Event Hubs</code> planned for scale-out</p>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="hot-band">
+      <div class="band-label">Deterministic pipeline · per event</div>
+      <div class="stages">
+        <div class="box hot stage"><h3>Interpret</h3><p>MatchState, incremental</p>
+          <ul><li>pass difficulty 0–100, lines broken</li><li>xG, shot and ball speed</li><li>distance, top speed, sprints</li><li>possession, field tilt, PPDA, press rate</li><li>momentum, control ↔ chaos, tempo</li><li>win probability (Poisson)</li></ul></div>
+        <div class="box hot stage"><h3>Explain</h3><p>14 detectors → insights</p>
+          <ul><li>evidence for every claim</li><li>salience and why-tags</li><li>CUSUM change-points</li><li>milestones, streaks, records</li><li>what-if win probability</li></ul></div>
+        <div class="box hot stage"><h3>Personalise</h3><p>per fan profile</p>
+          <ul><li>persona: casual · analyst · tactician</li><li>club, player, focus metric</li><li>6 languages, RTL, spoiler-safe</li><li>template text in &lt; 50 ms</li><li>player-focus card</li></ul></div>
+        <div class="box hot stage"><h3>Render</h3><p>timed overlay cues</p>
+          <ul><li>regions, priority, preemption</li><li>per-fan rate limits</li><li>programme gate (Director)</li><li>cue contract in match time</li><li>WebVTT and cue exports</li></ul></div>
+      </div>
+      <div class="budget">
+        <span class="pill">event → screen budget <b>&lt; 300 ms</b> · event → broadcast <b>0.7 ms</b> p95 measured</span>
+        <span class="pill">no model on the hot path</span>
+        <span class="pill">grounding validator on every AI line</span>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="col">
+      <div class="col-title">Delivery</div>
+      <div class="box"><h3>FastAPI engine</h3><p>REST · per-fan SSE streams with <code>Last-Event-ID</code> resume</p></div>
+      <div class="box"><h3>Narration worker</h3><p>Async LLM rewrite per persona-language group, cached; template stays if it fails</p></div>
+      <div class="box"><h3>MCP server <code>/mcp</code></h3><p>12 match tools for GitHub Copilot, Foundry agents, Claude</p></div>
+      <div class="box"><h3>Exports</h3><p>WebVTT chapters and captions, full-match cue JSON</p></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="col">
+      <div class="col-title">Experiences (Next.js)</div>
+      <div class="box"><h3>/overlay</h3><p>Transparent broadcast graphics for OBS and vision mixers</p></div>
+      <div class="box"><h3>/watch</h3><p>Fan second screen: feed, pitch, Ask the Match, recaps, player focus</p></div>
+      <div class="box"><h3>/studio</h3><p>Producer console: replay, Director approvals, agent trace, latency HUD</p></div>
+      <div class="box"><h3>/analyst · /compare</h3><p>Live charts and evidence inspector; two fans side by side</p></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ agents -->
+  <div class="connector"><span>agents read the match through tools</span><span>agent output re-enters as insights, cues and answers</span></div>
+  <div class="agents">
+    <div class="band-label">AI agent layer · Microsoft Agent Framework 1.21 · models on Microsoft Foundry</div>
+    <div class="agent-grid">
+      <div class="box agent"><h3>Analyst</h3><p>Finds the pattern behind tactical moments and writes notes into the live feed, using 12 read-only tools</p><span class="pattern">Sequential + reflection</span></div>
+      <div class="box agent"><h3>Fact-Checker</h3><p>Rules (every number in a tool result), then a model judge: approve · revise · reject</p><span class="pattern">Reflection / critic</span></div>
+      <div class="box agent"><h3>Ask the Match</h3><p>Guard → Analyst → Fact-Checker → Companion, answering in the fan's language and persona</p><span class="pattern">Workflow graph · handoff</span></div>
+      <div class="box agent"><h3>Editor newsroom</h3><p>HT and FT recaps: Editor plans, Analyst digs, Fact-Checker approves; Narrator adapts per fan</p><span class="pattern">Group chat</span></div>
+      <div class="box agent"><h3>Director</h3><p>Curates the programme feed: air, hold or drop each cue; auto, or the producer approves</p><span class="pattern">Human in the loop</span></div>
+    </div>
+    <div class="agent-foot">
+      <div class="box"><h3>Content safety</h3><p>Azure AI Content Safety + Prompt Shields on fan questions, display names, answers, recaps and notes; local screen as fallback</p></div>
+      <div class="box"><h3>Agent trace</h3><p>Every step, tool call and verdict, live in <code>/studio</code></p></div>
+      <div class="box"><h3>Budgets</h3><p>Tool-call caps, per-match and daily token caps; over a cap agents stand down, the pipeline carries on</p></div>
+    </div>
+  </div>
+
+  <!-- ============================================================ azure -->
+  <div class="azure">
+    <div class="band-label">Runs on Azure · one command: azd up</div>
+    <div class="azure-grid">
+      <div class="box az"><h3>Container Apps</h3><p>engine (FastAPI, agents, MCP) and web (Next.js), health and readiness probes</p></div>
+      <div class="box az"><h3>Microsoft Foundry</h3><p>Model deployments (fast and quality tiers), Entra ID only</p></div>
+      <div class="box az"><h3>AI Content Safety</h3><p>Same Foundry resource: text analysis and Prompt Shields</p></div>
+      <div class="box az"><h3>Container Registry</h3><p>Images pulled with the managed identity</p></div>
+      <div class="box az"><h3>Key Vault</h3><p>Third-party secrets as Container Apps references</p></div>
+      <div class="box az"><h3>App Insights</h3><p>Logs, traces and per-stage latency via Log Analytics</p></div>
+    </div>
+    <p class="note">One user-assigned managed identity, least-privilege roles, key auth disabled · Bicep templates in <code>infra/</code> · Event Hubs and Cosmos DB planned for multi-replica scale-out</p>
+  </div>
+
+  <!-- ============================================================ guardrails and evidence -->
+  <div class="bottom">
+    <div class="box guard">
+      <h3>Trust by design</h3>
+      <ul>
+        <li>Synthetic data only: fictional clubs, players and matches</li>
+        <li>Fan text is only ever a user message, never a prompt</li>
+        <li>Agents' tools are read-only, except the Director's cue tools, which follow scheduler rules</li>
+        <li>Goals and red cards never wait for an agent</li>
+        <li>Unverifiable answers become an honest "couldn't verify"</li>
+        <li>Rate limits, CORS allow-list, gitleaks in CI</li>
+      </ul>
+    </div>
+    <div class="box guard">
+      <h3>Measured (docs/eval.md)</h3>
+      <div class="stat">
+        <div><b>50/50</b><span>seeded hallucinations caught by the Fact-Checker</span></div>
+        <div><b>0/50</b><span>correct drafts wrongly rejected</span></div>
+        <div><b>26/30</b><span>Ask the Match questions passed</span></div>
+        <div><b>0 ms</b><span>goal delay with the Director on</span></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Python 3.12 · FastAPI · Pydantic · Microsoft Agent Framework · MCP · Next.js · TypeScript · Tailwind · Playwright · Bicep</span>
+    <span>Built for the Inside the Game Developer Hackathon (Microsoft × Premier League) · all data synthetic</span>
+  </footer>
+</div>
+</body>
+</html>

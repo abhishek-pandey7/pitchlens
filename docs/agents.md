@@ -4,6 +4,8 @@ PitchLens keeps a **deterministic hot path with an agentic warm path** (plan §1
 wait on an agent. Agents add reasoning, conversation and curation alongside the live pipeline, and
 **every number they state comes from a tool** that wraps the deterministic engine.
 
+Where the agents sit in the whole system: [architecture diagram](architecture.html) ([image](architecture.png)).
+
 Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core 1.21.0`,
 `agent-framework-openai 1.16.0` and `agent-framework-orchestrations 1.3.1`. The **PitchLens MCP server**
 (`mcp 2.3.0`) exposes the same tools to any Model Context Protocol client.

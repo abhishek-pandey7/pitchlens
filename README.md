@@ -11,12 +11,20 @@ PitchLens ingests synthetic match events as they happen and turns them into stat
 
 🚧 In active development. See [`PROJECT_PLAN.md`](PROJECT_PLAN.md) for the full design, task checklist and timeline.
 
-## Pipeline
+## Architecture
 
-```
-Ingest → Interpret → Explain → Render → Personalize
-(events)  (metrics)  (insights) (overlay cues) (per-fan feeds, languages, voice)
-```
+[![PitchLens architecture](docs/architecture.png)](docs/architecture.html)
+
+A **deterministic hot path** turns each event into metrics, explained insights, per-fan text and timed
+overlay cues in well under the 300 ms budget, with no model involved. An **AI agent layer** (Microsoft
+Agent Framework on Microsoft Foundry) works alongside it: the Analyst, Fact-Checker, Ask the Match,
+the Editor's newsroom and the Director, each grounded in the same tools and checked before a fan sees
+anything. Everything runs on Azure Container Apps with `azd up`.
+
+The diagram is [`docs/architecture.html`](docs/architecture.html) (open it in a browser for crisp text);
+the image is regenerated with `npm run docs:architecture` in `web/`. Details: [agents](docs/agents.md) ·
+[insights](docs/insights.md) · [metrics](docs/metrics.md) · [API](docs/api.md) · [evaluation](docs/eval.md) ·
+[deployment](docs/deploy.md) · [responsible AI](docs/responsible-ai.md).
 
 ## Repository layout
 

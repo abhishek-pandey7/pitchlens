@@ -637,7 +637,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 
 ### Phase 8: Quality, demo, submission (days 15–21)
 - [ ] **T-80 (all)** Full test pass per §18; latency run; fix regressions.
-- [ ] **T-81 (all)** Docs: README quickstart, architecture diagram, `overlay-contract.md`, `schemas.md`.
+- [ ] **T-81 (all)** Docs: README quickstart, architecture diagram, `overlay-contract.md`, `schemas.md`. *(Architecture diagram done: `docs/architecture.html` and `docs/architecture.png`, in the README. README rewrite and remaining docs pending.)*
 - [ ] **T-82 (all)** Demo script rehearsal + 3-min video recording (§21).
 - [ ] **T-83 (all)** Submission (§24).
 - [ ] **T-84 (all)** Pitch / description (`docs/pitch.md`, draft in §21A): what it is, Microsoft & Azure tech used, what it does, what problem it solves.
