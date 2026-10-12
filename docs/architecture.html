@@ -45,7 +45,7 @@
   .pill b { color: var(--strong); }
 
   .agents { margin-top: 26px; border: 2px dashed var(--strong); border-radius: 14px; padding: 16px 12px 12px; position: relative; }
-  .agent-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+  .agent-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
   .pattern { display: inline-block; margin-top: 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #ffffff; background: var(--strong); border-radius: 4px; padding: 1px 6px; }
   .agent-foot { margin-top: 10px; display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 10px; }
   .connector { display: flex; justify-content: center; gap: 120px; color: var(--muted); font-size: 12px; margin: 8px 0 -14px; }
@@ -122,7 +122,7 @@
     <div class="col">
       <div class="col-title">Delivery</div>
       <div class="box"><h3>FastAPI engine</h3><p>REST · per-fan SSE streams with <code>Last-Event-ID</code> resume</p></div>
-      <div class="box"><h3>Narration worker</h3><p>Async LLM rewrite per persona-language group, cached; template stays if it fails</p></div>
+      <div class="box"><h3>Narration worker</h3><p>One job per insight for every fan it reaches; cached, de-duplicated, shed under load</p></div>
       <div class="box"><h3>MCP server <code>/mcp</code></h3><p>12 match tools for GitHub Copilot, Foundry agents, Claude</p></div>
       <div class="box"><h3>Exports</h3><p>WebVTT chapters and captions, full-match cue JSON</p></div>
     </div>
@@ -142,6 +142,7 @@
     <div class="band-label">AI agent layer · Microsoft Agent Framework 1.21 · models on Microsoft Foundry</div>
     <div class="agent-grid">
       <div class="box agent"><h3>Analyst</h3><p>Finds the pattern behind tactical moments and writes notes into the live feed, using 12 read-only tools</p><span class="pattern">Sequential + reflection</span></div>
+      <div class="box agent"><h3>Narrator · Localization</h3><p>A line per persona-language group, written in parallel; Arabic and Hindi transcreated from English</p><span class="pattern">Concurrent fan-out</span></div>
       <div class="box agent"><h3>Fact-Checker</h3><p>Rules (every number in a tool result), then a model judge: approve · revise · reject</p><span class="pattern">Reflection / critic</span></div>
       <div class="box agent"><h3>Ask the Match</h3><p>Guard → Analyst → Fact-Checker → Companion, answering in the fan's language and persona</p><span class="pattern">Workflow graph · handoff</span></div>
       <div class="box agent"><h3>Editor newsroom</h3><p>HT and FT recaps: Editor plans, Analyst digs, Fact-Checker approves; Narrator adapts per fan</p><span class="pattern">Group chat</span></div>

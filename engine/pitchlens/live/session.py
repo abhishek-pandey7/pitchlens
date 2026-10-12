@@ -265,6 +265,7 @@ class MatchSession:
 
     def publish_insight(self, insight: Insight) -> None:
         ctx = NarrationContext.from_state(self.state)
+        to_narrate: list[tuple[Channel, float]] = []
         for channel in self.channels.values():
             item, decision = channel.personalise(insight, ctx)
             if item is None:
@@ -286,9 +287,11 @@ class MatchSession:
                 else:
                     channel.stats["cue_dropped"] += 1
             if self.worker is not None and decision is not None:
-                task = asyncio.ensure_future(self._narrate(channel, insight, ctx, decision.personal_salience))
-                self._narrations.add(task)
-                task.add_done_callback(self._narrations.discard)
+                to_narrate.append((channel, decision.personal_salience))
+        if to_narrate:  # one job per insight: every fan group's line is written together (T-123 fan-out)
+            task = asyncio.ensure_future(self._narrate(insight, ctx, to_narrate))
+            self._narrations.add(task)
+            task.add_done_callback(self._narrations.discard)
 
     def track(self, work: Coroutine[Any, Any, None]) -> None:
         """Run background work for this match (e.g. an agent). A seek cancels it; full time waits for it."""
@@ -302,22 +305,25 @@ class MatchSession:
         self.publish_insight(insight)
 
     async def _narrate(
-        self, channel: Channel, insight: Insight, ctx: NarrationContext, salience: float
+        self, insight: Insight, ctx: NarrationContext, fans: list[tuple[Channel, float]]
     ) -> None:
         assert self.worker is not None
         start = time.perf_counter()
-        narration = await self.worker.narrate(insight, channel.profile, ctx, personal_salience=salience)
-        if narration is None or narration.source != "llm":
-            channel.stats["narration_template"] += 1
-            return
-        self.latency.record("narration", (time.perf_counter() - start) * 1000)
-        for item in channel.delivered:
-            if item["insight"]["insight_id"] == insight.insight_id:
-                item["narration"] = {
-                    "text": narration.text, "headline": narration.text, "body": "",
-                    "lang": narration.lang, "source": "llm",
-                }  # fmt: skip
-        channel.send("narration", _json(narration.model_dump(mode="json")))
+        lines = await self.worker.narrate_many(insight, [(c.profile, salience) for c, salience in fans], ctx)
+        elapsed = (time.perf_counter() - start) * 1000
+        for channel, _ in fans:
+            narration = lines.get(channel.profile.profile_id)
+            if narration is None or narration.source != "llm":
+                channel.stats["narration_template"] += 1
+                continue
+            self.latency.record("narration", elapsed)
+            for item in channel.delivered:
+                if item["insight"]["insight_id"] == insight.insight_id:
+                    item["narration"] = {
+                        "text": narration.text, "headline": narration.text, "body": "",
+                        "lang": narration.lang, "source": "llm",
+                    }  # fmt: skip
+            channel.send("narration", _json(narration.model_dump(mode="json")))
 
     async def _finish(self, control: dict[str, Any]) -> None:
         await self.drain_narrations()

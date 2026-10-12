@@ -23,6 +23,21 @@ def narration_id(insight: Insight, profile: Profile) -> str:
     return f"n-{insight.insight_id}-{profile.profile_id}"
 
 
+def template_narration(insight: Insight, profile: Profile, ctx: NarrationContext) -> Narration:
+    """The template line as a Narration: always available, grounded by construction."""
+    text = render(insight, ctx, profile).text
+    return Narration(
+        narration_id=narration_id(insight, profile),
+        insight_id=insight.insight_id,
+        profile_id=profile.profile_id,
+        lang=profile.language,
+        text=text,
+        source="template",
+        grounding=validate(text, insight, ctx, profile.language),
+        latency_ms=0,
+    )
+
+
 class Narrator:
     def __init__(self, provider: LLMProvider, *, max_attempts: int = 2) -> None:
         self.provider = provider
@@ -30,17 +45,7 @@ class Narrator:
         self.stats = {"llm_passed": 0, "llm_retried": 0, "template_fallback": 0, "provider_errors": 0}
 
     def template(self, insight: Insight, profile: Profile, ctx: NarrationContext) -> Narration:
-        text = render(insight, ctx, profile).text
-        return Narration(
-            narration_id=narration_id(insight, profile),
-            insight_id=insight.insight_id,
-            profile_id=profile.profile_id,
-            lang=profile.language,
-            text=text,
-            source="template",
-            grounding=validate(text, insight, ctx, profile.language),
-            latency_ms=0,
-        )
+        return template_narration(insight, profile, ctx)
 
     async def narrate(
         self, insight: Insight, profile: Profile, ctx: NarrationContext, *, tier: Tier = Tier.FAST

@@ -56,8 +56,15 @@ def budget_middleware(budget: RateBudget, max_wait_s: float = AGENT_MAX_WAIT_S) 
     return _budget
 
 
-def chat_client(tier: Tier = Tier.FAST, provider: str | None = None, *, role: str = "analyst") -> Any:
-    """A chat client for the configured provider; falls back to the offline client without credentials."""
+def chat_client(
+    tier: Tier = Tier.FAST,
+    provider: str | None = None,
+    *,
+    role: str = "analyst",
+    max_wait_s: float = AGENT_MAX_WAIT_S,
+) -> Any:
+    """A chat client for the configured provider; falls back to the offline client without credentials.
+    `max_wait_s` bounds the wait for free-tier budget (live narration should not wait long)."""
     name = provider or os.environ.get("LLM_PROVIDER", "mock")
     if name == "groq" and os.environ.get("GROQ_API_KEY"):
         from agent_framework.openai import OpenAIChatCompletionClient
@@ -67,7 +74,7 @@ def chat_client(tier: Tier = Tier.FAST, provider: str | None = None, *, role: st
             model or "openai/gpt-oss-120b",
             api_key=os.environ["GROQ_API_KEY"],
             base_url=GROQ_BASE_URL,
-            middleware=[budget_middleware(groq_budget())],
+            middleware=[budget_middleware(groq_budget(), max_wait_s)],
             function_invocation_configuration=TOOL_LIMITS,
         )
     if name == "openai_compat" and os.environ.get("OPENAI_COMPAT_BASE_URL"):
@@ -163,6 +170,8 @@ class OfflineChatClient(FunctionInvocationLayer, BaseChatClient):  # type: ignor
             return last.split(VERIFIED_MARKER, 1)[-1].strip()
         if self.role == "director":
             return offline_direct(messages)
+        if self.role in ("narrator_live", "localizer"):
+            return offline_line(last)
         if self.role == "editor":
             return OFFLINE_PLAN if "YOUR TURN (plan)" in last else offline_recap(last)
         results = [c for m in messages for c in m.contents if c.type == "function_result"]
@@ -208,6 +217,17 @@ def offline_recap(prompt: str) -> str:
         return json.dumps({"headline": state["score"], "body": body, "player_line": line})
     except (StopIteration, KeyError, IndexError, TypeError, ValueError):
         return "{}"
+
+
+def offline_line(prompt: str) -> str:
+    """The offline Narrator / Localization agent: the grounded REFERENCE line from the prompt's payload
+    (the template in the target language), as structured output."""
+    try:
+        payload, _ = json.JSONDecoder().raw_decode(prompt.strip())
+        text = str(payload.get("REFERENCE", ""))
+    except (ValueError, AttributeError):
+        text = ""
+    return json.dumps({"text": text, "emphasis_entities": []}, ensure_ascii=False)
 
 
 def offline_direct(messages: Sequence[Message]) -> Step:

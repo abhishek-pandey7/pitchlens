@@ -13,6 +13,36 @@ Insight ─► template text (instant, 6 languages, grounded by construction)
 
 A narration never reaches a viewer without passing grounding.
 
+## Narrator and Localization agents (T-123)
+
+Live lines are written by agents (`engine/pitchlens/agents/narration.py`). When an insight lands, the
+session hands **every fan it reaches** to the narration worker at once. The worker keeps its cache,
+in-flight de-duplication and load shedding per (persona, language, verbosity) group, and the groups
+still to write go to one **Agent Framework concurrent workflow** (`ConcurrentBuilder`):
+
+```
+insight ──► Narrator (casual · es) ─────────────────────────────┐
+       ├──► Narrator (analyst · en) ─────────────────────────────┤──► one line per group (fan-in)
+       └──► Narrator (casual · hi, pivot en) ──► Localization ───┘
+```
+
+- **Narrator:** the same prompt as below (persona, glossary, ground rules, the template as a
+  reference). One retry with the validator's violations.
+- **Localization:** for pivot languages (`NARRATION_PIVOT_LANGS`, default Arabic and Hindi), the
+  Narrator writes in English and the Localization agent transcreates the line: idiomatic phrasing,
+  glossary terms, numbers kept as digits, names in Latin script. One retry, as above.
+- Every line is validated **in its own language**; a group that fails keeps its template line.
+- **Switch:** `NARRATION_AGENTS=auto|on|off`. `auto` uses the agents with Groq, Azure OpenAI / Foundry,
+  OpenAI-compatible endpoints and the offline mock (which returns the reference line), and the direct
+  provider path below for Claude on Foundry.
+
+**Live check (Groq, the comeback's last ten minutes at 10×, four fans):**
+- **The fan-out:** for the 85' equaliser one workflow wrote the Spanish, Hindi, Arabic and English
+  analyst lines in parallel. Hindi and Arabic went through the Localization agent, read naturally,
+  and kept the names in Latin script. Every line passed grounding.
+- **Free-tier waits:** 7 of 13 group lines fell back to the template. Live lines wait at most 2 s for
+  free-tier rate budget, the same bound as the direct path. Foundry has no such limit.
+
 ## Template text (`templates/*.yaml`)
 
 Every headline key the detectors emit has a template in **English, Spanish, French, Portuguese, Arabic and Hindi** (30+ keys, kept in lockstep by a test).
