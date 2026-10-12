@@ -19,6 +19,7 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `pitchlens/agents/ask.py` | "Ask the Match": an Agent Framework workflow of guard → analyst → fact-checker → companion |
 | `pitchlens/agents/notes.py` | Analyst tactical notes: agent-authored insights in the live feed |
 | `pitchlens/agents/editor.py` | Editor recaps: an Agent Framework GroupChat (Editor, Analyst, Fact-Checker), then the Narrator per fan |
+| `pitchlens/agents/narration.py` | Narrator and Localization agents: one line per fan group, written concurrently (fan-out / fan-in); see [narration.md](narration.md) |
 | `pitchlens/agents/director.py` | Director: curates the programme feed with cue tools, in auto or approve mode |
 | `pitchlens/render/programme.py` | Programme gate: pending cues, decisions within the scheduler's rules, the decision log |
 | `pitchlens/agents/views.py` | Match views: live session, stored match, or the match as it stood at a whistle (half-time, full time) |

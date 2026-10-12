@@ -7,6 +7,7 @@ import contextlib
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from pitchlens.agents.narration import AgentNarrator, narration_agents_enabled
 from pitchlens.ingest.bus import BusMessage, MessageKind
 from pitchlens.ingest.memory_bus import MemoryBus
 from pitchlens.narrate.mock import MockProvider
@@ -68,13 +69,21 @@ class Hub:
         live = self._live.get(match_id)
         if live is None:
             record = self.record(match_id)
-            worker = NarrationWorker(Narrator(self.provider)) if self.narrate else None
+            worker = NarrationWorker(self._narrator()) if self.narrate else None
             session = MatchSession(record.meta, self.bus, profiles=self.profiles, worker=worker)
             live = self._live[match_id] = Live(session)
             for hook in self.session_hooks:
                 hook(session)
             live.session.start()
         return live.session
+
+    def _narrator(self) -> Narrator | AgentNarrator:
+        """Narrator and Localization agents with the concurrent fan-out (T-123) when the agent clients
+        support the provider; the direct path otherwise (Claude on Foundry). Both keep the template
+        fallback and the grounding validator."""
+        if narration_agents_enabled(getattr(self.provider, "name", None)):
+            return AgentNarrator()
+        return Narrator(self.provider)
 
     def replay_state(self, match_id: str) -> dict[str, object]:
         live = self._live.get(match_id)
