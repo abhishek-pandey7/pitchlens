@@ -109,6 +109,54 @@ export type ProgrammeState = {
   log: ProgrammeLogEntry[];
 };
 
+/** One row of the match's time series (every 30 s of match time; see engine MatchState.readings). */
+export type SeriesRow = {
+  match_ms: number;
+  clock_ms: number;
+  period: number;
+  score: [number, number];
+  wp: [number, number, number]; // home, draw, away
+  xg: [number, number];
+  momentum: number; // home minus away, -1..1
+  possession_5m: number; // home share, last 5 minutes
+  field_tilt: number; // home share of final-third touches, last 10 minutes
+  ppda: [number, number];
+  press_rate: [number, number];
+  control: number | null; // 0 chaos .. 100 control
+  tempo: number;
+};
+
+export type FocusMoment = { insight_id: string; minute: string; type: string; text: string };
+
+/** Player-focus card (engine personalize/player_focus.py). */
+export type FocusCard = {
+  player_id: string;
+  name: string;
+  short_name: string;
+  shirt: number | null;
+  position: string;
+  team: { club_id: string; name: string };
+  on_pitch: boolean;
+  minutes: number;
+  involvement: {
+    touches: number;
+    passes: number;
+    pass_accuracy: number | null;
+    mean_pass_difficulty: number | null;
+    hardest_completed_pass: number | null;
+    key_passes: number;
+    progressive_passes: number;
+    lines_broken: number;
+  };
+  attack: { goals: number; assists: number; shots: number; shots_on_target: number; xg: number; max_shot_speed_kmh: number | null };
+  defence: { tackles: number; interceptions: number; recoveries: number; pressures: number; blocks: number };
+  physical: { distance_km: number; top_speed_kmh: number; speed_kmh: number; sprints: number } | null;
+  zones: { cols: number; rows: number; counts: number[] };
+  timeline: FocusMoment[];
+  latest: FocusMoment | null;
+  match_minute: string;
+};
+
 export type LatencyStage = { count: number; p50_ms: number; p95_ms: number; max_ms: number };
 
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
@@ -146,6 +194,11 @@ export const api = {
     call<ProgrammeState & { outcome: { ok: boolean; result: string; detail: string } }>(
       `/matches/${id}/director/cues/${encodeURIComponent(cueId)}`,
       { method: "POST", body: JSON.stringify({ action }) },
+    ),
+  series: (id: string) => call<SeriesRow[]>(`/matches/${id}/series`),
+  focus: (id: string, playerId: string, profileId?: string | null) =>
+    call<FocusCard>(
+      `/matches/${id}/players/${encodeURIComponent(playerId)}/focus${profileId ? `?profile_id=${encodeURIComponent(profileId)}` : ""}`,
     ),
   streamUrl: (id: string, opts: { profileId?: string | null; frames?: boolean; events?: boolean }) => {
     const params = new URLSearchParams();

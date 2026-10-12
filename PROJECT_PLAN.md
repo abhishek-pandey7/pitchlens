@@ -614,7 +614,7 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-54 (A)** Grounding validator (multilingual numerals, entity check) + retry/fallback. Deps: T-53. *Done when:* adversarial test texts with invented numbers are rejected.
 - [x] **T-55 (A)** Narration worker: cache, concurrency limit, backpressure. Deps: T-54, T-41.
 - [x] **T-56 (A)** Profiles + ranker + spoiler-safe + focus metric. Deps: T-32.
-- [ ] **T-57 (A)** Player-focus mode card + boost. Deps: T-56, T-23.
+- [x] **T-57 (A)** Player-focus mode card + boost. Deps: T-56, T-23. *(Ranker boost ×3 plus a running card: `GET /matches/{id}/players/{pid}/focus`, touch map in the attacking direction, moments in the fan's language.)*
 - [x] **T-58 (A)** Recaps: HT, FT, player of the match, personal recap. Deps: T-54. *(Delivered by T-126: the Editor's group chat, with the Narrator per fan.)*
 
 ### Phase 6: Render & frontend (days 6–15)
@@ -623,8 +623,8 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 - [x] **T-62 (F)** PitchCanvas with 60 fps interpolation. Deps: T-61.
 - [x] **T-63 (F)** Overlay components: PlayerTag, PassCard, ShotSpeedCard, MomentumBar, LowerThird, ChaosMeter, WP swing. Deps: T-61.
 - [x] **T-64 (F)** `/overlay` route (transparent, OBS-ready). Deps: T-60, T-63.
-- [ ] **T-65 (F)** `/watch` fan app + ProfilePicker + player-focus panel + personal recap. Deps: T-56, T-57. *(In progress: live feed, pitch, scoreboard, profiles, i18n/RTL and personal recap done; player-focus panel pending.)*
-- [ ] **T-66 (F)** `/analyst` charts + evidence inspector. Deps: T-24…T-26.
+- [x] **T-65 (F)** `/watch` fan app + ProfilePicker + player-focus panel + personal recap. Deps: T-56, T-57. *(In progress: live feed, pitch, scoreboard, profiles, i18n/RTL, personal recap and the player-focus panel done.)*
+- [x] **T-66 (F)** `/analyst` charts + evidence inspector. Deps: T-24…T-26. *(Six live charts (win probability, xG with goal markers, momentum, pressing, territory, control vs chaos) and an evidence inspector that marks the moment on every chart.)*
 - [x] **T-67 (F)** `/studio` console (replay controls, insight queue, recap triggers, latency HUD). Deps: T-40, T-58. *(Done: replay controls, programme/overlay preview, insight queue, latency HUD, Ask panel and agent trace. Recap panel done with T-126, Director approve mode with T-125.)*
 - [x] **T-68 (F)** `/compare` side-by-side view. Deps: T-65.
 

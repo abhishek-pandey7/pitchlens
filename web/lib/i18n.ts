@@ -153,3 +153,23 @@ const RECAP: Record<Lang, RecapStrings> = {
 export function recapStrings(lang: string | null | undefined): RecapStrings {
   return RECAP[isLang(lang) ? lang : "en"];
 }
+
+type FocusStrings = {
+  title: string; pick: string; none: string; minutes: string; touches: string; passes: string; accuracy: string;
+  difficulty: string; keyPasses: string; goals: string; assists: string; shots: string; xg: string;
+  tackles: string; interceptions: string; recoveries: string; distance: string; topSpeed: string; sprints: string;
+  touchMap: string; attacking: string; moments: string; noMoments: string; noTracking: string; onPitch: string; off: string;
+};
+
+const FOCUS: Record<Lang, FocusStrings> = {
+  en: { title: "Player focus", pick: "Follow a player", none: "Pick a player to follow their match.", minutes: "min", touches: "Touches", passes: "Passes", accuracy: "Accuracy", difficulty: "Pass difficulty", keyPasses: "Key passes", goals: "Goals", assists: "Assists", shots: "Shots", xg: "xG", tackles: "Tackles", interceptions: "Interceptions", recoveries: "Recoveries", distance: "Distance", topSpeed: "Top speed", sprints: "Sprints", touchMap: "Touch map", attacking: "attacking", moments: "Moments", noMoments: "No moments yet.", noTracking: "Running data needs tracking.", onPitch: "on the pitch", off: "off" },
+  es: { title: "Jugador en foco", pick: "Sigue a un jugador", none: "Elige un jugador para seguir su partido.", minutes: "min", touches: "Toques", passes: "Pases", accuracy: "Precisión", difficulty: "Dificultad de pase", keyPasses: "Pases clave", goals: "Goles", assists: "Asistencias", shots: "Tiros", xg: "xG", tackles: "Entradas", interceptions: "Intercepciones", recoveries: "Recuperaciones", distance: "Distancia", topSpeed: "Velocidad máx.", sprints: "Sprints", touchMap: "Mapa de toques", attacking: "ataca", moments: "Momentos", noMoments: "Aún no hay momentos.", noTracking: "Los datos físicos necesitan tracking.", onPitch: "en el campo", off: "fuera" },
+  fr: { title: "Joueur suivi", pick: "Suivre un joueur", none: "Choisissez un joueur pour suivre son match.", minutes: "min", touches: "Touches", passes: "Passes", accuracy: "Précision", difficulty: "Difficulté des passes", keyPasses: "Passes clés", goals: "Buts", assists: "Passes déc.", shots: "Tirs", xg: "xG", tackles: "Tacles", interceptions: "Interceptions", recoveries: "Récupérations", distance: "Distance", topSpeed: "Vitesse max.", sprints: "Sprints", touchMap: "Carte des touches", attacking: "attaque", moments: "Moments", noMoments: "Pas encore de moments.", noTracking: "Les données physiques demandent le tracking.", onPitch: "sur le terrain", off: "sorti" },
+  pt: { title: "Jogador em foco", pick: "Siga um jogador", none: "Escolha um jogador para acompanhar a partida dele.", minutes: "min", touches: "Toques", passes: "Passes", accuracy: "Precisão", difficulty: "Dificuldade dos passes", keyPasses: "Passes decisivos", goals: "Gols", assists: "Assistências", shots: "Chutes", xg: "xG", tackles: "Desarmes", interceptions: "Interceptações", recoveries: "Recuperações", distance: "Distância", topSpeed: "Velocidade máx.", sprints: "Sprints", touchMap: "Mapa de toques", attacking: "ataca", moments: "Momentos", noMoments: "Ainda sem momentos.", noTracking: "Os dados físicos precisam de tracking.", onPitch: "em campo", off: "fora" },
+  ar: { title: "لاعب تحت المجهر", pick: "تابع لاعبًا", none: "اختر لاعبًا لمتابعة مباراته.", minutes: "د", touches: "اللمسات", passes: "التمريرات", accuracy: "الدقة", difficulty: "صعوبة التمرير", keyPasses: "تمريرات مفتاحية", goals: "الأهداف", assists: "التمريرات الحاسمة", shots: "التسديدات", xg: "xG", tackles: "الافتكاكات", interceptions: "الاعتراضات", recoveries: "الاستعادات", distance: "المسافة", topSpeed: "السرعة القصوى", sprints: "الانطلاقات", touchMap: "خريطة اللمسات", attacking: "اتجاه الهجوم", moments: "اللحظات", noMoments: "لا لحظات بعد.", noTracking: "البيانات البدنية تحتاج إلى التتبع.", onPitch: "في الملعب", off: "خارج الملعب" },
+  hi: { title: "खिलाड़ी पर फ़ोकस", pick: "किसी खिलाड़ी को फ़ॉलो करें", none: "किसी खिलाड़ी को चुनें और उसका मैच देखें।", minutes: "मिनट", touches: "टच", passes: "पास", accuracy: "सटीकता", difficulty: "पास की कठिनाई", keyPasses: "की पास", goals: "गोल", assists: "असिस्ट", shots: "शॉट", xg: "xG", tackles: "टैकल", interceptions: "इंटरसेप्शन", recoveries: "रिकवरी", distance: "दूरी", topSpeed: "टॉप स्पीड", sprints: "स्प्रिंट", touchMap: "टच मैप", attacking: "हमले की दिशा", moments: "पल", noMoments: "अभी कोई पल नहीं।", noTracking: "फ़िज़िकल डेटा के लिए ट्रैकिंग चाहिए।", onPitch: "मैदान पर", off: "बाहर" },
+};
+
+export function focusStrings(lang: string | null | undefined): FocusStrings {
+  return FOCUS[isLang(lang) ? lang : "en"];
+}

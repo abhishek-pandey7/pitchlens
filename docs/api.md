@@ -34,6 +34,7 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `GET /matches/{id}/insights` | Insights so far. Query: `since_ms`, `min_salience` |
 | `GET /matches/{id}/series` | 30 s time series (win probability, xG, momentum, tilt, PPDA, press rate, control, tempo) |
 | `GET /matches/{id}/players/{player_id}` | Player card: event stats and physical metrics |
+| `GET /matches/{id}/players/{pid}/focus?profile_id=` | **Player-focus card**: involvement, attack, defence and running numbers, a 6×4 touch map in the player's attacking direction, and their moments in the fan's language |
 | `GET /matches/{id}/latency` | Per-stage latency p50 / p95 / max (studio HUD) |
 | `POST /matches/external` | Register an externally fed match: `{meta}` |
 | `POST /ingest` | Push `events.v1` batches into an external match. Each event is validated independently, and bad events are returned in `rejected` |

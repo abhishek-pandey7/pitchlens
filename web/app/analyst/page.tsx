@@ -1,11 +1,13 @@
-import { RouteStub } from "@/components/RouteStub";
+import { Suspense } from "react";
+import { AnalystClient } from "./AnalystClient";
 
-export default function Page() {
+export const metadata = { title: "Analyst · PitchLens" };
+
+// /analyst?match=… reads the match with useSearchParams, which needs a Suspense boundary.
+export default function AnalystPage() {
   return (
-    <RouteStub
-      title="Analyst"
-      audience="Analysts"
-      description="Win probability, xG timeline, momentum, PPDA, control vs chaos and an evidence inspector."
-    />
+    <Suspense fallback={<div className="p-8 text-muted">Loading…</div>}>
+      <AnalystClient />
+    </Suspense>
   );
 }

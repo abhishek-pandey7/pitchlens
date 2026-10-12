@@ -8,6 +8,7 @@ import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { MatchLauncher } from "@/components/MatchLauncher";
 import { PitchCanvas } from "@/components/PitchCanvas";
+import { PlayerFocusPanel } from "@/components/PlayerFocusPanel";
 import { Scoreboard } from "@/components/Scoreboard";
 import { api } from "@/lib/api";
 import { dir, t } from "@/lib/i18n";
@@ -29,7 +30,10 @@ export function WatchClient() {
   const view = useMatchStream(matchId, { profileId, frames: true });
   const lang = view.profile?.language ?? profile?.language ?? "en";
   const persona = view.profile?.persona ?? profile?.persona ?? "analyst";
-  const focus = profile?.player_focus_mode.enabled ? profile.player_focus_mode.player_id : null;
+  const profileFocus = profile?.player_focus_mode.enabled ? profile.player_focus_mode.player_id : null;
+  // The fan's own pick (undefined until they choose) overrides the profile's focus player.
+  const [picked, setPicked] = useState<string | null | undefined>(undefined);
+  const focus = picked === undefined ? profileFocus : picked;
 
   if (!matchId) {
     return (
@@ -68,6 +72,15 @@ export function WatchClient() {
               <Stat label={t(lang, "shots")} home={String(view.state.home.shots)} away={String(view.state.away.shots)} />
             </dl>
           )}
+          <PlayerFocusPanel
+            matchId={matchId}
+            meta={view.meta}
+            playerId={focus}
+            onPick={setPicked}
+            profileId={profileId}
+            lang={lang}
+            matchMs={view.matchMs}
+          />
         </section>
         <div className="flex flex-col gap-4">
           <AskPanel matchId={matchId} profileId={profileId} lang={lang} />
