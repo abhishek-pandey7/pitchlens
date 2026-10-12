@@ -664,8 +664,8 @@ Tracks: **E** = Engine/Data · **A** = AI/Narrative · **F** = Frontend/Overlay 
 **P1**
 - [ ] **T-90 (A)** TTS commentary: Azure AI Speech provider, per-language neural voice map, SSML emphasis on goals/WP swings, audio cache; `/watch` toggle + `/overlay?audio=1`. Deps: T-55. *Done when:* goal narration plays in es and en within 4 s of the event.
 - [ ] **T-91 (A)** "Ask the Match" agent: tool schemas over metric/insight functions, provider tool-use loop, grounded citations, chat panel in `/watch` + `/analyst`. Deps: T-51, T-41. *Done when:* 10 scripted questions answered correctly with cited evidence.
-- [ ] **T-92 (E)** Counterfactual WP (`explain/counterfactual.py`) for big chances, saves and red cards; added as evidence + "What if" card. Deps: T-26, T-31.
-- [ ] **T-93 (E/F)** WebVTT chapters + caption export per language, full-match cue JSON export, `GET /matches/{id}/export/{chapters|captions|cues}`. Deps: T-58, T-60.
+- [x] **T-92 (E)** Counterfactual WP (`explain/counterfactual.py`) for big chances, saves and red cards; added as evidence + "What if" card. Deps: T-26, T-31. *(Big chances (missed, saved, blocked) and red cards; evidence `what_if_win_prob` / `no_red_win_prob`, narrated in six languages, grounded, and a "What if" strip on the overlay.)*
+- [x] **T-93 (E/F)** WebVTT chapters + caption export per language, full-match cue JSON export, `GET /matches/{id}/export/{chapters|captions|cues}`. Deps: T-58, T-60. *(`GET /matches/{id}/export/{chapters|captions|cues}`; WebVTT in six languages, match-time stamps; Exports panel in /studio.)*
 - [ ] **T-94 (A/F)** Studio pundit sheet: pre-match preview, HT talking points, FT talking points; print view in `/studio`. Deps: T-58, T-10.
 - [ ] **T-95 (F)** Shareable moment cards via `next/og`, per language and club colours. Deps: T-65.
 

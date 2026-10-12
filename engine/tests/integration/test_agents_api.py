@@ -80,3 +80,19 @@ def test_readiness_probe(server: tuple[str, Hub]) -> None:
     assert ready.status_code == 200 and body["status"] == "ready"
     assert body["checks"]["content_safety"] == "local" and body["checks"]["llm"]["provider"] == "mock"
     assert body["checks"]["agent_budget"]["per_match"] > 0
+
+
+def test_exports(server: tuple[str, Hub]) -> None:
+    base, _ = server
+    match_id = httpx.post(
+        f"{base}/matches", json={"seed": 4, "storyline": "red_card_turn", "tracking": False}, timeout=120
+    ).json()["match_id"]
+    chapters = httpx.get(f"{base}/matches/{match_id}/export/chapters", params={"lang": "fr"}, timeout=120)
+    assert chapters.status_code == 200 and chapters.headers["content-type"].startswith("text/vtt")
+    assert chapters.text.startswith("WEBVTT") and "Coup d'envoi" in chapters.text
+    captions = httpx.get(f"{base}/matches/{match_id}/export/captions", params={"profile_id": "p-casual-ar"})
+    assert captions.status_code == 200 and "-->" in captions.text
+    cues = httpx.get(f"{base}/matches/{match_id}/export/cues", params={"profile_id": "p-casual-es"}).json()
+    assert cues["time_base"] == "match_ms" and cues["cues"]
+    assert httpx.get(f"{base}/matches/{match_id}/export/everything").status_code == 422
+    assert httpx.get(f"{base}/matches/nope/export/chapters").status_code == 404

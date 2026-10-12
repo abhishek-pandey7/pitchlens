@@ -1,5 +1,6 @@
 // Broadcast graphics for overlay cues. Every number shown comes from the cue's `data` (the insight's
 // evidence); every sentence from `text` (template or grounded AI narration).
+import { t } from "@/lib/i18n";
 import type { MatchMeta, OverlayCue } from "@/lib/types";
 
 type Change = { from: number | null; to: number | null };
@@ -33,15 +34,35 @@ function Panel({ children, className = "" }: { children: React.ReactNode; classN
 
 export function LowerThird({ cue, accent }: { cue: OverlayCue; accent: string }) {
   const goal = cue.priority >= 100;
+  // T-92: the counterfactual on big chances ("if it had gone in") and red cards ("with eleven").
+  const whatIf = change(cue, "what_if_win_prob") ?? change(cue, "no_red_win_prob");
   return (
     <Panel className="flex max-w-[70%] overflow-hidden">
       <div className="w-2 shrink-0" style={{ background: accent }} />
       <div className="px-6 py-4">
         <p className={`${goal ? "text-4xl" : "text-2xl"} font-bold leading-tight`}>{cue.text.headline}</p>
         {cue.text.body && <p className="mt-1 text-lg text-muted">{cue.text.body}</p>}
+        {whatIf && whatIf.from != null && whatIf.to != null && <WhatIf change={whatIf} lang={cue.text.lang} />}
       </div>
       {cue.text.source === "llm" && <span className="self-start px-3 pt-3 text-xs font-semibold text-accent">AI</span>}
     </Panel>
+  );
+}
+
+/** "What if": win probability as it is, and as it would be, for the team in the moment. */
+function WhatIf({ change: c, lang }: { change: Change; lang: string }) {
+  const from = c.from ?? 0;
+  const to = c.to ?? 0;
+  return (
+    <div className="mt-3 flex items-center gap-3 text-base" data-testid="what-if">
+      <span className="rounded bg-accent/15 px-2 py-0.5 text-sm font-semibold uppercase tracking-widest text-accent">{t(lang, "whatIf")}</span>
+      <span className="font-mono tabular-nums text-muted">{pct(from)}</span>
+      <span className="relative h-2 w-40 overflow-hidden rounded-full bg-white/10" aria-hidden>
+        <span className="absolute inset-y-0 start-0 bg-white/30" style={{ width: `${Math.round(from * 100)}%` }} />
+        <span className="absolute inset-y-0 start-0 border-e-2 border-accent" style={{ width: `${Math.round(to * 100)}%` }} />
+      </span>
+      <span className="font-mono text-lg font-bold tabular-nums text-accent">{pct(to)}</span>
+    </div>
   );
 }
 

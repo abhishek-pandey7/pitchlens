@@ -17,6 +17,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from typing import Any
 
+from pitchlens.explain import counterfactual
 from pitchlens.interpret.geometry import OWN_DEFENSIVE_60_X, PRESS_ZONE_X
 from pitchlens.interpret.state import MatchState
 from pitchlens.schema.enriched import AlertKind, EnrichedEvent, PhysicalAlert
@@ -223,6 +224,7 @@ class BigChanceDetector(Detector):
         ]
         if "shot_speed_kmh" in x.metrics:
             evidence.append(ev("shot_speed_kmh", x.metrics["shot_speed_kmh"], unit="km/h"))
+        evidence.append(counterfactual.if_scored(self.state, e.team_id))  # what if it had gone in
         return [
             Candidate(
                 InsightType.BIG_CHANCE,
@@ -393,6 +395,7 @@ class CardDetector(Detector):
         evidence = [ev("card", outcome.value, player=e.player_id), *wp]
         if dismissal:
             evidence.append(ev("players_on_pitch", len(self.state.teams[e.team_id].on_pitch), team=e.team_id))
+            evidence.append(counterfactual.if_eleven(self.state, e.team_id))  # what if still eleven
         return [
             Candidate(
                 InsightType.CARD,

@@ -29,6 +29,7 @@ big_chance.saved:
   detail: &chance_detail
     - "Era una ocasión de {xg} xG desde {shot_distance_m} m."
     - "Velocidad del disparo: {shot_speed_kmh} km/h."
+    - "¿Y si hubiera entrado? {team} tendría un {what_if_win_prob_to_pct} de ganar, no un {what_if_win_prob_from_pct}."
 big_chance.missed:
   headline: "{player} falla una ocasión clarísima para {team}."
   detail: *chance_detail
@@ -57,6 +58,7 @@ card.second_yellow:
   headline: "¡Segunda amarilla! {player} se va a la calle y {team} se queda con {players_on_pitch}."
   detail: &card_detail
     - "Probabilidad de victoria de {team}: {win_prob_from_pct} → {win_prob_to_pct}."
+    - "Con once jugadores, {team} tendría un {no_red_win_prob_to_pct} de ganar."
 card.red:
   headline: "¡Roja directa! {player} es expulsado y {team} se queda con {players_on_pitch}."
   detail: *card_detail

@@ -24,7 +24,7 @@ from pitchlens.mcpserver.server import build_server
 from pitchlens.narrate.provider import LLMProvider
 from pitchlens.narrate.providers import build_provider
 
-from .routes import agents, matches, misc, streams
+from .routes import agents, exports, matches, misc, streams
 
 API_PREFIX = "/api/v1"
 log = logging.getLogger("pitchlens")
@@ -74,7 +74,7 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         allow_headers=["Content-Type", "Last-Event-ID", "Authorization", "Mcp-Session-Id"],
         expose_headers=["Retry-After"],
     )
-    for router in (misc.router, matches.router, streams.router, agents.router):
+    for router in (misc.router, matches.router, streams.router, agents.router, exports.router):
         app.include_router(router, prefix=API_PREFIX)
     app.mount("/", mcp_app)  # last, so the API routes match first; serves POST/GET /mcp
     return app
