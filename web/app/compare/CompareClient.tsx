@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { InsightFeed } from "@/components/InsightFeed";
-import { MatchLauncher } from "@/components/MatchLauncher";
+import { MatchLauncher, fanLabel } from "@/components/MatchLauncher";
 import { OverlayStage } from "@/components/overlay/OverlayStage";
 import { Scoreboard } from "@/components/Scoreboard";
 import { dir } from "@/lib/i18n";
@@ -79,7 +79,7 @@ function FanColumn({
       >
         {profiles.map((p) => (
           <option key={p.profile_id} value={p.profile_id}>
-            {p.display_name ?? p.profile_id} · {p.persona} · {p.language}
+            {fanLabel(p)}
           </option>
         ))}
       </select>
@@ -96,8 +96,8 @@ function FanColumn({
 function Header() {
   return (
     <header className="mb-6">
-      <Link href="/" className="text-sm font-semibold uppercase tracking-widest text-accent">
-        PitchLens <span className="text-muted">· Same match, two fans</span>
+      <Link href="/" className="display text-xl text-foreground">
+        PitchLens <span className="ms-1 text-muted">Same match, two fans</span>
       </Link>
     </header>
   );

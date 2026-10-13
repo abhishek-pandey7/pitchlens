@@ -25,7 +25,7 @@ export function OverlayClient() {
     );
   }
   return (
-    <main className="overlay-page mx-auto w-full max-w-[1920px]">
+    <main className="overlay-page broadcast mx-auto w-full max-w-[1920px]">
       <OverlayStage view={view} pitch={pitch} />
     </main>
   );

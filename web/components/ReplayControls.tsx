@@ -34,7 +34,7 @@ export function ReplayControls({ matchId }: { matchId: string }) {
 
   return (
     <section aria-label="Replay controls" className="flex flex-wrap items-center gap-2 rounded-lg bg-surface p-3 text-sm">
-      <span className="me-1 text-xs uppercase tracking-widest text-muted">Replay</span>
+      <span className="me-1 text-sm font-semibold">Replay</span>
       {STARTS.map((s) => (
         <button
           key={s.label}
@@ -74,9 +74,9 @@ export function ReplayControls({ matchId }: { matchId: string }) {
           ▶ Resume
         </button>
       )}
-      <span className="ms-auto font-mono text-xs text-muted" data-testid="replay-state">
+      <span className="ms-auto text-sm text-muted" data-testid="replay-state">
         {state}
-        {match?.replay.speed ? ` · ${match.replay.speed}×` : ""}
+        {match?.replay.speed ? ` at ${match.replay.speed}×` : ""}
       </span>
       {error && <p className="w-full text-xs text-warning">{error}</p>}
     </section>

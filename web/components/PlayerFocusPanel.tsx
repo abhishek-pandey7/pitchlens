@@ -24,9 +24,9 @@ export function PlayerFocusPanel({ matchId, meta, playerId, onPick, profileId, l
   const card = usePoll(key, () => api.focus(matchId, playerId ?? "", profileId), 3000);
 
   return (
-    <section aria-label={s.title} className="rounded-lg bg-surface p-3" data-testid="player-focus">
+    <section aria-label={s.title} className="panel" data-testid="player-focus">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h2 className="me-auto text-sm font-semibold uppercase tracking-widest text-muted">{s.title}</h2>
+        <h2 className="me-auto section-title">{s.title}</h2>
         <select
           aria-label={s.pick}
           value={playerId ?? ""}
@@ -98,7 +98,7 @@ function Card({ card, lang }: { card: FocusCard; lang: string }) {
       {!card.physical && <p className="text-xs text-muted">{s.noTracking}</p>}
       <TouchMap card={card} lang={lang} />
       <div>
-        <h3 className="mb-1 text-xs font-semibold uppercase tracking-widest text-muted">{s.moments}</h3>
+        <h3 className="mb-1 text-sm font-semibold">{s.moments}</h3>
         {!card.timeline.length && <p className="text-xs text-muted">{s.noMoments}</p>}
         <ol className="flex flex-col gap-1">
           {[...card.timeline].reverse().map((m) => (

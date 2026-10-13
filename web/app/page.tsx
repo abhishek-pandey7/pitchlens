@@ -1,38 +1,46 @@
 import Link from "next/link";
 
-const ROUTES = [
-  { href: "/watch", title: "Watch", body: "Personalized second screen: your persona, language, club and player." },
-  { href: "/compare", title: "Compare", body: "Same moment, two fans. Side-by-side personalized experiences." },
-  { href: "/overlay", title: "Overlay", body: "Transparent broadcast overlay for OBS or a rendering partner." },
-  { href: "/analyst", title: "Analyst", body: "Win probability, xG, momentum, pressure and the evidence behind every insight." },
-  { href: "/studio", title: "Studio", body: "Producer console: replay control, insight queue, agent trace, recaps." },
-  { href: "/matchday", title: "Matchday", body: "Several live matches, cross-match alerts and a live table." },
+// Who each view is for, in their words. The order follows a matchday: the fan first, the broadcast last.
+const VIEWS = [
+  { href: "/watch", title: "Watch", body: "Follow a match your way: your club, your player, your language, as much or as little detail as you like." },
+  { href: "/compare", title: "Compare", body: "See the same moment told to two different fans, side by side." },
+  { href: "/analyst", title: "Analyst", body: "Win probability, xG, momentum and pressure, with the evidence behind every insight." },
+  { href: "/studio", title: "Studio", body: "Run the replay, approve what goes on air, read the agents' working and write the recaps." },
+  { href: "/overlay", title: "Overlay", body: "Transparent broadcast graphics for OBS or a rendering partner." },
 ];
 
 export default function Home() {
   return (
-    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-10 px-4 py-16">
-      <header className="flex flex-col gap-3">
-        <p className="text-xs font-semibold uppercase tracking-widest text-accent">PitchLens</p>
-        <h1 className="text-4xl font-semibold sm:text-5xl">The game, explained for every fan.</h1>
-        <p className="max-w-2xl text-muted">
-          Synthetic football events in, explainable insights, live narratives, overlays and recaps out,
-          personalized by persona, language, club and player.
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-14 px-4 py-14 sm:py-20">
+      <header className="flex max-w-3xl flex-col gap-5">
+        <p className="display text-2xl text-accent">PitchLens</p>
+        <h1 className="display text-5xl sm:text-7xl">The game, explained for every fan.</h1>
+        <p className="max-w-[60ch] text-lg text-muted">
+          Live match events go in. What happened, why it matters and what it means for your club come out as
+          commentary, graphics and recaps in six languages, checked against the numbers before anyone sees them.
         </p>
-      </header>
-      <nav className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {ROUTES.map((route) => (
-          <Link
-            key={route.href}
-            href={route.href}
-            className="rounded-xl border border-surface-2 bg-surface p-5 transition-colors hover:border-accent"
-          >
-            <h2 className="text-lg font-semibold">{route.title}</h2>
-            <p className="mt-1 text-sm text-muted">{route.body}</p>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link href="/watch" className="rounded-md bg-accent px-5 py-2.5 font-semibold text-white hover:bg-accent/90">
+            Watch a match
           </Link>
-        ))}
+          <Link href="/compare" className="font-semibold text-accent underline-offset-4 hover:underline">
+            Compare two fans
+          </Link>
+        </div>
+      </header>
+      <nav aria-label="Views">
+        <ul className="grid gap-x-10 sm:grid-cols-2">
+          {VIEWS.map((view) => (
+            <li key={view.href} className="border-t border-surface-2">
+              <Link href={view.href} className="group block py-4">
+                <span className="text-lg font-semibold group-hover:text-accent">{view.title}</span>
+                <span className="mt-1 block max-w-[52ch] text-muted">{view.body}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </nav>
-      <footer className="text-xs text-muted">
+      <footer className="text-sm text-muted">
         All data is synthetic. No real Premier League match data, players or trademarks are used.
       </footer>
     </main>

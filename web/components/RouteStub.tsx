@@ -13,7 +13,7 @@ export function RouteStub({ title, audience, description }: RouteStubProps) {
       <Link href="/" className="text-sm text-muted hover:text-foreground">
         ← PitchLens
       </Link>
-      <p className="text-xs font-semibold uppercase tracking-widest text-accent">{audience}</p>
+      <p className="display text-lg text-accent">{audience}</p>
       <h1 className="text-3xl font-semibold">{title}</h1>
       <p className="text-muted">{description}</p>
     </main>

@@ -53,7 +53,7 @@ export function LineChart({
   const last = (values: (number | null)[]) => [...values].reverse().find((v) => v != null) ?? null;
 
   return (
-    <figure className="rounded-lg bg-surface p-3" data-testid={testId}>
+    <figure className="panel" data-testid={testId}>
       <figcaption className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <span className="text-sm font-semibold">{title}</span>
         {subtitle && <span className="text-xs text-muted">{subtitle}</span>}

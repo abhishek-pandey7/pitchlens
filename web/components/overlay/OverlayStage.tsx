@@ -65,7 +65,7 @@ export function OverlayStage({ view, pitch }: { view: MatchView; pitch: boolean 
 
   return (
     <ScaledStage>
-      <div dir={dir(lang)} lang={lang} className="overlay-root relative h-full w-full text-foreground">
+      <div dir={dir(lang)} lang={lang} className="overlay-root broadcast relative h-full w-full text-foreground">
       {pitch && (
         <div className="absolute left-1/2 top-1/2 w-[78%] -translate-x-1/2 -translate-y-1/2">
           <div className="relative">
