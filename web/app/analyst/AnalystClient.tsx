@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { LineChart, type ChartMarker } from "@/components/charts/LineChart";
+import { cardKind } from "@/components/InsightFeed";
 import { MatchLauncher } from "@/components/MatchLauncher";
 import { ReplayControls } from "@/components/ReplayControls";
 import { Scoreboard } from "@/components/Scoreboard";
@@ -223,7 +224,7 @@ function Inspector({
                 className={`w-full rounded-md p-2 text-start text-sm ${active ? "bg-accent/15 ring-1 ring-accent" : "bg-surface hover:bg-surface-2"}`}
               >
                 <span className="me-2 font-mono text-xs text-muted">{clockLabel(f)}</span>
-                <span className="me-2 text-xs text-muted">{typeLabel("en", f.insight.type)}</span>
+                <span className="me-2 text-xs text-muted">{typeLabel("en", cardKind(f.insight) ?? f.insight.type)}</span>
                 <span>{f.narration.headline || f.narration.text}</span>
               </button>
             </li>
@@ -242,7 +243,7 @@ function Detail({ item, names, onClose }: { item: FeedItem; names: Record<string
       <header className="mb-2 flex items-start gap-2">
         <div className="me-auto">
           <p className="font-mono text-xs text-muted">
-            {clockLabel(item)} · {typeLabel("en", i.type)} · <code>{i.headline_key}</code>
+            {clockLabel(item)} · {typeLabel("en", cardKind(i) ?? i.type)} · <code>{i.headline_key}</code>
           </p>
           <p className="font-semibold">{item.narration.text}</p>
         </div>

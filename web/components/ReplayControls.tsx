@@ -17,6 +17,11 @@ export function ReplayControls({ matchId }: { matchId: string }) {
   const [error, setError] = useState<string | null>(null);
   const match = usePoll(matchId, () => api.match(matchId), 1500);
   const state = match?.replay.state ?? "idle";
+  // While a replay runs, the select shows its real speed: otherwise picking the speed the select already
+  // shows (but the replay is not running at) would not register as a change.
+  const live = (state === "playing" || state === "paused") && match?.replay.speed ? match.replay.speed : null;
+  const shown = live ?? speed;
+  const options = SPEEDS.includes(shown) ? SPEEDS : [...SPEEDS, shown].sort((a, b) => a - b);
 
   async function run(action: () => Promise<unknown>) {
     setError(null);
@@ -43,7 +48,8 @@ export function ReplayControls({ matchId }: { matchId: string }) {
       <label className="flex items-center gap-1 text-xs text-muted">
         Speed
         <select
-          value={speed}
+          value={shown}
+          aria-label="Speed"
           onChange={(e) => {
             const next = Number(e.target.value);
             setSpeed(next);
@@ -51,7 +57,7 @@ export function ReplayControls({ matchId }: { matchId: string }) {
           }}
           className="rounded bg-surface-2 px-1.5 py-1 text-foreground"
         >
-          {SPEEDS.map((s) => (
+          {options.map((s) => (
             <option key={s} value={s}>
               {s}×
             </option>
