@@ -55,14 +55,12 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         app.state.hub = hub or Hub(MatchStore(settings.data_dirs), provider=provider_from(settings))
         app.state.agents = desk
         app.state.hub.session_hooks.append(desk.attach)
-        warm = None
         if os.environ.get("PITCHLENS_WARM_TRACKING", "1") not in ("0", "false", "off"):
-            # Players and ball for the stored sample matches, built in the background (seconds each).
-            warm = asyncio.create_task(asyncio.to_thread(app.state.hub.store.warm_tracking))
+            # Players and ball for the stored sample matches: built in a worker process, then cached.
+            await asyncio.to_thread(app.state.hub.store.warm_tracking)
         async with mcp.session_manager.run():
             yield
-        if warm is not None and not warm.done():
-            warm.cancel()
+        app.state.hub.store.close()
         await app.state.hub.shutdown()
 
     app = FastAPI(
