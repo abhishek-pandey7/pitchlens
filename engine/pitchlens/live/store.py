@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import gzip
 import json
+import logging
+import os
+import threading
+from collections import defaultdict
+from concurrent.futures import Future, ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -13,6 +18,13 @@ from pitchlens.sim.simulator import simulate
 from pitchlens.sim.storylines import build, default_fixture
 from pitchlens.sim.tracking import Tracking, generate_tracking
 
+log = logging.getLogger(__name__)
+# Rebuilt tracking for stored matches is cached here (gitignored), so each match is built once.
+TRACKING_CACHE = Path(
+    os.environ.get("PITCHLENS_TRACKING_CACHE")
+    or Path(__file__).resolve().parents[3] / "data" / ".cache" / "tracking"
+)
+
 
 @dataclass
 class MatchRecord:
@@ -20,6 +32,7 @@ class MatchRecord:
     events: list[MatchEvent] = field(default_factory=list)
     tracking: Tracking | None = None
     source: str = "stored"  # stored | generated | external
+    path: Path | None = None  # the stored match's directory
 
     @property
     def match_id(self) -> str:
@@ -57,7 +70,27 @@ def load_match_dir(match_dir: Path) -> MatchRecord | None:
     meta = MatchMeta.model_validate(json.loads(meta_path.read_text(encoding="utf-8")))
     tracking_path = match_dir / "tracking.npz"
     tracking = Tracking.load(tracking_path) if tracking_path.exists() else None
-    return MatchRecord(meta=meta, events=read_events(events_path), tracking=tracking)
+    return MatchRecord(meta=meta, events=read_events(events_path), tracking=tracking, path=match_dir)
+
+
+def cache_path(match_id: str, n_events: int, cache: Path | None = None) -> Path:
+    return (cache or TRACKING_CACHE) / f"{match_id}-{n_events}.npz"
+
+
+def build_tracking_cache(match_dir: str, cache: str) -> str | None:
+    """Worker-process entry point: rebuild a stored match's tracking and save it to the cache. It runs in
+    its own process, so a build (tens of seconds of pure Python) never slows the engine's event loop."""
+    record = load_match_dir(Path(match_dir))
+    if record is None:
+        return None
+    try:
+        tracking = generate_tracking(record.meta, record.events, load_league())
+    except (StopIteration, KeyError, ValueError):  # clubs or players outside this league
+        return None
+    target = cache_path(record.match_id, len(record.events), Path(cache))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tracking.save(target)
+    return str(target)
 
 
 class MatchStore:
@@ -66,6 +99,9 @@ class MatchStore:
         self._league = league
         self._records: dict[str, MatchRecord] = {}
         self._scanned = False
+        self._tracking_locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
+        self._builder: ProcessPoolExecutor | None = None
+        self._building: dict[str, Future[str | None]] = {}
 
     @property
     def league(self) -> League:
@@ -91,6 +127,72 @@ class MatchStore:
     def get(self, match_id: str) -> MatchRecord | None:
         self._scan()
         return self._records.get(match_id)
+
+    # ------------------------------------------------------------------ tracking for stored matches
+    # The committed samples carry events only, to keep the repository small. Their 5 Hz tracking is
+    # rebuilt deterministically from the events and the league's rosters, once, and cached on disk.
+
+    def load_cached_tracking(self, record: MatchRecord) -> bool:
+        """Tracking from memory or the disk cache (fast). Never builds. External feeds never use the
+        cache: it holds tracking rebuilt for our own simulator's matches."""
+        if record.tracking is not None:
+            return True
+        if record.source == "external":
+            return False
+        cached = cache_path(record.match_id, len(record.events))
+        with self._tracking_locks[record.match_id]:
+            if record.tracking is None and cached.exists():
+                try:
+                    record.tracking = Tracking.load(cached)
+                except (OSError, ValueError, KeyError):
+                    cached.unlink(missing_ok=True)
+        return record.tracking is not None
+
+    def request_tracking(self, record: MatchRecord) -> bool:
+        """Ask the background builder for a stored match's tracking (non-blocking). True if queued."""
+        if record.tracking is not None or record.source != "stored" or record.path is None:
+            return False
+        if cache_path(record.match_id, len(record.events)).exists():
+            return False
+        building = self._building.get(record.match_id)
+        if building is not None and not building.done():
+            return False
+        if self._builder is None:
+            self._builder = ProcessPoolExecutor(max_workers=1)  # one build at a time, off the event loop
+        self._building[record.match_id] = self._builder.submit(
+            build_tracking_cache, str(record.path), str(TRACKING_CACHE)
+        )
+        return True
+
+    def ensure_tracking(self, record: MatchRecord) -> bool:
+        """Load or build tracking now, in this process (blocking: for tests and scripts)."""
+        if self.load_cached_tracking(record):
+            return True
+        if record.source == "external" or not record.events:
+            return False
+        with self._tracking_locks[record.match_id]:
+            if record.tracking is not None:
+                return True
+            try:
+                record.tracking = generate_tracking(record.meta, record.events, self.league)
+            except (StopIteration, KeyError, ValueError):  # clubs or players outside this league
+                return False
+            try:
+                target = cache_path(record.match_id, len(record.events))
+                target.parent.mkdir(parents=True, exist_ok=True)
+                record.tracking.save(target)
+            except OSError as exc:  # a read-only disk only costs the cache
+                log.warning("could not cache tracking for %s: %s", record.match_id, exc)
+            return True
+
+    def warm_tracking(self) -> int:
+        """Queue background builds for every stored match not yet cached (call at startup)."""
+        return sum(self.request_tracking(r) for r in self.list() if not self.load_cached_tracking(r))
+
+    def close(self) -> None:
+        if self._builder is not None:
+            self._builder.shutdown(wait=False, cancel_futures=True)
+            self._builder = None
 
     def add(self, record: MatchRecord) -> MatchRecord:
         self._records[record.match_id] = record

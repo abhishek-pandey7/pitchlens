@@ -20,7 +20,8 @@ RUN python -c "import tomllib; d = tomllib.load(open('engine/pyproject.toml','rb
 COPY engine/pitchlens engine/pitchlens
 COPY data data
 RUN pip install --no-deps -e engine \
-    && useradd --create-home --uid 10001 pitchlens
+    && useradd --create-home --uid 10001 pitchlens \
+    && mkdir -p data/.cache && chown -R pitchlens data/.cache  # tracking rebuilt for stored matches
 USER pitchlens
 
 # 8080: unprivileged, and the port Azure Container Apps' placeholder image uses before the first deploy.
