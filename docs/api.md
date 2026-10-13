@@ -27,6 +27,7 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `GET /matches/storylines` | Available scripted storylines |
 | `POST /matches` | Simulate a match: `{seed, storyline?, home?, away?, tracking=true}` |
 | `GET /matches/{id}` | Metadata (teams, lineups, pre-match strengths) and summary |
+| `GET /matches/{id}/clips/goal` | Tracking frames around a goal, for animations that are not live (the home page's 3D replay). Query: `index` (0 the first goal, -1 the last), `before_ms` (default 10000), `after_ms` (default 4000), 60 s at most. 404 while a stored sample's tracking is still being rebuilt |
 | `POST /matches/{id}/replay` | Start or restart: `{speed (≤600), from_ms, frames}` |
 | `POST /matches/{id}/control` | `{action: pause \| resume \| seek \| speed, to_ms?, speed?}` |
 | `GET /matches/{id}/stream` | **SSE** live stream (below). Query: `profile_id`, `frames` |

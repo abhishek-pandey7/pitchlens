@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { GoalHero } from "@/components/GoalHero";
 
 // Who each view is for, in their words. The order follows a matchday: the fan first, the broadcast last.
 const VIEWS = [
@@ -28,6 +29,7 @@ export default function Home() {
           </Link>
         </div>
       </header>
+      <GoalHero />
       <nav aria-label="Views">
         <ul className="grid gap-x-10 sm:grid-cols-2">
           {VIEWS.map((view) => (

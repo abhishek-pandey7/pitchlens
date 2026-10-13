@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import dataclasses
 from typing import Any
 
@@ -9,6 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from pitchlens.api.deps import get_hub, get_profiles, session_or_404
 from pitchlens.api.models import ControlRequest, CreateMatch, ExternalMatch, ReplayRequest
+from pitchlens.live.clips import ClipError
+from pitchlens.live.clips import goal_clip as goal_clip_frames
 from pitchlens.live.hub import Hub, HubError
 from pitchlens.personalize.player_focus import focus_card
 from pitchlens.personalize.profiles import ProfileStore
@@ -61,6 +64,23 @@ def get_match(match_id: str, hub: Hub = Depends(get_hub)) -> dict[str, Any]:
         "meta": record.meta.model_dump(mode="json"),
         "replay": hub.replay_state(match_id),
     }
+
+
+@router.get("/{match_id}/clips/goal")
+async def goal_clip(
+    match_id: str, index: int = 0, before_ms: int = 10_000, after_ms: int = 4_000, hub: Hub = Depends(get_hub)
+) -> dict[str, Any]:
+    """Tracking frames around a goal (`index` 0 the first, -1 the last), for non-live animations."""
+    try:
+        record = hub.record(match_id)
+    except HubError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    if not await asyncio.to_thread(hub.store.load_cached_tracking, record):
+        hub.store.request_tracking(record)  # a stored sample: ready on a later request
+    try:
+        return await asyncio.to_thread(goal_clip_frames, record, index, before_ms, after_ms)
+    except ClipError as exc:
+        raise HTTPException(404, str(exc)) from exc
 
 
 @router.post("/{match_id}/replay", status_code=202)

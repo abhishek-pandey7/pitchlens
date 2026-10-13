@@ -1,5 +1,5 @@
 // REST helpers for the PitchLens engine API (see docs/api.md).
-import type { MatchMeta, Profile } from "./types";
+import type { MatchMeta, Profile, TrackingFrame } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1";
 
@@ -14,6 +14,12 @@ export type MatchSummary = {
   has_tracking: boolean;
   final_score: string | null;
   replay: { state: string; speed?: number; match_ms?: number };
+};
+
+export type GoalClip = {
+  match_id: string;
+  moment: { type: "goal"; match_ms: number; team_id: string; player_id: string | null; goals: number };
+  frames: TrackingFrame[];
 };
 
 export type AskStep = {
@@ -173,6 +179,7 @@ export const api = {
   matches: () => call<MatchSummary[]>("/matches"),
   storylines: () => call<string[]>("/matches/storylines"),
   match: (id: string) => call<MatchSummary & { meta: MatchMeta }>(`/matches/${id}`),
+  goalClip: (id: string, index = 0) => call<GoalClip>(`/matches/${id}/clips/goal?index=${index}`),
   createMatch: (body: { seed: number; storyline?: string; home?: string; away?: string; tracking?: boolean }) =>
     call<MatchSummary>("/matches", { method: "POST", body: JSON.stringify(body) }),
   replay: (id: string, body: { speed: number; from_ms?: number; frames?: boolean }) =>
