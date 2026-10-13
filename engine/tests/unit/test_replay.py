@@ -116,3 +116,22 @@ async def test_memory_bus_fans_out_and_isolates_matches() -> None:
     await bus.close()
     remaining = [m async for m in b]  # queued message is still delivered, then iteration stops
     assert [m.control for m in remaining] == [{"x": 1}]
+
+
+def test_stored_matches_get_tracking_rebuilt_once_and_cached(tmp_path, monkeypatch) -> None:
+    from pitchlens.live import store as store_module
+    from pitchlens.live.store import MatchRecord, MatchStore
+
+    monkeypatch.setattr(store_module, "TRACKING_CACHE", tmp_path / "cache")
+    source = MatchStore(data_dirs=[])
+    made = source.generate(seed=3, storyline="comeback", tracking=False)
+    stored = MatchRecord(meta=made.meta, events=made.events, source="stored")  # events only, like the samples
+    store = MatchStore(data_dirs=[])
+    assert store.ensure_tracking(stored) and stored.tracking is not None and len(stored.tracking) > 1000
+    cached = list((tmp_path / "cache").glob("*.npz"))
+    assert len(cached) == 1
+
+    again = MatchRecord(meta=made.meta, events=made.events, source="stored")
+    assert store.ensure_tracking(again) and len(again.tracking) == len(stored.tracking)  # from the cache
+    external = MatchRecord(meta=made.meta, events=made.events, source="external")
+    assert not store.ensure_tracking(external) and external.tracking is None

@@ -5,6 +5,7 @@ uvicorn pitchlens.api.main:app --reload
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from collections.abc import AsyncIterator
@@ -54,8 +55,14 @@ def create_app(settings: Settings | None = None, *, hub: Hub | None = None) -> F
         app.state.hub = hub or Hub(MatchStore(settings.data_dirs), provider=provider_from(settings))
         app.state.agents = desk
         app.state.hub.session_hooks.append(desk.attach)
+        warm = None
+        if os.environ.get("PITCHLENS_WARM_TRACKING", "1") not in ("0", "false", "off"):
+            # Players and ball for the stored sample matches, built in the background (seconds each).
+            warm = asyncio.create_task(asyncio.to_thread(app.state.hub.store.warm_tracking))
         async with mcp.session_manager.run():
             yield
+        if warm is not None and not warm.done():
+            warm.cancel()
         await app.state.hub.shutdown()
 
     app = FastAPI(

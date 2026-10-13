@@ -31,6 +31,8 @@ next-env.d.ts
 # Generated data (sample matches are committed explicitly under data/samples/)
 data/matches/*
 !data/matches/.gitkeep
+# Tracking rebuilt for stored matches (engine cache)
+data/.cache/
 *.parquet
 
 # OS / editors

@@ -108,6 +108,8 @@ class Hub:
         self.session(match_id)  # subscribed before the replay publishes anything
         live = self._live[match_id]
         await self._stop_replay(live)
+        if frames and record.tracking is None:  # stored samples: rebuild players and ball, once
+            await asyncio.to_thread(self.store.ensure_tracking, record)
         tracking = record.tracking if frames else None
         replay = Replay(
             self.bus,

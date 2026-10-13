@@ -80,9 +80,9 @@ class MatchViews:
         cached = self._stages[key]
         return lambda: cached
 
-    @staticmethod
-    def _analyse(record: Any, cut: int | None = None) -> MatchView:
+    def _analyse(self, record: Any, cut: int | None = None) -> MatchView:
         """Analyse the whole match, or its events up to and including index `cut`."""
+        self._hub().store.ensure_tracking(record)  # distance and speed need tracking
         events = record.events if cut is None else record.events[: cut + 1]
         tracking = record.tracking
         last = len(tracking) if tracking is not None else 0
