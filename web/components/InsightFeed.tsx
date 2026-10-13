@@ -16,6 +16,12 @@ const TONE: Record<string, string> = {
   control_chaos_flip: "border-home",
 };
 
+/** A sending-off (straight red or second yellow) is a red card, whatever the event type says. */
+export function cardKind(insight: Pick<FeedItem["insight"], "type" | "headline_key">): "red_card" | "yellow_card" | null {
+  if (insight.type !== "card") return null;
+  return insight.headline_key === "card.yellow" ? "yellow_card" : "red_card";
+}
+
 type Props = { items: FeedItem[]; lang: string; showEvidence: boolean };
 
 export function InsightFeed({ items, lang, showEvidence }: Props) {
@@ -33,14 +39,16 @@ function FeedCard({ item, lang, showEvidence }: { item: FeedItem; lang: string; 
   const [revealed, setRevealed] = useState(!item.spoiler);
   const { insight, narration } = item;
   const goal = insight.type === "goal";
+  const card = cardKind(insight);
+  const tone = card === "red_card" ? "border-danger" : (TONE[insight.type] ?? "border-surface-2");
   return (
     <li
-      className={`rounded-lg border-s-4 bg-surface p-3 ${TONE[insight.type] ?? "border-surface-2"} ${goal ? "ring-1 ring-accent/40" : ""}`}
+      className={`rounded-lg border-s-4 bg-surface p-3 ${tone} ${goal ? "ring-1 ring-accent/40" : ""}`}
       style={{ opacity: 0.55 + 0.45 * item.personal_salience }}
     >
       <div className="mb-1 flex items-center gap-2 text-xs text-muted">
         <span className="font-mono font-semibold text-foreground">{minuteLabel(insight.clock_ms, insight.period)}</span>
-        <span>{typeLabel(lang, insight.type)}</span>
+        <span className={card === "red_card" ? "font-semibold text-danger" : undefined}>{typeLabel(lang, card ?? insight.type)}</span>
         {narration.source === "llm" && (
           <span className="rounded bg-accent/15 px-1.5 py-0.5 font-semibold text-accent" title="Rewritten by the AI narrator, checked against the evidence">
             {t(lang, "ai")}
