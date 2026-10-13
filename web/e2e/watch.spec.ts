@@ -9,7 +9,15 @@ test("a Spanish fan watches the comeback's finale live", async ({ page, request 
 
   await page.goto(`/watch?match=${match.match_id}&profile=p-casual-es`);
   await expect(page.locator("main")).toHaveAttribute("lang", "es");
-  await expect(page.getByRole("img", { name: "Live 2D view of the pitch" })).toBeVisible();
+  // 3D where the browser has WebGL, the 2D canvas otherwise; viewers can switch between them.
+  await expect(page.getByRole("img", { name: /^Live (3D|2D) view of the pitch$/ })).toBeVisible();
+  const views = page.getByRole("radiogroup", { name: "Pitch view" });
+  if (await views.isVisible()) {
+    await views.getByRole("radio", { name: "2D" }).click();
+    await expect(page.getByRole("img", { name: "Live 2D view of the pitch" })).toBeVisible();
+    await views.getByRole("radio", { name: "3D" }).click();
+    await expect(page.getByRole("img", { name: "Live 3D view of the pitch" })).toBeVisible();
+  }
 
   // Start at 80': the first 80 minutes are applied instantly (seek path), the finale plays live.
   await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 60, from_ms: 80 * 60_000 } });

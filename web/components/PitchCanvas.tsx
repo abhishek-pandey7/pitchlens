@@ -5,8 +5,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import type { MatchMeta, TrackingFrame } from "@/lib/types";
 
-const LENGTH = 105;
-const WIDTH = 68;
+export const LENGTH = 105;
+export const WIDTH = 68;
 const EASE = 0.3;
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
 
 type Dot = { x: number; y: number };
 
-function drawPitch(ctx: CanvasRenderingContext2D, s: number) {
+export function drawPitch(ctx: CanvasRenderingContext2D, s: number) {
   const stripes = 12;
   for (let i = 0; i < stripes; i++) {
     ctx.fillStyle = i % 2 ? "#1d5a33" : "#20623a";
@@ -125,7 +125,7 @@ export function PitchCanvas({ frame, meta, focusPlayerId, className }: Props) {
           ctx.stroke();
           if (info && s > 5) {
             ctx.fillStyle = info.colors[1];
-            ctx.font = `600 ${Math.round(radius * 1.05)}px var(--font-geist-sans), sans-serif`;
+            ctx.font = `600 ${Math.round(radius * 1.05)}px Archivo, system-ui, sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(String(info.shirt), pos.x * s, pos.y * s + 0.5);
