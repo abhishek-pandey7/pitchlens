@@ -9,8 +9,8 @@ export function ExportLinks({ matchId, profileId, lang }: { matchId: string; pro
     ["Overlay cues", `${base}/cues?profile_id=${profileId}`, "JSON: every cue this fan's feed puts on air"],
   ];
   return (
-    <section aria-label="Exports" className="rounded-lg bg-surface p-3 text-sm">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted">Exports</h2>
+    <section aria-label="Exports" className="panel text-sm">
+      <h2 className="mb-2 section-title">Exports</h2>
       <ul className="flex flex-col gap-1.5">
         {links.map(([label, href, hint]) => (
           <li key={label} className="flex flex-wrap items-baseline gap-2">

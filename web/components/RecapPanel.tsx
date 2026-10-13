@@ -33,9 +33,9 @@ export function RecapPanel({ matchId, profileId, lang }: { matchId: string; prof
 
   const slot = stage ? slots[key(stage)] : undefined;
   return (
-    <section aria-label={s.title} className="rounded-lg bg-surface p-3">
+    <section aria-label={s.title} className="panel">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h2 className="me-auto text-sm font-semibold uppercase tracking-widest text-muted">{s.title}</h2>
+        <h2 className="me-auto section-title">{s.title}</h2>
         {(["ht", "ft"] as const).map((st) => (
           <button
             key={st}
@@ -69,7 +69,7 @@ function Recap({ result, lang }: { result: RecapResponse; lang: string }) {
       ))}
       {result.player_line && (
         <p className="rounded-md bg-surface-2 p-2">
-          <span className="me-1 text-xs font-semibold uppercase tracking-wide text-accent">
+          <span className="me-1 text-sm font-semibold text-accent">
             {result.stage === "ft" ? s.potm : s.standout}
           </span>
           {result.player_line}

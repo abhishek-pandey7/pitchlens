@@ -23,7 +23,7 @@ export function AgentTrace({ matchId }: { matchId: string }) {
   const runs = data?.runs ?? [];
   return (
     <section aria-label="Agent trace" className="flex flex-col gap-3">
-      <h2 className="text-sm font-semibold uppercase tracking-widest text-muted">Agent trace</h2>
+      <h2 className="section-title">Agent trace</h2>
       {!runs.length && (
         <p className="rounded-lg bg-surface p-3 text-sm text-muted">
           No agent runs yet. Ask a question below or from /watch, and each agent step appears here.
@@ -41,7 +41,7 @@ export function AgentTrace({ matchId }: { matchId: string }) {
 function Run({ run }: { run: AgentRunTrace }) {
   const verified = run.verdict === "approve" && !UNVERIFIED.has(run.source);
   return (
-    <li className="rounded-lg bg-surface p-3 text-sm" data-testid="trace-run">
+    <li className="panel text-sm" data-testid="trace-run">
       <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted">
         <span className="font-mono">{new Date(run.at * 1000).toLocaleTimeString()}</span>
         <span>{run.profile_id}</span>
@@ -94,7 +94,7 @@ function Step({ step }: { step: AskStep }) {
         {typeof step.ms === "number" && <span className="ms-auto font-mono text-muted">{step.ms} ms</span>}
       </div>
       {step.tool_calls?.map((call, i) => (
-        <div key={i} className="ms-4 font-mono text-muted">
+        <div key={i} className="ms-4 font-code text-[11.5px] text-muted">
           ↳ {call.tool}({Object.entries(call.args).filter(([, v]) => v != null).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join(", ")})
           {call.error ? <span className="text-warning"> · {call.error}</span> : null}
         </div>

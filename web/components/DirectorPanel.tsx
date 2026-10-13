@@ -35,9 +35,9 @@ export function DirectorPanel({ matchId, profileId }: { matchId: string; profile
   const mode = state?.mode ?? "off";
   const elsewhere = state && state.mode !== "off" && state.profile_id !== profileId;
   return (
-    <section aria-label="Director" className="rounded-lg bg-surface p-3 text-sm">
+    <section aria-label="Director" className="panel text-sm">
       <div className="mb-2 flex flex-wrap items-center gap-2">
-        <h2 className="me-auto text-sm font-semibold uppercase tracking-widest text-muted">Director</h2>
+        <h2 className="me-auto section-title">Director</h2>
         <div role="radiogroup" aria-label="Director mode" className="flex rounded-md bg-surface-2 p-0.5">
           {MODES.map((m) => (
             <button
@@ -93,7 +93,7 @@ function Pending({ cue, onAct }: { cue: PendingCue; onAct: (action: "air" | "hol
   return (
     <li className="rounded-md bg-surface-2 p-2" data-testid="pending-cue">
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-        <span className="font-mono">{cue.region}</span>
+        <span className="font-code">{cue.region}</span>
         <span>p{cue.priority}</span>
         <span>{cue.waiting_s}s</span>
         {cue.held && <span className="text-warning">held</span>}

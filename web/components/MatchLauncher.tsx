@@ -59,47 +59,58 @@ export function MatchLauncher({ profiles, profileId, basePath }: Props) {
   };
 
   return (
-    <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end gap-3 rounded-xl bg-surface p-4">
-        <label className="flex flex-col gap-1 text-xs text-muted">
+    <section className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-sm font-semibold">
           Watch as
-          <select value={fan} onChange={(e) => setFan(e.target.value)} className="rounded-md bg-surface-2 px-3 py-2 text-sm text-foreground">
+          <select value={fan} onChange={(e) => setFan(e.target.value)} className="rounded-md border border-surface-2 bg-background px-3 py-2 font-normal">
             {profiles.map((p) => (
               <option key={p.profile_id} value={p.profile_id}>
-                {p.display_name ?? p.profile_id} · {p.persona} · {p.language}
+                {fanLabel(p)}
               </option>
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1 text-xs text-muted">
+        <label className="flex flex-col gap-1 text-sm font-semibold">
           New match storyline
-          <select value={storyline} onChange={(e) => setStoryline(e.target.value)} className="rounded-md bg-surface-2 px-3 py-2 text-sm text-foreground">
-            {storylines.map((s) => <option key={s}>{s}</option>)}
+          <select value={storyline} onChange={(e) => setStoryline(e.target.value)} className="rounded-md border border-surface-2 bg-background px-3 py-2 font-normal">
+            {storylines.map((s) => <option key={s} value={s}>{storylineName(s)}</option>)}
           </select>
         </label>
-        <button type="button" onClick={generate} disabled={busy !== null} className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-background disabled:opacity-50">
+        <button type="button" onClick={generate} disabled={busy !== null} className="rounded-md bg-accent px-4 py-2 font-semibold text-white disabled:opacity-50">
           {busy === "generate" ? "Simulating…" : "Simulate match"}
         </button>
       </div>
-      {error && <p className="rounded-md bg-danger/15 p-3 text-sm text-danger">{error}</p>}
-      <ul className="grid gap-3 sm:grid-cols-2">
+      {error && <p className="rounded-md bg-danger/10 p-3 text-sm text-danger">{error}</p>}
+      <ul aria-label="Matches">
         {matches.map((m) => (
-          <li key={m.match_id} className="flex flex-col gap-3 rounded-xl border border-surface-2 bg-surface p-4">
-            <div>
-              <p className="font-semibold">{m.home.name} v {m.away.name}</p>
-              <p className="text-xs text-muted">
-                {m.storyline ?? "organic"} · {m.source} · {m.has_tracking ? "tracking" : "events only"} · replay {m.replay.state}
+          <li key={m.match_id} className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-t border-surface-2 py-3">
+            <div className="min-w-0">
+              <p className="font-semibold">
+                {m.home.name} <span className="font-normal text-muted">v</span> {m.away.name}
+              </p>
+              <p className="text-sm text-muted">
+                {storylineName(m.storyline)}
+                {m.replay.state === "playing" ? `, replaying at ${m.replay.speed}×` : ""}
+                {m.has_tracking ? "" : ", events only"}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Link
                 href={`${basePath}?match=${encodeURIComponent(m.match_id)}${fan ? `&profile=${fan}` : ""}`}
-                className="rounded-md bg-surface-2 px-3 py-1.5 text-sm hover:bg-accent hover:text-background"
+                className="rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent/90"
               >
                 Open
               </Link>
               {[10, 60].map((speed) => (
-                <button key={speed} type="button" disabled={busy !== null} onClick={() => start(m.match_id, speed)} className="rounded-md bg-surface-2 px-3 py-1.5 text-sm disabled:opacity-50">
+                <button
+                  key={speed}
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() => start(m.match_id, speed)}
+                  aria-label={`Replay at ${speed}×`}
+                  className="rounded-md border border-surface-2 px-3 py-1.5 text-sm hover:border-accent disabled:opacity-50"
+                >
                   ▶ {speed}×
                 </button>
               ))}
@@ -109,4 +120,19 @@ export function MatchLauncher({ profiles, profileId, basePath }: Props) {
       </ul>
     </section>
   );
+}
+
+const PERSONAS: Record<string, string> = { casual: "Casual fan", analyst: "Analyst", tactician: "Tactician" };
+const LANGUAGES: Record<string, string> = { en: "English", es: "Spanish", fr: "French", pt: "Portuguese", ar: "Arabic", hi: "Hindi" };
+
+export function fanLabel(p: Profile) {
+  const name = p.display_name ?? p.profile_id;
+  return `${name}: ${PERSONAS[p.persona] ?? p.persona}, ${LANGUAGES[p.language] ?? p.language}`;
+}
+
+// Storyline keys from the simulator, as a fan would name the match.
+export function storylineName(key: string | null) {
+  if (!key || key === "organic") return "Unscripted match";
+  const name = key.replaceAll("_", " ");
+  return name[0].toUpperCase() + name.slice(1);
 }

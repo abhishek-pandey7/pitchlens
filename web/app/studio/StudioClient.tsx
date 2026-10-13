@@ -9,7 +9,7 @@ import { ExportLinks } from "@/components/ExportLinks";
 import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { LatencyHud } from "@/components/LatencyHud";
-import { MatchLauncher } from "@/components/MatchLauncher";
+import { MatchLauncher, fanLabel } from "@/components/MatchLauncher";
 import { OverlayStage } from "@/components/overlay/OverlayStage";
 import { ReplayControls } from "@/components/ReplayControls";
 import { Scoreboard } from "@/components/Scoreboard";
@@ -49,7 +49,7 @@ export function StudioClient() {
           >
             {profiles.map((p) => (
               <option key={p.profile_id} value={p.profile_id}>
-                {p.display_name ?? p.profile_id} · {p.persona} · {p.language}
+                {fanLabel(p)}
               </option>
             ))}
           </select>
@@ -59,7 +59,7 @@ export function StudioClient() {
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,5fr)_minmax(0,3fr)_minmax(340px,4fr)]">
         <section className="flex min-w-0 flex-col gap-4" aria-label="Programme">
           <Scoreboard meta={view.meta} state={view.state} status={view.status} lang="en" />
-          <div className="overflow-hidden rounded-lg ring-1 ring-surface-2">
+          <div className="broadcast overflow-hidden rounded-lg bg-background">
             <OverlayStage view={view} pitch />
           </div>
           <DirectorPanel matchId={matchId} profileId={profileId} />
@@ -67,7 +67,7 @@ export function StudioClient() {
           <LatencyHud matchId={matchId} />
         </section>
         <section className="min-w-0" aria-label="Insight queue">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">Insight queue</h2>
+          <h2 className="mb-3 section-title">Insight queue</h2>
           <div className="max-h-[78vh] overflow-y-auto pe-1">
             <InsightFeed items={view.feed} lang={view.profile?.language ?? "en"} showEvidence />
           </div>
@@ -87,8 +87,8 @@ export function StudioClient() {
 function Header({ children }: { children?: React.ReactNode }) {
   return (
     <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <Link href="/" className="text-sm font-semibold uppercase tracking-widest text-accent">
-        PitchLens <span className="text-muted">· Studio</span>
+      <Link href="/" className="display text-xl text-foreground">
+        PitchLens <span className="ms-1 text-muted">Studio</span>
       </Link>
       {children}
     </header>

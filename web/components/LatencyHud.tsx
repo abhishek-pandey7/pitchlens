@@ -15,9 +15,9 @@ const STAGES: { key: string; label: string; budget: number }[] = [
 export function LatencyHud({ matchId }: { matchId: string }) {
   const data = usePoll(matchId, () => api.latency(matchId), 2000);
   return (
-    <section aria-label="Latency" className="rounded-lg bg-surface p-3">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted">
-        Latency <span className="font-normal normal-case tracking-normal">· p95 vs budget</span>
+    <section aria-label="Latency" className="panel">
+      <h2 className="mb-2 section-title">
+        Latency <span className="font-normal text-muted">(95th percentile against budget)</span>
       </h2>
       <dl className="grid grid-cols-5 gap-2 text-center">
         {STAGES.map(({ key, label, budget }) => {

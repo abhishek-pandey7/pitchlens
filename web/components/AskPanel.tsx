@@ -33,8 +33,8 @@ export function AskPanel({ matchId, profileId, lang }: { matchId: string; profil
   }
 
   return (
-    <section aria-label={s.title} className="rounded-lg bg-surface p-3">
-      <h2 className="mb-2 text-sm font-semibold uppercase tracking-widest text-muted">{s.title}</h2>
+    <section aria-label={s.title} className="panel">
+      <h2 className="mb-2 section-title">{s.title}</h2>
       <form
         onSubmit={(e) => {
           e.preventDefault();

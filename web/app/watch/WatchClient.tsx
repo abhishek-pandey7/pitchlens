@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AskPanel } from "@/components/AskPanel";
 import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
-import { MatchLauncher } from "@/components/MatchLauncher";
+import { MatchLauncher, fanLabel } from "@/components/MatchLauncher";
 import { PitchCanvas } from "@/components/PitchCanvas";
 import { PlayerFocusPanel } from "@/components/PlayerFocusPanel";
 import { Scoreboard } from "@/components/Scoreboard";
@@ -55,7 +55,7 @@ export function WatchClient() {
         >
           {profiles.map((p) => (
             <option key={p.profile_id} value={p.profile_id}>
-              {p.display_name ?? p.profile_id} · {p.persona} · {p.language}
+              {fanLabel(p)}
             </option>
           ))}
         </select>
@@ -66,7 +66,7 @@ export function WatchClient() {
           <Scoreboard meta={view.meta} state={view.state} status={view.status} lang={lang} />
           <PitchCanvas frame={view.frame} meta={view.meta} focusPlayerId={focus} />
           {view.state && (
-            <dl className="grid grid-cols-3 gap-3 text-center text-sm">
+            <dl className="text-sm">
               <Stat label={t(lang, "possession")} home={`${Math.round(view.state.home.possession * 100)}%`} away={`${Math.round(view.state.away.possession * 100)}%`} />
               <Stat label={t(lang, "xg")} home={view.state.home.xg.toFixed(2)} away={view.state.away.xg.toFixed(2)} />
               <Stat label={t(lang, "shots")} home={String(view.state.home.shots)} away={String(view.state.away.shots)} />
@@ -86,7 +86,7 @@ export function WatchClient() {
           <AskPanel matchId={matchId} profileId={profileId} lang={lang} />
           <RecapPanel matchId={matchId} profileId={profileId} lang={lang} />
           <section aria-label={t(lang, "feed")}>
-            <h2 className="mb-3 text-sm font-semibold uppercase tracking-widest text-muted">{t(lang, "feed")}</h2>
+            <h2 className="mb-3 section-title">{t(lang, "feed")}</h2>
             <div className="max-h-[60vh] overflow-y-auto pe-1">
               <InsightFeed items={view.feed} lang={lang} showEvidence={persona === "analyst" || persona === "tactician"} />
             </div>
@@ -100,8 +100,8 @@ export function WatchClient() {
 function Header({ children }: { children?: React.ReactNode }) {
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <Link href="/" className="text-sm font-semibold uppercase tracking-widest text-accent">
-        PitchLens <span className="text-muted">· Watch</span>
+      <Link href="/" className="display text-xl text-foreground">
+        PitchLens <span className="ms-1 text-muted">Watch</span>
       </Link>
       {children}
     </header>
@@ -110,11 +110,10 @@ function Header({ children }: { children?: React.ReactNode }) {
 
 function Stat({ label, home, away }: { label: string; home: string; away: string }) {
   return (
-    <div className="rounded-lg bg-surface p-2">
-      <dt className="text-xs text-muted">{label}</dt>
-      <dd className="font-mono tabular-nums">
-        {home} <span className="text-muted">·</span> {away}
-      </dd>
+    <div className="grid grid-cols-[1fr_auto_1fr] items-baseline border-b border-surface-2 py-1.5 last:border-b-0">
+      <dd className="font-mono text-base font-semibold">{home}</dd>
+      <dt className="text-muted">{label}</dt>
+      <dd className="text-end font-mono text-base font-semibold">{away}</dd>
     </div>
   );
 }

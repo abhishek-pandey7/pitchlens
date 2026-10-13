@@ -16,7 +16,7 @@ export function AgentSteps({ steps }: { steps: AskStep[] }) {
   return (
     <ol className="mt-1 flex flex-col gap-1 ps-3" dir="ltr">
       {steps.map((step, i) => (
-        <li key={i} className="font-mono">
+        <li key={i} className="font-code text-[11.5px]">
           <span className="text-foreground">{AGENT_LABEL[step.agent] ?? step.agent}</span>
           {step.task ? ` · ${step.task}` : ""}
           {step.agent === "safety" ? ` · ${step.stage} ${step.allowed ? "passed" : `blocked (${(step.categories ?? []).join(", ")})`}` : ""}

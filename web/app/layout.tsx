@@ -1,25 +1,28 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Archivo, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// One family at two widths: narrow and heavy for scores and headings, normal width for reading.
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Only for real code (tool calls in the agent trace, metric keys).
+const codeMono = Geist_Mono({
+  variable: "--font-code-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "PitchLens",
-  description: "Explainable, personalized match intelligence from synthetic football events.",
+  description: "Live football match intelligence, explained for every fan.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`${archivo.variable} ${codeMono.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

@@ -171,8 +171,8 @@ function Charts({ rows, feed, home, away, highlight }: { rows: SeriesRow[]; feed
         yTicks={[0, 40, 60, 100]}
         formatY={(v) => v.toFixed(0)}
         bands={[
-          { from: 0, to: 40, color: "rgba(255, 93, 108, 0.08)", label: "chaos" },
-          { from: 60, to: 100, color: "rgba(56, 225, 166, 0.07)", label: "control" },
+          { from: 0, to: 40, color: "rgba(200, 50, 60, 0.07)", label: "chaos" },
+          { from: 60, to: 100, color: "rgba(21, 122, 74, 0.08)", label: "control" },
         ]}
         highlight={highlight}
       />
@@ -199,7 +199,7 @@ function Inspector({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <h2 className="me-auto text-sm font-semibold uppercase tracking-widest text-muted">Evidence inspector</h2>
+        <h2 className="me-auto section-title">Evidence inspector</h2>
         <select aria-label="Moment type" value={type} onChange={(e) => setType(e.target.value)} className="rounded-md bg-surface-2 px-2 py-1 text-xs">
           <option value="all">All moments ({feed.length})</option>
           {types.map((t) => (
@@ -278,7 +278,7 @@ function Detail({ item, names, onClose }: { item: FeedItem; names: Record<string
         <tbody>
           {i.evidence.map((e, n) => (
             <tr key={n} className="border-t border-surface-2">
-              <td className="py-1 pe-3 font-mono">{e.metric}</td>
+              <td className="py-1 pe-3 font-code text-[11.5px]">{e.metric}</td>
               <td className="py-1">{[e.team, e.player].filter(Boolean).map((id) => names[id as string] ?? id).join(" · ") || "–"}</td>
               <td className="py-1 text-end font-mono tabular-nums">
                 {e.from != null && e.to != null ? `${fmt(e.from)} → ${fmt(e.to)}` : fmt(e.value)}
@@ -307,8 +307,8 @@ function clockLabel(f: FeedItem): string {
 function Header() {
   return (
     <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <Link href="/" className="text-sm font-semibold uppercase tracking-widest text-accent">
-        PitchLens <span className="text-muted">· Analyst</span>
+      <Link href="/" className="display text-xl text-foreground">
+        PitchLens <span className="ms-1 text-muted">Analyst</span>
       </Link>
     </header>
   );
