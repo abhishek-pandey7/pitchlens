@@ -43,8 +43,12 @@ azd env set AZURE_LOCATION swedencentral          # a region with quota
 azd up                                            # about 10 minutes the first time
 ```
 
-`azd up` runs `provision` (Bicep) and then `deploy` (build, push and roll out both images). The web image
-is built with `NEXT_PUBLIC_API_BASE=${API_BASE_URL}`, the engine URL that provisioning outputs.
+`azd up` runs `provision` (Bicep) and then `deploy` (build, push and roll out the three images: engine,
+web and the Rust broadcast edge). The web image is built with `NEXT_PUBLIC_API_BASE=${API_BASE_URL}`, the
+engine URL that provisioning outputs, and `NEXT_PUBLIC_STREAM_BASE=${STREAM_BASE_URL}`, the edge's, so
+viewers' live streams go through the edge ([edge/README.md](../edge/README.md)). The edge reaches the
+engine at its public FQDN (`ENGINE_URL`), keeps at least one replica warm and scales out on concurrent
+connections (KEDA HTTP rule, 5,000 viewers per replica by default).
 
 At the end azd prints the endpoints. They are also in `azd env get-values`:
 
@@ -52,10 +56,11 @@ At the end azd prints the endpoints. They are also in `azd env get-values`:
 |---|---|
 | `WEB_URL` | The app: `/watch`, `/studio`, `/overlay`, `/compare` |
 | `API_BASE_URL` | The engine API (`/health`, `/health/ready`, `/docs`) |
+| `STREAM_BASE_URL` | The broadcast edge (`/api/v1/matches/{id}/stream`; `/health` and `/stats` at its root) |
 | `MCP_URL` | The MCP endpoint for GitHub Copilot and other agents ([agents.md](agents.md#mcp-server)) |
 
 Run `azd up` (or `azd provision`) a second time after the first deploy. That provision knows the real
-engine image and adds the HTTP readiness probe on `/api/v1/health/ready`. The very first provision
+engine and edge images and adds their HTTP readiness probes (`/api/v1/health/ready`, `/health`). The very first provision
 creates the apps with a placeholder image and TCP probes only.
 
 ### Check it

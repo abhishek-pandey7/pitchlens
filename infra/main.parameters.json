@@ -34,6 +34,9 @@
     },
     "webImageName": {
       "value": "${SERVICE_WEB_IMAGE_NAME=}"
+    },
+    "edgeImageName": {
+      "value": "${SERVICE_EDGE_IMAGE_NAME=}"
     }
   }
 }

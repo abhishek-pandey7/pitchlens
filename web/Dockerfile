@@ -1,6 +1,7 @@
 # PitchLens web: Next.js (standalone output). Build from the web/ directory:
 #   docker build -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=https://<engine>/api/v1 web
-# NEXT_PUBLIC_API_BASE is compiled into the browser bundle, so it is a build argument.
+# NEXT_PUBLIC_API_BASE (and the optional NEXT_PUBLIC_STREAM_BASE) are compiled into the browser bundle, so
+# they are build arguments.
 FROM node:24-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -9,7 +10,10 @@ RUN npm ci --no-audit --no-fund
 FROM deps AS build
 COPY . .
 ARG NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1
+# Live streams from the Rust broadcast edge; empty means from the engine (NEXT_PUBLIC_API_BASE).
+ARG NEXT_PUBLIC_STREAM_BASE=
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE \
+    NEXT_PUBLIC_STREAM_BASE=$NEXT_PUBLIC_STREAM_BASE \
     NEXT_OUTPUT=standalone \
     NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
