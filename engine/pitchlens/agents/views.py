@@ -82,7 +82,7 @@ class MatchViews:
 
     def _analyse(self, record: Any, cut: int | None = None) -> MatchView:
         """Analyse the whole match, or its events up to and including index `cut`."""
-        self._hub().store.load_cached_tracking(record)  # distance and speed need tracking
+        self._hub().store.tracking_ready(record)  # distance and speed need tracking
         events = record.events if cut is None else record.events[: cut + 1]
         tracking = record.tracking
         last = len(tracking) if tracking is not None else 0
