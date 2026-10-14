@@ -88,6 +88,5 @@ class MatchViews:
         last = len(tracking) if tracking is not None else 0
         if tracking is not None and cut is not None:
             last = tracking.index_at(events[-1].match_ms) + 1
-        frames = [tracking.frame(i) for i in range(last)] if tracking is not None else []
-        state, insights = explain_match(record.meta, events, frames)
+        state, insights = explain_match(record.meta, events, tracking=tracking, frames_end=last)
         return MatchView(state, insights)

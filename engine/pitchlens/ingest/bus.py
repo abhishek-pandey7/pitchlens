@@ -33,6 +33,11 @@ class BusMessage(Model):
     meta: MatchMeta | None = None
     event: MatchEvent | None = None
     frame: TrackingFrame | None = None
+    frame_json: str | None = Field(
+        default=None,
+        exclude=True,  # in-process only: never part of a serialised bus message
+        description="`frame` as compact JSON text, when the producer already has it (the Rust core).",
+    )
     control: dict[str, Any] | None = None
 
 

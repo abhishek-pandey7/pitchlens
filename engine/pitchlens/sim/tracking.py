@@ -13,6 +13,7 @@ Tracking is stored as compressed numpy arrays (`tracking.npz`): ~30k frames x 22
 from __future__ import annotations
 
 import bisect
+import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -84,6 +85,44 @@ class Tracking:
             ball=Point3(x=round(bx, 2), y=round(by, 2), z=round(bz, 2)),
             players=players,
         )
+
+    def frames_json(self, start: int = 0, end: int | None = None) -> list[str]:
+        """Frames `start` to `end` (exclusive; clamped to the match like a slice) as the compact JSON text
+        the engine sends: exactly `json.dumps(self.frame(i).model_dump(mode="json"), separators=(",", ":"),
+        ensure_ascii=False)`, the SSE `frame` payload. The Rust core writes the text without building
+        Pydantic models (~25x faster); the Python path is the reference."""
+        if start < 0 or (end is not None and end < 0):
+            raise ValueError("frame indices are non-negative")
+        end = len(self) if end is None else min(end, len(self))
+        start = min(start, end)
+        native = getattr(core.native, "frames_json", None)  # None without the core, or an older build
+        if native is not None:
+            return native(
+                self.match_id,
+                np.asarray(self.ms, dtype=np.int64),
+                np.asarray(self.ball, dtype=np.float32),
+                np.asarray(self.xy, dtype=np.float32),
+                self.player_ids,
+                start,
+                end,
+            )
+        return [
+            json.dumps(self.frame(i).model_dump(mode="json"), separators=(",", ":"), ensure_ascii=False)
+            for i in range(start, end)
+        ]
+
+    def frame_for_stream(self, i: int) -> tuple[TrackingFrame, str | None]:
+        """Frame `i` for the live pipeline, plus its JSON text when that comes for free. With the Rust core
+        the frame is parsed from the text by pydantic-core (validated as before, and a little faster than
+        `frame`) and the text goes out as the SSE payload, so the session never re-serialises a frame.
+        Without the core: the frame as before and no text (the session serialises what it forwards).
+        The physical metrics still need the frame object; once they read the arrays, the text is enough."""
+        if not 0 <= i < len(self):
+            raise IndexError(f"frame {i} out of range ({len(self)} frames)")
+        if getattr(core.native, "frames_json", None) is None:
+            return self.frame(i), None
+        (text,) = self.frames_json(i, i + 1)
+        return TrackingFrame.model_validate_json(text), text
 
     def index_at(self, match_ms: int) -> int:
         """Index of the latest frame at or before `match_ms` (clamped to the first frame)."""

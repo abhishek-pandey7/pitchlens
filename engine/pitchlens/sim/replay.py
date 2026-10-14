@@ -208,11 +208,13 @@ class Replay:
             ):
                 return
             self._last_frame_wall = now
+            frame, text = self.tracking.frame_for_stream(item.frame_index)
             message = BusMessage(
                 kind=MessageKind.FRAME,
                 match_id=self.match_id,
                 match_ms=item.match_ms,
-                frame=self.tracking.frame(item.frame_index),
+                frame=frame,
+                frame_json=text,
             )
         self.published += 1
         self.position_ms = item.match_ms

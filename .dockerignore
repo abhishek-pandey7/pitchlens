@@ -16,3 +16,5 @@ web/
 docs/
 engine/tests/
 engine/evals/
+**/target
+.claude

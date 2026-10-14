@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from pitchlens.live.store import MatchRecord
@@ -18,6 +19,14 @@ def goal_clip(
 ) -> dict[str, Any]:
     """Players and ball from `before_ms` ahead of a goal to `after_ms` after it. `index` picks the goal
     (0 the first, -1 the last). Needs the record's tracking to be loaded."""
+    return json.loads(goal_clip_json(record, index, before_ms, after_ms))
+
+
+def goal_clip_json(
+    record: MatchRecord, index: int = 0, before_ms: int = 10_000, after_ms: int = 4_000
+) -> str:
+    """`goal_clip` as the compact JSON text the API sends. The frames come pre-written from
+    `Tracking.frames_json` (the Rust core when built) and are spliced in, never parsed or re-serialised."""
     if record.tracking is None:
         raise ClipError("no tracking for this match yet")
     goals = [e for e in record.events if e.type == "goal"]
@@ -33,7 +42,7 @@ def goal_clip(
     tracking = record.tracking
     start = tracking.index_at(goal.match_ms - before_ms)
     end = tracking.index_at(goal.match_ms + after_ms)
-    return {
+    head = {
         "match_id": record.match_id,
         "moment": {
             "type": "goal",
@@ -42,5 +51,7 @@ def goal_clip(
             "player_id": goal.player_id,
             "goals": len(goals),
         },
-        "frames": [tracking.frame(i).model_dump(mode="json") for i in range(start, end + 1)],
     }
+    frames = ",".join(tracking.frames_json(start, end + 1))
+    # The same text as json.dumps(..., separators=(",", ":"), ensure_ascii=False), FastAPI's rendering.
+    return json.dumps(head, separators=(",", ":"), ensure_ascii=False)[:-1] + f',"frames":[{frames}]}}'
