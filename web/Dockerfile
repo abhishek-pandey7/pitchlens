@@ -6,9 +6,16 @@
 # The kernel for the browser: the same Rust the engine runs, as static files served from /kernel/.
 FROM rust:1-slim AS kernel
 ARG WASM_BINDGEN=0.2.129
-RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates     && rm -rf /var/lib/apt/lists/*     && rustup target add wasm32-unknown-unknown     && curl -sSfL "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${WASM_BINDGEN}/wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl.tar.gz"        | tar -xz -C /usr/local/bin --strip-components=1 "wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl/wasm-bindgen"
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && rustup target add wasm32-unknown-unknown \
+    && curl -sSfL "https://github.com/wasm-bindgen/wasm-bindgen/releases/download/${WASM_BINDGEN}/wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl.tar.gz" \
+       | tar -xz -C /usr/local/bin --strip-components=1 "wasm-bindgen-${WASM_BINDGEN}-x86_64-unknown-linux-musl/wasm-bindgen"
 COPY engine/core /src/core
-RUN cd /src/core     && cargo build -p pitchlens-wasm --target wasm32-unknown-unknown --release     && wasm-bindgen target/wasm32-unknown-unknown/release/pitchlens_wasm.wasm --target web --out-dir /kernel        --out-name pitchlens_kernel --omit-default-module-path --no-typescript
+RUN cd /src/core \
+    && cargo build -p pitchlens-wasm --target wasm32-unknown-unknown --release \
+    && wasm-bindgen target/wasm32-unknown-unknown/release/pitchlens_wasm.wasm --target web --out-dir /kernel \
+       --out-name pitchlens_kernel --omit-default-module-path --no-typescript
 
 FROM node:24-alpine AS deps
 WORKDIR /app
