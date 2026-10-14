@@ -16,10 +16,7 @@
 
 use std::fmt::Write;
 
-use numpy::ndarray::{ArrayView1, ArrayView2, ArrayView3};
-use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyReadonlyArray3};
-use pyo3::exceptions::PyValueError;
-use pyo3::prelude::*;
+use ndarray::{ArrayView1, ArrayView2, ArrayView3};
 
 // Point3 bounds in `schema/common.py`: the Python path rejects a ball outside them.
 const PITCH_LENGTH: f64 = 105.0;
@@ -124,17 +121,6 @@ pub fn push_json_str(out: &mut String, s: &str) {
 pub enum FrameError {
     Shape(String),
     Value { frame: usize, what: String },
-}
-
-impl From<FrameError> for PyErr {
-    fn from(e: FrameError) -> PyErr {
-        match e {
-            FrameError::Shape(msg) => PyValueError::new_err(msg),
-            FrameError::Value { frame, what } => {
-                PyValueError::new_err(format!("frame {frame}: {what}"))
-            }
-        }
-    }
 }
 
 /// The arrays of a `Tracking`, borrowed.
@@ -250,36 +236,10 @@ impl Frames<'_> {
     }
 }
 
-/// Tracking frames `start..end` (clamped to the match) as compact JSON text, one string per frame, equal
-/// to `json.dumps(Tracking.frame(i).model_dump(mode="json"), separators=(",", ":"), ensure_ascii=False)`.
-#[pyfunction]
-#[allow(clippy::too_many_arguments)] // mirrors the Python call: one argument per Tracking field
-#[pyo3(signature = (match_id, ms, ball, xy, player_ids, start, end))]
-pub fn frames_json(
-    py: Python<'_>,
-    match_id: &str,
-    ms: PyReadonlyArray1<'_, i64>,
-    ball: PyReadonlyArray2<'_, f32>,
-    xy: PyReadonlyArray3<'_, f32>,
-    player_ids: Vec<String>,
-    start: usize,
-    end: usize,
-) -> PyResult<Vec<String>> {
-    let frames = Frames {
-        match_id,
-        ms: ms.as_array(),
-        ball: ball.as_array(),
-        xy: xy.as_array(),
-        player_ids: &player_ids,
-    };
-    // Pure Rust over borrowed arrays: let other Python threads run (clips are served from a thread).
-    Ok(py.allow_threads(|| frames.render(start, end))?)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use numpy::ndarray::{Array1, Array2, Array3};
+    use ndarray::{Array1, Array2, Array3};
 
     fn r2(v: f64) -> String {
         let mut s = String::new();

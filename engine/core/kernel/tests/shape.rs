@@ -1,7 +1,7 @@
 //! `team_shape` against values captured from `pitchlens/sim/pitch.py`
 //! (`python scripts/capture_core_cases.py` writes tests/data/shape_cases.txt).
 
-use pitchlens_core::shape::{team_shape, Unit, XY};
+use pitchlens_kernel::shape::{team_shape, Unit, XY};
 
 struct Case {
     label: String,
