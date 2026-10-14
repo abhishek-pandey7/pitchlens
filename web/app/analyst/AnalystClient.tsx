@@ -31,7 +31,8 @@ export function AnalystClient() {
   const profiles = useProfiles();
   const view = useMatchStream(matchId, { profileId: PROFILE, frames: false });
   // Refresh the series as the replay advances (rows are every 30 s of match time).
-  const rows = usePoll(matchId ? `${matchId}|${Math.floor(view.matchMs / 30_000)}` : null, () => api.series(matchId ?? ""), 4000) ?? [];
+  // Fresh series every 30 s of match time; the charts keep the last series on screen while it loads.
+  const rows = usePoll(matchId, () => api.series(matchId ?? ""), 4000, Math.floor(view.matchMs / 30_000)) ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = view.feed.find((f) => f.insight.insight_id === selectedId) ?? null;
 
