@@ -144,6 +144,7 @@ jobs:
           docker run -d --name engine -p 8000:8080 pitchlens-engine
           for i in $(seq 1 30); do curl -sf http://localhost:8000/api/v1/health && break; sleep 1; done
           curl -sf http://localhost:8000/api/v1/health/ready
+          curl -sf http://localhost:8000/api/v1/health | grep -q '"backend":"rust"'  # the Rust core loaded
           id=$(curl -sf -X POST http://localhost:8000/api/v1/matches -H 'content-type: application/json'             -d '{"seed":7,"storyline":"comeback","tracking":false}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["match_id"])')
           curl -sf -X POST "http://localhost:8000/api/v1/matches/$id/ask" -H 'content-type: application/json'             -d '{"question":"Who won?"}' | grep -q '2-3'
       - name: Web container serves the app
