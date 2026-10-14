@@ -75,8 +75,7 @@ async def goal_clip(
         record = hub.record(match_id)
     except HubError as exc:
         raise HTTPException(404, str(exc)) from exc
-    if not await asyncio.to_thread(hub.store.load_cached_tracking, record):
-        hub.store.request_tracking(record)  # a stored sample: ready on a later request
+    await asyncio.to_thread(hub.store.tracking_ready, record)  # Python fallback: may be ready only later
     try:
         body = await asyncio.to_thread(goal_clip_json, record, index, before_ms, after_ms)
     except ClipError as exc:

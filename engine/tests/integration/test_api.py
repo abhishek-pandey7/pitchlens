@@ -9,6 +9,7 @@ from dataclasses import dataclass, field
 
 import httpx
 
+from pitchlens import core
 from pitchlens.sim.simulator import simulate
 
 
@@ -48,8 +49,11 @@ def test_rest_basics(server) -> None:
     assert match["final_score"] == "2-3"
     assert any(m["match_id"] == match["match_id"] for m in httpx.get(f"{base}/matches").json())
     assert httpx.get(f"{base}/matches/nope").status_code == 404
-    no_tracking = httpx.get(f"{base}/matches/{match['match_id']}/clips/goal")
-    assert no_tracking.status_code == 404 and "no tracking" in no_tracking.text
+    clip = httpx.get(f"{base}/matches/{match['match_id']}/clips/goal")
+    if core.RUST:  # built on demand, in milliseconds
+        assert clip.status_code == 200 and clip.json()["frames"], clip.text
+    else:  # the Python fallback only serves tracking it already has (or finds in the disk cache)
+        assert clip.status_code == 200 or "no tracking" in clip.text
     assert httpx.post(f"{base}/matches", json={"storyline": "nope"}).status_code == 422
     assert "comeback" in httpx.get(f"{base}/matches/storylines").json()
     assert httpx.get(f"{base}/schema/insight").json()["type"] == "object"
