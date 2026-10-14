@@ -19,6 +19,7 @@ from pathlib import Path
 
 import numpy as np
 
+from pitchlens import core
 from pitchlens.schema.common import Point3
 from pitchlens.schema.events import (
     EventType,
@@ -26,11 +27,13 @@ from pitchlens.schema.events import (
     MatchEvent,
     MatchMeta,
     Outcome,
+    Position,
     TrackedPlayer,
     TrackingFrame,
 )
 
 from .pitch import FORMATION_ANCHORS, XY, mirror, team_shape
+from .pitch import _unit as unit_of
 from .rosters import FORMATION_STARTERS, League, Player
 
 HZ = 5
@@ -167,6 +170,113 @@ class _Side:
 
 
 def generate_tracking(meta: MatchMeta, events: list[MatchEvent], league: League) -> Tracking:
+    """Tracking for a match: the Rust core (`pitchlens_core.build_tracking`) when it is loaded, the
+    Python reference (`generate_tracking_py`) otherwise. Both give the same frames (parity tests in
+    tests/unit/test_core_parity.py)."""
+    build = getattr(core.native, "build_tracking", None) if core.RUST else None
+    if build is None:
+        return generate_tracking_py(meta, events, league)
+    player_ids, packed = _pack(meta, events, league)
+    ms, period, ball, xy = build(**packed)
+    return Tracking(match_id=meta.match_id, ms=ms, period=period, ball=ball, player_ids=player_ids, xy=xy)
+
+
+# Codes shared with engine/core/src/tracking.rs.
+_KIND = {
+    EventType.PERIOD_START: 1,
+    EventType.PERIOD_END: 2,
+    EventType.POSSESSION_CHANGE: 3,
+    EventType.SUBSTITUTION: 4,
+    EventType.CARD: 5,
+    EventType.PRESSURE: 6,
+    EventType.SHOT: 7,
+}  # every other type is 0
+_ON_BALL, _TRAVEL, _HIGH, _SENT_OFF = 1, 2, 4, 8
+_NONE, _UNKNOWN = -1, -2  # a falsy id; a non-empty id this match doesn't know
+_UNIT = {"def": 1, "mid": 2, "fwd": 3}  # and 0 for the goalkeeper
+_FLAGS = {t: (_ON_BALL if t in ON_BALL else 0) | (_TRAVEL if t in TRAVEL else 0) for t in EventType}
+_INT_COLUMNS = ("match_ms", "period", "team", "player", "related", "recipient", "duration_ms")
+
+
+def _pack(meta: MatchMeta, events: list[MatchEvent], league: League) -> tuple[list[str], dict[str, object]]:
+    """`generate_tracking_py`'s setup, as plain arrays for `pitchlens_core.build_tracking`: the sides (same
+    clubs, XI, anchors and slots), the sorted player columns, and the events as columns of codes."""
+    clubs = {
+        meta.home.club_id: league.club(meta.home.club_id),
+        meta.away.club_id: league.club(meta.away.club_id),
+    }
+    lookup = {p.player_id: p for club in clubs.values() for p in club.players}
+    player_ids = sorted(lookup)
+    col = {pid: i for i, pid in enumerate(player_ids)}
+    side_of = {cid: i for i, cid in enumerate(clubs)}  # the home side is 0, as in the Python loop
+    sides = [
+        (
+            cid == meta.home.club_id,
+            [col[p.player_id] for p in club.starting_xi()],
+            [(float(x), float(y)) for x, y in FORMATION_ANCHORS[club.formation]],
+            [0 if pos is Position.GK else _UNIT[unit_of(pos)] for pos in FORMATION_STARTERS[club.formation]],
+            club.style.press_intensity,
+            club.style.width,
+        )
+        for cid, club in clubs.items()
+    ]
+
+    def team(team_id: str | None) -> int:
+        return side_of.get(team_id, _UNKNOWN) if team_id else _NONE
+
+    def player(player_id: str | None) -> int:
+        return col.get(player_id, _UNKNOWN) if player_id else _NONE
+
+    sent_off = (Outcome.RED, Outcome.SECOND_YELLOW)
+    nan = math.nan
+    codes, ints, points = [], [], []
+    for e in events:
+        codes.append(
+            (
+                _KIND.get(e.type, 0),
+                _FLAGS[e.type]
+                | (_HIGH if e.height is Height.HIGH else 0)
+                | (_SENT_OFF if e.outcome in sent_off else 0),
+            )
+        )
+        ints.append(
+            (
+                e.match_ms,
+                e.period,
+                team(e.team_id),
+                player(e.player_id),
+                player(e.related_player_id),
+                player(e.recipient_id),
+                e.duration_ms or 0,
+            )
+        )
+        start, end = e.start, e.end
+        points.append(
+            (
+                start.x if start is not None else nan,
+                start.y if start is not None else nan,
+                end.x if end is not None else nan,
+                end.y if end is not None else nan,
+            )
+        )
+    n = len(events)
+    codes_arr = np.array(codes, dtype=np.uint8).reshape(n, 2).T
+    ints_arr = np.array(ints, dtype=np.int64).reshape(n, 7).T
+    points_arr = np.array(points, dtype=np.float64).reshape(n, 4)
+    packed: dict[str, object] = {
+        "kind": np.ascontiguousarray(codes_arr[0]),
+        "flags": np.ascontiguousarray(codes_arr[1]),
+        **{name: np.ascontiguousarray(ints_arr[k]) for k, name in enumerate(_INT_COLUMNS)},
+        "start": np.ascontiguousarray(points_arr[:, :2]),
+        "end": np.ascontiguousarray(points_arr[:, 2:]),
+        "top_speed_kmh": np.array([lookup[pid].top_speed_kmh for pid in player_ids], dtype=np.float64),
+        "sides": sides,
+    }
+    return player_ids, packed
+
+
+def generate_tracking_py(meta: MatchMeta, events: list[MatchEvent], league: League) -> Tracking:
+    """The reference implementation in pure Python (and the fallback when the Rust core isn't built)."""
     ball = BallPath(events)
     clubs = {
         meta.home.club_id: league.club(meta.home.club_id),
