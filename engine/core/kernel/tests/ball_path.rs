@@ -1,7 +1,7 @@
 //! `BallPath` (and its `np.interp`) against values captured from `pitchlens/sim/tracking.py`
 //! (`python scripts/capture_core_cases.py` writes tests/data/ball_cases.txt).
 
-use pitchlens_core::tracking::{BallEvent, BallPath};
+use pitchlens_kernel::tracking::{BallEvent, BallPath};
 
 struct Set {
     name: String,

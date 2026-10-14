@@ -8,7 +8,7 @@ RUN apt-get update     && apt-get install -y --no-install-recommends curl build-
 ENV PATH=/root/.cargo/bin:$PATH
 RUN pip install --no-cache-dir "maturin>=1.9,<2"
 COPY engine/core /src/core
-RUN cd /src/core && maturin build --release --out /wheels -i python3
+RUN cd /src/core/py && maturin build --release --out /wheels -i python3
 
 FROM python:3.12-slim AS base
 

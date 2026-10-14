@@ -1,4 +1,4 @@
-"""Build the Rust core (engine/core) and install it.
+"""Build the Rust core's Python module (engine/core/py, binding engine/core/kernel) and install it.
 
     python scripts/build_core.py                  # release build, installed into this interpreter
     python scripts/build_core.py --target DIR     # install into DIR instead (add DIR to PYTHONPATH)
@@ -18,7 +18,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-CORE = Path(__file__).resolve().parents[1] / "core"
+CORE = Path(__file__).resolve().parents[1] / "core" / "py"
 
 
 def main() -> int:

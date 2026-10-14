@@ -2,7 +2,7 @@
 
     python scripts/capture_core_cases.py
 
-Writes, under engine/core/tests/data: shape_cases.txt (`pitch.team_shape` for every formation x
+Writes, under engine/core/kernel/tests/data: shape_cases.txt (`pitch.team_shape` for every formation x
 possession x press x width over several ball positions), ball_cases.txt (`BallPath.at` over real match
 events plus interrupted flights and repeated timestamps) and hypot_cases.txt (`math.hypot` and
 `np.hypot`). Floats are written with
@@ -25,7 +25,7 @@ from pitchlens.sim.simulator import simulate
 from pitchlens.sim.storylines import build, default_fixture
 from pitchlens.sim.tracking import BallPath
 
-OUT = Path(__file__).resolve().parents[1] / "core" / "tests" / "data"
+OUT = Path(__file__).resolve().parents[1] / "core" / "kernel" / "tests" / "data"
 UNIT_CODE = {"def": 1, "mid": 2, "fwd": 3}
 
 PRESS = (0.0, 0.35, 1.0)

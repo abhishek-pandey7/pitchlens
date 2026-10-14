@@ -1,7 +1,7 @@
 //! The two hypots the tracking build uses, against values captured from Python
 //! (`python scripts/capture_core_cases.py` writes tests/data/hypot_cases.txt).
 
-use pitchlens_core::tracking::python_hypot;
+use pitchlens_kernel::tracking::python_hypot;
 
 fn cases() -> Vec<[f64; 4]> {
     include_str!("data/hypot_cases.txt")

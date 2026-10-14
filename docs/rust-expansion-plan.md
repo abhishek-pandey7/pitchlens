@@ -1,6 +1,6 @@
 # Rust, phase 2: futures, the browser and the broadcast edge
 
-Status: **proposed, for review.** Follows [rust-core-plan.md](rust-core-plan.md); that plan's tasks R-0 to R-7 are built.
+Status: **in progress.** X-1 (workspace split) is done: `engine/core` is a Cargo workspace with `kernel` (pure Rust) and `py` (PyO3 bindings); `wasm` arrives with W-1. Follows [rust-core-plan.md](rust-core-plan.md); that plan's tasks R-0 to R-7 are built.
 
 ## 1. Goal
 
