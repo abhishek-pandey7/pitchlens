@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass, field
@@ -127,6 +128,86 @@ def test_last_event_id_resumes_without_gaps(server) -> None:
                 break
     assert resumed[0] == last + 1
     assert resumed == list(range(last + 1, last + 1 + len(resumed)))
+
+
+def test_sync_snapshot_matches_the_stream(server) -> None:
+    """`/sync` returns the very `sync` a new subscriber gets, with the id of the last message it covers."""
+    base, _ = server
+    mid = create(base, seed=11)["match_id"]
+    assert httpx.get(f"{base}/matches/nope/sync").status_code == 404
+    assert httpx.get(f"{base}/matches/{mid}/sync", params={"profile_id": "nope"}).status_code == 404
+    for params in ({}, {"profile_id": "p-casual-es", "frames": "true", "events": "false"}):
+        r = httpx.get(f"{base}/matches/{mid}/sync", params=params)
+        assert r.status_code == 200 and r.headers["content-type"].startswith("application/json")
+        body = r.json()
+        assert set(body) == {"last_id", "sync"} and body["last_id"] == 0  # nothing streamed yet
+        assert set(body["sync"]) == {"meta", "profile", "state", "insights"}
+        assert (body["sync"]["profile"] is None) == ("profile_id" not in params)
+        raw = r.text[len('{"last_id":0,"sync":') : -1]  # the payload exactly as written
+        with httpx.stream("GET", f"{base}/matches/{mid}/stream", params=params, timeout=30) as s:
+            data = next(line for line in s.iter_lines() if line.startswith("data:"))
+        assert data == f"data: {raw}"  # byte for byte what the stream sends a new subscriber
+
+
+def test_snapshot_id_contract(server) -> None:
+    """After a snapshot with id N, joining the live stream and dropping ids <= N (here: resuming from N)
+    gives exactly what a direct subscriber sees after N, with no gap and no duplicate, and the snapshot
+    holds exactly what the messages up to N carried."""
+    base, _ = server
+    mid = create(base, seed=7, storyline="comeback")["match_id"]
+    params = {"profile_id": "p-casual-es", "events": "true"}
+    direct: list[Sse] = []
+    live = threading.Event()
+
+    def collect(out: list[Sse], headers: dict[str, str], *, started: threading.Event | None = None) -> None:
+        url = f"{base}/matches/{mid}/stream"
+        with httpx.stream("GET", url, params=params, headers=headers, timeout=60) as r:
+            for msg in sse_events(r):
+                out.append(msg)
+                if started is not None and msg.event == "sync" and msg.id is not None:
+                    started.set()  # the seek's catch-up is over: live play from here
+                if msg.event == "control" and msg.data.get("action") == "finished":
+                    return
+
+    threads = [threading.Thread(target=collect, args=(direct, {}), kwargs={"started": live})]
+    threads[0].start()
+    time.sleep(0.3)  # subscribed before the replay starts
+    started = httpx.post(f"{base}/matches/{mid}/replay", json={"speed": 300, "from_ms": 60 * 60_000})
+    assert started.status_code == 202
+    assert live.wait(20)
+    snapshots: list[tuple[int, dict, list[Sse]]] = []
+    for _ in range(4):
+        time.sleep(0.8)
+        body = httpx.get(f"{base}/matches/{mid}/sync", params=params).json()
+        joined: list[Sse] = []
+        snapshots.append((body["last_id"], body["sync"], joined))
+        thread = threading.Thread(target=collect, args=(joined, {"Last-Event-ID": str(body["last_id"])}))
+        thread.start()
+        threads.append(thread)
+    for thread in threads:
+        thread.join(timeout=60)
+    assert direct[-1].event == "control"  # the whole match was seen
+
+    with_ids = [m for m in direct if m.id is not None]
+    assert [m.id for m in with_ids] == list(range(with_ids[0].id, with_ids[-1].id + 1))  # no gap, no dup
+    states = [m for m in direct if m.event == "state"]
+    assert states and all(abs(m.data["sent_at"] - time.time() * 1000) < 120_000 for m in states)
+    assert len({n for n, _, _ in snapshots}) > 1  # the snapshots were taken at different points
+    for n, snap, joined in snapshots:
+        after = [(m.id, m.event, m.data) for m in with_ids if m.id > n]
+        assert [(m.id, m.event, m.data) for m in joined] == after
+        # What the snapshot covers: the last sync up to N, then every insight and event after it up to N.
+        upto = [m for m in with_ids if m.id <= n]
+        base_sync = max((i for i, m in enumerate(upto) if m.event == "sync"), default=None)
+        assert base_sync is not None
+        expected = [i["insight"]["insight_id"] for i in upto[base_sync].data["insights"]]
+        expected += [m.data["insight"]["insight_id"] for m in upto[base_sync + 1 :] if m.event == "insight"]
+        assert [i["insight"]["insight_id"] for i in snap["insights"]] == expected
+        last_event = next((m for m in reversed(upto) if m.event == "event"), None)
+        if last_event is not None:
+            score = (snap["state"]["home"]["score"], snap["state"]["away"]["score"])
+            assert score == (last_event.data["home_score"], last_event.data["away_score"])
+            assert snap["state"]["match_ms"] == last_event.data["event"]["match_ms"]
 
 
 def test_replay_control(server) -> None:

@@ -46,6 +46,8 @@ export type StateSnapshot = {
   home: TeamView;
   away: TeamView;
   dynamics: Dynamics;
+  /** Epoch ms when the engine sent this `state` message (absent in `sync` and `GET /state`). */
+  sent_at?: number;
 };
 
 export type FeedNarration = { text: string; headline: string; body: string; lang: string; source: "template" | "llm" };

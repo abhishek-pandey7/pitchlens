@@ -5,13 +5,16 @@ Event names: `sync` (full picture on connect / after a seek), `reset`, `state` (
 Every message except frames carries an `id`; reconnect with `Last-Event-ID` to resume without gaps.
 Query flags: `frames=true` opts into tracking frames; `events=false` skips raw match events, which fan
 views and overlays don't need (about 90% of the traffic).
+
+`/sync` returns the snapshot a new subscriber would get, with the id of the last message it covers, so a
+relay (the Rust broadcast edge) can join a channel mid-match without gaps or duplicates.
 """
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
 from sse_starlette import EventSourceResponse
 
 from pitchlens.api.deps import get_hub, get_profiles, session_or_404
@@ -21,6 +24,31 @@ from pitchlens.personalize.profiles import ProfileStore
 router = APIRouter(tags=["streams"])
 
 PING_SECONDS = 15
+
+
+@router.get("/matches/{match_id}/sync")
+async def sync(  # async: runs on the event loop, so the snapshot is atomic with publishing
+    match_id: str,
+    profile_id: str | None = None,
+    frames: bool = False,
+    events: bool = True,
+    hub: Hub = Depends(get_hub),
+    profiles: ProfileStore = Depends(get_profiles),
+) -> Response:
+    """`{"last_id": N, "sync": <payload>}`. `sync` is byte for byte the data of the `sync` message that
+    `/stream` would send a new subscriber right now, and it covers every message with id <= N on this
+    channel. `frames` and `events` are accepted so a relay can pass its stream query through; they don't
+    change the snapshot, only which messages follow it."""
+    del frames, events
+    session = session_or_404(hub, match_id)
+    if profile_id is not None and profiles.get(profile_id) is None:
+        raise HTTPException(404, f"unknown profile {profile_id!r}")
+    last_id, payload = session.snapshot(profile_id)
+    return Response(
+        f'{{"last_id":{last_id},"sync":{payload}}}',
+        media_type="application/json",
+        headers={"Cache-Control": "no-store"},
+    )
 
 
 @router.get("/matches/{match_id}/stream")
