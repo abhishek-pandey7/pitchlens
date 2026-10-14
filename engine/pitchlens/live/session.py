@@ -261,7 +261,9 @@ class MatchSession:
                 now = time.monotonic()
                 if now - self._last_frame_wall >= 1 / FRAMES_PER_S:
                     self._last_frame_wall = now
-                    self.broadcast("frame", message.frame.model_dump(mode="json"), ephemeral=True)
+                    # The same text either way; the Rust core has already written it.
+                    text = message.frame_json or _json(message.frame.model_dump(mode="json"))
+                    self.broadcast_text("frame", text, ephemeral=True)
 
     def publish_insight(self, insight: Insight) -> None:
         ctx = NarrationContext.from_state(self.state)
@@ -348,7 +350,10 @@ class MatchSession:
 
     # ------------------------------------------------------------------ fan-out
     def broadcast(self, event: str, payload: dict[str, Any], *, ephemeral: bool = False) -> None:
-        data = _json(payload)
+        self.broadcast_text(event, _json(payload), ephemeral=ephemeral)
+
+    def broadcast_text(self, event: str, data: str, *, ephemeral: bool = False) -> None:
+        """Broadcast a payload that is already JSON text (written as `_json` would)."""
         for channel in self.channels.values():
             channel.send(event, data, ephemeral=ephemeral)
 
