@@ -6,9 +6,12 @@ rebuild: a bus `reset` simply means constructing a new one and re-applying the c
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+import numpy as np
 
 from pitchlens.schema.common import PITCH_LENGTH, PITCH_WIDTH
 from pitchlens.schema.enriched import EnrichedEvent, MetricValue, PhysicalAlert
@@ -28,9 +31,12 @@ from . import shots as shot_model
 from .control_chaos import ControlChaos
 from .geometry import distance, to_attacking, unit_lines
 from .momentum import Observation, TeamDynamics
-from .physical import PhysicalTracker
+from .physical import Tracker, new_tracker
 from .rhythm import Rhythm
 from .win_prob import WinProbability, remaining_minutes, scoring_rate_per_90, win_probability
+
+if TYPE_CHECKING:
+    from pitchlens.sim.tracking import Tracking
 
 FRAME_MAX_AGE_MS = 1000  # tracking older than this is not used for pass context
 SAMPLE_EVERY_MS = 30_000  # time-series resolution for charts and change-point detection
@@ -158,7 +164,9 @@ class MatchState:
                     ps.on_ms = 0
                     self.teams[club_id].on_pitch.add(lp.player_id)
                 self.players[lp.player_id] = ps
-        self.physical = PhysicalTracker(meta.match_id, {pid: p.team_id for pid, p in self.players.items()})
+        self.physical: Tracker = new_tracker(
+            meta.match_id, {pid: p.team_id for pid, p in self.players.items()}
+        )
         self.period = 1
         self.match_ms = 0
         self.clock_ms = 0
@@ -168,7 +176,8 @@ class MatchState:
         self._possession_since = 0
         self.goals: list[Goal] = []
         self.events_applied = 0
-        self.last_frame: TrackingFrame | None = None
+        self._last_frame: TrackingFrame | None = None
+        self._frame_source: tuple[Tracking, int] | None = None  # set by apply_tracking: built on demand
         self._last_completed_pass: tuple[MatchEvent, float] | None = None  # event, difficulty
         self.dynamics = TeamDynamics(self.home_id, self.away_id)
         self.control = ControlChaos()
@@ -198,21 +207,57 @@ class MatchState:
 
     def defensive_lines(self, attacking_team: str, at_ms: int) -> list[float] | None:
         """Opposition unit lines in the attacking team's frame, from the latest fresh tracking frame."""
-        frame = self.last_frame
-        if frame is None or at_ms - frame.match_ms > FRAME_MAX_AGE_MS:
+        positions = self._fresh_positions(at_ms)
+        if positions is None:
             return None
         defenders = self.teams[self.opponent(attacking_team)].on_pitch
         pairs = [
-            (self.attacking(attacking_team, p.x, p.y)[0], self.players[p.player_id].position)
-            for p in frame.players
-            if p.player_id in defenders
+            (self.attacking(attacking_team, x, y)[0], self.players[pid].position)
+            for pid, x, y in positions
+            if pid in defenders
         ]
         return unit_lines(pairs) if pairs else None
 
+    def _fresh_positions(self, at_ms: int) -> list[tuple[str, float, float]] | None:
+        """(player, x, y) in the latest frame, if it is recent enough for pass context. Reads a bulk-applied
+        frame straight from the tracking arrays, with the rounding `Tracking.frame` would apply."""
+        if self._frame_source is not None:
+            tracking, i = self._frame_source
+            if at_ms - int(tracking.ms[i]) > FRAME_MAX_AGE_MS:
+                return None
+            return [
+                (pid, round(x, 2), round(y, 2))
+                for pid, (x, y) in zip(tracking.player_ids, tracking.xy[i].tolist(), strict=True)
+                if not math.isnan(x)
+            ]
+        frame = self._last_frame
+        if frame is None or at_ms - frame.match_ms > FRAME_MAX_AGE_MS:
+            return None
+        return [(p.player_id, p.x, p.y) for p in frame.players]
+
     # ------------------------------------------------------------------ frames
+    @property
+    def last_frame(self) -> TrackingFrame | None:
+        """The latest tracking frame applied (built on first access after `apply_tracking`)."""
+        if self._frame_source is not None:
+            tracking, i = self._frame_source
+            self._last_frame, self._frame_source = tracking.frame(i), None
+        return self._last_frame
+
     def apply_frame(self, frame: TrackingFrame) -> list[PhysicalAlert]:
-        self.last_frame = frame
+        self._last_frame, self._frame_source = frame, None
         return self.physical.apply(frame, self.period)
+
+    def apply_tracking(self, tracking: Tracking, start: int, end: int) -> list[PhysicalAlert]:
+        """Frames `start..end` of `tracking` at once, in the current period: the same as `apply_frame` on
+        each `tracking.frame(i)`, without building the frames (seek catch-up, whole-match analysis)."""
+        if end <= start:
+            return []
+        alerts = self.physical.apply_range(
+            tracking.ms, self.period, tracking.ball, tracking.xy, tracking.player_ids, start, end
+        )
+        self._last_frame, self._frame_source = None, (tracking, end - 1)
+        return alerts
 
     # ------------------------------------------------------------------ events
     def apply(self, e: MatchEvent) -> EnrichedEvent:
@@ -517,16 +562,44 @@ def timeline(
         yield item
 
 
+def tracked_timeline(
+    events: Iterable[MatchEvent], tracking: Tracking, end: int | None = None
+) -> Iterator[MatchEvent | range]:
+    """`timeline` with the frames `0..end` of `tracking` as runs of indices: each run of frames between two
+    events comes as one `range` for `MatchState.apply_tracking` (frames at an event's instant follow it)."""
+    end = len(tracking) if end is None else end
+    ms = tracking.ms[:end]
+    pos = 0
+    for e in sorted(events, key=lambda e: (e.match_ms, e.seq)):
+        upto = max(pos, int(np.searchsorted(ms, e.match_ms, side="left")))
+        if upto > pos:
+            yield range(pos, upto)
+            pos = upto
+        yield e
+    if pos < end:
+        yield range(pos, end)
+
+
 def build_state(
-    meta: MatchMeta, events: Iterable[MatchEvent], frames: Iterable[TrackingFrame] = ()
+    meta: MatchMeta,
+    events: Iterable[MatchEvent],
+    frames: Iterable[TrackingFrame] = (),
+    *,
+    tracking: Tracking | None = None,
+    frames_end: int | None = None,
 ) -> tuple[MatchState, list[EnrichedEvent], list[PhysicalAlert]]:
-    """Apply a whole (stored) match offline: the same code path the live pipeline uses."""
+    """Apply a whole (stored) match offline: the same code path the live pipeline uses. Pass `tracking`
+    (optionally only its frames `0..frames_end`) instead of `frames` for the bulk path: same results."""
     state = MatchState(meta)
     enriched: list[EnrichedEvent] = []
     alerts: list[PhysicalAlert] = []
-    for item in timeline(events, frames):
+    items = timeline(events, frames) if tracking is None else tracked_timeline(events, tracking, frames_end)
+    for item in items:
         if isinstance(item, MatchEvent):
             enriched.append(state.apply(item))
+        elif isinstance(item, range):
+            assert tracking is not None
+            alerts += state.apply_tracking(tracking, item.start, item.stop)
         else:
             alerts += state.apply_frame(item)
     return state, enriched, alerts
