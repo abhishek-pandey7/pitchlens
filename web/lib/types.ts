@@ -102,6 +102,162 @@ export interface Point {
   y: number;
 }
 
+export interface Futures {
+  schema_version: string;
+  match_id: string;
+  match_ms: number;
+  clock_ms: number;
+  period: number;
+  /**
+   * Score when the run started.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  score: [number, number];
+  backend: "rust" | "python";
+  /**
+   * A what-if, not the match as it stands.
+   */
+  hypothetical: boolean;
+  paths: number;
+  home: number;
+  draw: number;
+  away: number;
+  /**
+   * The most likely final scores, most likely first.
+   */
+  scores: ScoreChance[];
+  /**
+   * Every other final score together.
+   */
+  other: number;
+  /**
+   * None when the score is level.
+   */
+  comeback: Comeback | null;
+  next_goal: NextGoal;
+  /**
+   * Expected goals still to come.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  goals_left: [number, number];
+  /**
+   * Simulation time.
+   */
+  ms: number;
+  /**
+   * The run's input; null in state messages.
+   */
+  input: FuturesInput | null;
+}
+export interface ScoreChance {
+  home: number;
+  away: number;
+  p: number;
+}
+/**
+ * The side behind now: how often it avoids defeat, and how often it wins.
+ */
+export interface Comeback {
+  /**
+   * Club id of the side behind.
+   */
+  team: string;
+  side: "home" | "away";
+  avoid_defeat: number;
+  win: number;
+}
+export interface NextGoal {
+  home: number;
+  away: number;
+  /**
+   * No more goals.
+   */
+  none: number;
+  /**
+   * Median clock minute of the next goal.
+   */
+  median_minute: number | null;
+}
+/**
+ * Home first in every pair.
+ */
+export interface FuturesInput {
+  /**
+   * Goals so far.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  score: [number, number];
+  /**
+   * Clock minute the simulation starts from.
+   */
+  minute: number;
+  /**
+   * Including expected added time.
+   */
+  minutes_left: number;
+  /**
+   * Scoring rates per 90 minutes before red cards.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  rate_90: [number, number];
+  /**
+   * Red cards so far.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  reds: [number, number];
+  /**
+   * Home minus away decayed threat.
+   */
+  momentum: number;
+  /**
+   * Home share of final-third touches.
+   */
+  field_tilt: number;
+  /**
+   * Red cards per 90 minutes from here, per side.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  red_rate_90: [number, number];
+  effects: FuturesEffects;
+  paths: number;
+  /**
+   * From the match id and the latest event's seq.
+   */
+  seed: number;
+}
+/**
+ * Which effects a run models. All off reproduces the closed-form win probability.
+ */
+export interface FuturesEffects {
+  /**
+   * Trailing sides push, leading sides sit deeper.
+   */
+  game_state: boolean;
+  /**
+   * Momentum and field tilt lift the side on top, fading.
+   */
+  momentum: boolean;
+  /**
+   * Further red cards at each side's card/foul rate.
+   */
+  discipline: boolean;
+}
+
+/**
+ * Home first in every pair.
+ */
 export type InsightType =
   | "goal"
   | "big_chance"
@@ -120,7 +276,8 @@ export type InsightType =
   | "tactical_note"
   | "fatigue_alert"
   | "duel"
-  | "card";
+  | "card"
+  | "futures_swing";
 
 export interface Insight {
   schema_version: string;
@@ -248,7 +405,15 @@ export interface Grounding {
 
 export type Region = "lower_third" | "top_left" | "top_right" | "player_anchor" | "full_bar";
 export type CueTemplate =
-  "pass_card" | "shot_speed" | "player_tag" | "momentum_bar" | "lower_third" | "chaos_meter" | "wp_swing" | "what_if";
+  | "pass_card"
+  | "shot_speed"
+  | "player_tag"
+  | "momentum_bar"
+  | "lower_third"
+  | "chaos_meter"
+  | "wp_swing"
+  | "what_if"
+  | "futures_bar";
 
 export interface OverlayCue {
   schema_version: string;

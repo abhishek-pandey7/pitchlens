@@ -1,4 +1,5 @@
-"""Matches: list, generate, replay control, state, insights, series, players, latency, external feeds."""
+"""Matches: list, generate, replay control, state, insights, series, futures, players, latency, external
+feeds."""
 
 from __future__ import annotations
 
@@ -6,14 +7,17 @@ import asyncio
 import dataclasses
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 
 from pitchlens.api.deps import get_hub, get_profiles, session_or_404
-from pitchlens.api.models import ControlRequest, CreateMatch, ExternalMatch, ReplayRequest
+from pitchlens.api.models import ControlRequest, CreateMatch, ExternalMatch, FuturesWhatIf, ReplayRequest
+from pitchlens.interpret.futures import futures_input, simulate, to_futures
 from pitchlens.live.clips import ClipError, goal_clip_json
 from pitchlens.live.hub import Hub, HubError
+from pitchlens.live.session import MatchSession
 from pitchlens.personalize.player_focus import focus_card
 from pitchlens.personalize.profiles import ProfileStore
+from pitchlens.schema.futures import MAX_FUTURES_PATHS, FuturesInput
 from pitchlens.sim.storylines import STORYLINES
 
 router = APIRouter(prefix="/matches", tags=["matches"])
@@ -123,6 +127,74 @@ async def insights(
 @router.get("/{match_id}/series")
 async def series(match_id: str, since_ms: int = 0, hub: Hub = Depends(get_hub)) -> list[dict[str, Any]]:
     return [r for r in session_or_404(hub, match_id).state.series if r["match_ms"] >= since_ms]
+
+
+async def _futures(session: MatchSession, inp: FuturesInput, *, hypothetical: bool = False) -> dict[str, Any]:
+    """Simulate `inp` in a worker thread, labelled with the session's current moment."""
+    state = session.state
+    moment = (state.match_ms, state.clock_ms, state.period)
+    raw, backend = await asyncio.to_thread(simulate, inp)
+    futures = to_futures(
+        raw,
+        inp,
+        backend=backend,
+        match_id=state.match_id,
+        team_ids=(state.home_id, state.away_id),
+        match_ms=moment[0],
+        clock_ms=moment[1],
+        period=moment[2],
+        hypothetical=hypothetical,
+    )
+    return futures.model_dump(mode="json")
+
+
+@router.get("/{match_id}/futures")
+async def futures(
+    match_id: str,
+    paths: int | None = Query(default=None, ge=1, le=MAX_FUTURES_PATHS),
+    hub: Hub = Depends(get_hub),
+) -> dict[str, Any]:
+    """The rest of the match simulated `paths` times from where it stands (default: 100,000 with the
+    Rust core, 10,000 without). Seeded from the latest event, so the same moment gives the same futures."""
+    session = session_or_404(hub, match_id)
+    return await _futures(session, futures_input(session.state, paths=paths))
+
+
+@router.get("/{match_id}/futures/history")
+async def futures_history(match_id: str, hub: Hub = Depends(get_hub)) -> list[dict[str, Any]]:
+    """Every futures run of the live session so far (result split, comeback odds, top score)."""
+    return session_or_404(hub, match_id).state.futures_history
+
+
+@router.post("/{match_id}/futures/whatif")
+async def futures_whatif(match_id: str, body: FuturesWhatIf, hub: Hub = Depends(get_hub)) -> dict[str, Any]:
+    """Futures for a hypothetical: a different score, minute, red cards or momentum."""
+    session = session_or_404(hub, match_id)
+    state = session.state
+    score = None
+    if body.home_goals is not None or body.away_goals is not None:
+        score = (
+            state.score[0] if body.home_goals is None else body.home_goals,
+            state.score[1] if body.away_goals is None else body.away_goals,
+        )
+    reds = None
+    if body.home_reds is not None or body.away_reds is not None:
+        now = (state.teams[state.home_id].red_cards, state.teams[state.away_id].red_cards)
+        reds = (
+            now[0] if body.home_reds is None else body.home_reds,
+            now[1] if body.away_reds is None else body.away_reds,
+        )
+    inp = futures_input(
+        state,
+        paths=body.paths,
+        effects=body.effects,
+        score=score,
+        minute=body.minute,
+        reds=reds,
+        momentum=body.momentum,
+        field_tilt=body.field_tilt,
+    )
+    return await _futures(session, inp, hypothetical=True)
 
 
 @router.get("/{match_id}/players/{player_id}")

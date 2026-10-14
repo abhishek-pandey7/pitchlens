@@ -160,7 +160,8 @@
         "tactical_note",
         "fatigue_alert",
         "duel",
-        "card"
+        "card",
+        "futures_swing"
       ],
       "title": "InsightType",
       "type": "string"

@@ -30,6 +30,7 @@ TYPE_WEIGHTS: dict[InsightType, float] = {
     InsightType.FATIGUE_ALERT: 0.35,
     InsightType.DUEL: 0.3,
     InsightType.CARD: 0.3,
+    InsightType.FUTURES_SWING: 0.5,
 }
 
 

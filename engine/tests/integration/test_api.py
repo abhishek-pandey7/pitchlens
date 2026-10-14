@@ -186,3 +186,48 @@ def test_goals_push_state_immediately(server) -> None:
             after = next(m for m in received[i + 1 :] if m.event == "state")
             score = (after.data["home"]["score"], after.data["away"]["score"])
             assert score == (msg.data["home_score"], msg.data["away_score"])
+
+
+def test_futures_endpoints_and_live_futures(server) -> None:
+    """GET /futures, POST /futures/whatif and the futures in a replay's state messages and history."""
+    base, _ = server
+    mid = create(base, seed=31, storyline="comeback")["match_id"]  # a fresh session
+    kickoff = httpx.get(f"{base}/matches/{mid}/futures", params={"paths": 5000}).json()
+    assert kickoff["paths"] == 5000 and kickoff["score"] == [0, 0] and not kickoff["hypothetical"]
+    assert abs(kickoff["home"] + kickoff["draw"] + kickoff["away"] - 1) < 1e-3
+    assert kickoff["input"]["seed"] < 2**53 and kickoff["backend"] == ("rust" if core.RUST else "python")
+    again = httpx.get(f"{base}/matches/{mid}/futures", params={"paths": 5000}).json()
+    assert {**again, "ms": 0} == {**kickoff, "ms": 0}  # seeded from the match: same moment, same futures
+    whatif = httpx.post(
+        f"{base}/matches/{mid}/futures/whatif",
+        json={"home_goals": 2, "minute": 80, "away_reds": 1, "momentum": 0.5, "paths": 5000},
+    ).json()
+    assert whatif["hypothetical"] and whatif["score"] == [2, 0] and whatif["input"]["reds"] == [0, 1]
+    assert whatif["home"] > 0.9 and whatif["comeback"]["side"] == "away"
+    off = httpx.post(
+        f"{base}/matches/{mid}/futures/whatif",
+        json={"effects": {"game_state": False, "momentum": False, "discipline": False}, "paths": 5000},
+    ).json()
+    assert off["input"]["effects"] == {"game_state": False, "momentum": False, "discipline": False}
+    assert httpx.get(f"{base}/matches/{mid}/futures", params={"paths": 0}).status_code == 422
+    assert httpx.post(f"{base}/matches/{mid}/futures/whatif", json={"home_goals": -1}).status_code == 422
+    assert httpx.get(f"{base}/matches/nope/futures").status_code == 404
+
+    states: list[dict] = []
+    with httpx.stream("GET", f"{base}/matches/{mid}/stream", params={"events": "false"}, timeout=60) as r:
+        events = sse_events(r)
+        next(events)
+        httpx.post(
+            f"{base}/matches/{mid}/replay", json={"speed": 300, "frames": False, "from_ms": 60 * 60_000}
+        )
+        for msg in events:
+            if msg.event == "state":
+                states.append(msg.data)
+            if msg.event == "control" and msg.data.get("action") == "finished":
+                break
+    with_futures = [s for s in states if s["dynamics"].get("futures")]
+    assert with_futures, "no state message carried futures"
+    last = with_futures[-1]["dynamics"]["futures"]
+    assert last["input"] is None and last["match_id"] == mid
+    history = httpx.get(f"{base}/matches/{mid}/futures/history").json()
+    assert history and sorted(history[-1]["result"]) == [0.0, 0.0, 1.0]  # full time: one result left

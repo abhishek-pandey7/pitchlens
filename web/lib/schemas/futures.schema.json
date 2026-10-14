@@ -1,0 +1,382 @@
+{
+  "$defs": {
+    "Comeback": {
+      "additionalProperties": false,
+      "description": "The side behind now: how often it avoids defeat, and how often it wins.",
+      "properties": {
+        "team": {
+          "description": "Club id of the side behind.",
+          "title": "Team",
+          "type": "string"
+        },
+        "side": {
+          "enum": [
+            "home",
+            "away"
+          ],
+          "title": "Side",
+          "type": "string"
+        },
+        "avoid_defeat": {
+          "title": "Avoid Defeat",
+          "type": "number"
+        },
+        "win": {
+          "title": "Win",
+          "type": "number"
+        }
+      },
+      "required": [
+        "team",
+        "side",
+        "avoid_defeat",
+        "win"
+      ],
+      "title": "Comeback",
+      "type": "object"
+    },
+    "FuturesEffects": {
+      "additionalProperties": false,
+      "description": "Which effects a run models. All off reproduces the closed-form win probability.",
+      "properties": {
+        "game_state": {
+          "default": true,
+          "description": "Trailing sides push, leading sides sit deeper.",
+          "title": "Game State",
+          "type": "boolean"
+        },
+        "momentum": {
+          "default": true,
+          "description": "Momentum and field tilt lift the side on top, fading.",
+          "title": "Momentum",
+          "type": "boolean"
+        },
+        "discipline": {
+          "default": true,
+          "description": "Further red cards at each side's card/foul rate.",
+          "title": "Discipline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "game_state",
+        "momentum",
+        "discipline"
+      ],
+      "title": "FuturesEffects",
+      "type": "object"
+    },
+    "FuturesInput": {
+      "additionalProperties": false,
+      "description": "Home first in every pair.",
+      "properties": {
+        "score": {
+          "description": "Goals so far.",
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Score",
+          "type": "array"
+        },
+        "minute": {
+          "description": "Clock minute the simulation starts from.",
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Minute",
+          "type": "number"
+        },
+        "minutes_left": {
+          "description": "Including expected added time.",
+          "maximum": 200,
+          "minimum": 0,
+          "title": "Minutes Left",
+          "type": "number"
+        },
+        "rate_90": {
+          "description": "Scoring rates per 90 minutes before red cards.",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Rate 90",
+          "type": "array"
+        },
+        "reds": {
+          "description": "Red cards so far.",
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Reds",
+          "type": "array"
+        },
+        "momentum": {
+          "description": "Home minus away decayed threat.",
+          "maximum": 1,
+          "minimum": -1,
+          "title": "Momentum",
+          "type": "number"
+        },
+        "field_tilt": {
+          "description": "Home share of final-third touches.",
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Field Tilt",
+          "type": "number"
+        },
+        "red_rate_90": {
+          "description": "Red cards per 90 minutes from here, per side.",
+          "items": {
+            "type": "number"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "title": "Red Rate 90",
+          "type": "array"
+        },
+        "effects": {
+          "$ref": "#/$defs/FuturesEffects"
+        },
+        "paths": {
+          "maximum": 1000000,
+          "minimum": 1,
+          "title": "Paths",
+          "type": "integer"
+        },
+        "seed": {
+          "description": "From the match id and the latest event's seq.",
+          "exclusiveMaximum": 9007199254740992,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "score",
+        "minute",
+        "minutes_left",
+        "rate_90",
+        "reds",
+        "momentum",
+        "field_tilt",
+        "red_rate_90",
+        "effects",
+        "paths",
+        "seed"
+      ],
+      "title": "FuturesInput",
+      "type": "object"
+    },
+    "NextGoal": {
+      "additionalProperties": false,
+      "properties": {
+        "home": {
+          "title": "Home",
+          "type": "number"
+        },
+        "away": {
+          "title": "Away",
+          "type": "number"
+        },
+        "none": {
+          "description": "No more goals.",
+          "title": "None",
+          "type": "number"
+        },
+        "median_minute": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Median clock minute of the next goal.",
+          "title": "Median Minute"
+        }
+      },
+      "required": [
+        "home",
+        "away",
+        "none",
+        "median_minute"
+      ],
+      "title": "NextGoal",
+      "type": "object"
+    },
+    "ScoreChance": {
+      "additionalProperties": false,
+      "properties": {
+        "home": {
+          "title": "Home",
+          "type": "integer"
+        },
+        "away": {
+          "title": "Away",
+          "type": "integer"
+        },
+        "p": {
+          "title": "P",
+          "type": "number"
+        }
+      },
+      "required": [
+        "home",
+        "away",
+        "p"
+      ],
+      "title": "ScoreChance",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "match_id": {
+      "title": "Match Id",
+      "type": "string"
+    },
+    "match_ms": {
+      "minimum": 0,
+      "title": "Match Ms",
+      "type": "integer"
+    },
+    "clock_ms": {
+      "minimum": 0,
+      "title": "Clock Ms",
+      "type": "integer"
+    },
+    "period": {
+      "maximum": 4,
+      "minimum": 1,
+      "title": "Period",
+      "type": "integer"
+    },
+    "score": {
+      "description": "Score when the run started.",
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Score",
+      "type": "array"
+    },
+    "backend": {
+      "enum": [
+        "rust",
+        "python"
+      ],
+      "title": "Backend",
+      "type": "string"
+    },
+    "hypothetical": {
+      "default": false,
+      "description": "A what-if, not the match as it stands.",
+      "title": "Hypothetical",
+      "type": "boolean"
+    },
+    "paths": {
+      "title": "Paths",
+      "type": "integer"
+    },
+    "home": {
+      "title": "Home",
+      "type": "number"
+    },
+    "draw": {
+      "title": "Draw",
+      "type": "number"
+    },
+    "away": {
+      "title": "Away",
+      "type": "number"
+    },
+    "scores": {
+      "description": "The most likely final scores, most likely first.",
+      "items": {
+        "$ref": "#/$defs/ScoreChance"
+      },
+      "title": "Scores",
+      "type": "array"
+    },
+    "other": {
+      "description": "Every other final score together.",
+      "title": "Other",
+      "type": "number"
+    },
+    "comeback": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Comeback"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "None when the score is level."
+    },
+    "next_goal": {
+      "$ref": "#/$defs/NextGoal"
+    },
+    "goals_left": {
+      "description": "Expected goals still to come.",
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Goals Left",
+      "type": "array"
+    },
+    "ms": {
+      "description": "Simulation time.",
+      "title": "Ms",
+      "type": "number"
+    },
+    "input": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FuturesInput"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "The run's input; null in state messages."
+    }
+  },
+  "required": [
+    "schema_version",
+    "match_id",
+    "match_ms",
+    "clock_ms",
+    "period",
+    "score",
+    "backend",
+    "hypothetical",
+    "paths",
+    "home",
+    "draw",
+    "away",
+    "scores",
+    "other",
+    "comeback",
+    "next_goal",
+    "goals_left",
+    "ms",
+    "input"
+  ],
+  "title": "Futures",
+  "type": "object"
+}

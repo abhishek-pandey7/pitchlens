@@ -32,6 +32,7 @@ big_chance.saved:
     - "It was a {xg} xG chance from {shot_distance_m} m."
     - "Shot speed {shot_speed_kmh} km/h."
     - "What if it had gone in? {team} would be at {what_if_win_prob_to_pct} to win, not {what_if_win_prob_from_pct}."
+    - "In simulated futures {team} would win {what_if_futures_win_pct} of them; the most likely final score would be {what_if_futures_score}."
 big_chance.missed:
   headline: "{player} misses a big chance for {team}."
   detail: *chance_detail
@@ -61,6 +62,7 @@ card.second_yellow:
   detail: &card_detail
     - "{team} win probability: {win_prob_from_pct} → {win_prob_to_pct}."
     - "With eleven players, {team} would be at {no_red_win_prob_to_pct} to win."
+    - "Simulated with eleven, {team} would win {no_red_futures_win_pct} of futures."
 card.red:
   headline: "Red card! {player} is sent off and {team} are down to {players_on_pitch}."
   detail: *card_detail
@@ -113,3 +115,18 @@ distance_milestone.sprints:
 # Written by the Analyst agent and approved by the Fact-Checker; the note itself is in English.
 tactical_note.agent:
   headline: "Analysis: {note}"
+# From the futures: the rest of the match simulated many times (interpret/futures.py).
+futures_swing.win_up:
+  headline: "Futures: {team} now win in {futures_win_to_pct} of simulated endings, up from {futures_win_from_pct}."
+  detail: &futures_detail
+    - "Most likely final score: {futures_top_score} ({futures_top_score_p_pct})."
+    - "Home win, draw, away win across every simulated ending: {futures_home_pct}, {futures_draw_pct}, {futures_away_pct}."
+futures_swing.win_down:
+  headline: "Futures: {team} now win in only {futures_win_to_pct} of simulated endings, down from {futures_win_from_pct}."
+  detail: *futures_detail
+futures_swing.comeback_up:
+  headline: "Futures: {team} avoid defeat in {futures_comeback_to_pct} of simulated endings, up from {futures_comeback_from_pct}."
+  detail: *futures_detail
+futures_swing.comeback_down:
+  headline: "Futures: {team} now avoid defeat in only {futures_comeback_to_pct} of simulated endings, down from {futures_comeback_from_pct}."
+  detail: *futures_detail

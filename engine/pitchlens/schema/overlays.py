@@ -27,6 +27,7 @@ class CueTemplate(StrEnum):
     CHAOS_METER = "chaos_meter"
     WP_SWING = "wp_swing"
     WHAT_IF = "what_if"
+    FUTURES_BAR = "futures_bar"
 
 
 class CueAnchor(Model):

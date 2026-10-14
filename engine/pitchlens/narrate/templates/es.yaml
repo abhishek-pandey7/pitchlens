@@ -30,6 +30,7 @@ big_chance.saved:
     - "Era una ocasión de {xg} xG desde {shot_distance_m} m."
     - "Velocidad del disparo: {shot_speed_kmh} km/h."
     - "¿Y si hubiera entrado? {team} tendría un {what_if_win_prob_to_pct} de ganar, no un {what_if_win_prob_from_pct}."
+    - "En los futuros simulados, {team} ganaría el {what_if_futures_win_pct}; el resultado final más probable sería {what_if_futures_score}."
 big_chance.missed:
   headline: "{player} falla una ocasión clarísima para {team}."
   detail: *chance_detail
@@ -59,6 +60,7 @@ card.second_yellow:
   detail: &card_detail
     - "Probabilidad de victoria de {team}: {win_prob_from_pct} → {win_prob_to_pct}."
     - "Con once jugadores, {team} tendría un {no_red_win_prob_to_pct} de ganar."
+    - "Con once jugadores, {team} ganaría el {no_red_futures_win_pct} de los futuros simulados."
 card.red:
   headline: "¡Roja directa! {player} es expulsado y {team} se queda con {players_on_pitch}."
   detail: *card_detail
@@ -111,3 +113,18 @@ distance_milestone.sprints:
 # Written by the Analyst agent and approved by the Fact-Checker; the note itself is in English.
 tactical_note.agent:
   headline: "Análisis: {note}"
+# From the futures: the rest of the match simulated many times (interpret/futures.py).
+futures_swing.win_up:
+  headline: "Futuros: {team} gana ahora en el {futures_win_to_pct} de los finales simulados, antes en el {futures_win_from_pct}."
+  detail: &futures_detail
+    - "Resultado final más probable: {futures_top_score} ({futures_top_score_p_pct})."
+    - "Local, empate, visitante en todos los finales simulados: {futures_home_pct}, {futures_draw_pct}, {futures_away_pct}."
+futures_swing.win_down:
+  headline: "Futuros: {team} solo gana ya en el {futures_win_to_pct} de los finales simulados, antes en el {futures_win_from_pct}."
+  detail: *futures_detail
+futures_swing.comeback_up:
+  headline: "Futuros: {team} evita la derrota en el {futures_comeback_to_pct} de los finales simulados, antes en el {futures_comeback_from_pct}."
+  detail: *futures_detail
+futures_swing.comeback_down:
+  headline: "Futuros: {team} solo evita ya la derrota en el {futures_comeback_to_pct} de los finales simulados, antes en el {futures_comeback_from_pct}."
+  detail: *futures_detail

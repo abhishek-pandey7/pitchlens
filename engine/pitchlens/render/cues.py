@@ -49,6 +49,7 @@ SPECS: dict[InsightType, CueSpec] = {
     T.TACTICAL_NOTE: CueSpec(CueTemplate.LOWER_THIRD, Region.LOWER_THIRD, 45, 7000),
     T.FATIGUE_ALERT: CueSpec(CueTemplate.PLAYER_TAG, Region.PLAYER_ANCHOR, 40, 5000, anchored=True),
     T.DUEL: CueSpec(CueTemplate.LOWER_THIRD, Region.LOWER_THIRD, 35, 5000),
+    T.FUTURES_SWING: CueSpec(CueTemplate.FUTURES_BAR, Region.FULL_BAR, 55, 8000),
 }
 DEFAULT_SPEC = CueSpec(CueTemplate.LOWER_THIRD, Region.LOWER_THIRD, 30, 5000)
 
