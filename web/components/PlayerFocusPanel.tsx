@@ -19,9 +19,10 @@ type Props = {
  *  highlights the same player, and the fan's profile can boost their moments in the feed. */
 export function PlayerFocusPanel({ matchId, meta, playerId, onPick, profileId, lang, matchMs }: Props) {
   const s = focusStrings(lang);
-  // Refresh every few seconds of real time, and whenever the match moves on noticeably.
-  const key = playerId ? `${matchId}|${playerId}|${profileId ?? ""}|${Math.floor(matchMs / 20_000)}` : null;
-  const card = usePoll(key, () => api.focus(matchId, playerId ?? "", profileId), 3000);
+  // Refresh every few seconds of real time, and whenever the match moves on noticeably. The card stays on
+  // screen while it refreshes: only another match, player or profile clears it.
+  const key = playerId ? `${matchId}|${playerId}|${profileId ?? ""}` : null;
+  const card = usePoll(key, () => api.focus(matchId, playerId ?? "", profileId), 3000, Math.floor(matchMs / 20_000));
 
   return (
     <section aria-label={s.title} className="panel" data-testid="player-focus">
