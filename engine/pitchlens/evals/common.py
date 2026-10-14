@@ -35,11 +35,8 @@ def match_view(storyline: str, seed: int, tracking: bool = False) -> MatchView:
     league = generate_league()
     home, away = default_fixture(league, storyline)
     match = simulate(league, home, away, seed=seed, storyline=build(league, storyline, home, away))
-    frames: list[Any] = []
-    if tracking:
-        trk = generate_tracking(match.meta, match.events, league)
-        frames = [trk.frame(i) for i in range(len(trk))]
-    return MatchView(*explain_match(match.meta, match.events, frames))
+    trk = generate_tracking(match.meta, match.events, league) if tracking else None
+    return MatchView(*explain_match(match.meta, match.events, tracking=trk))
 
 
 def provider_info() -> dict[str, Any]:

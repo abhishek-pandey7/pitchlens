@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
-from pitchlens.interpret.state import MatchState, timeline
+from pitchlens.interpret.state import MatchState, timeline, tracked_timeline
 from pitchlens.schema.enriched import EnrichedEvent, PhysicalAlert
 from pitchlens.schema.events import MatchEvent, MatchMeta, TrackingFrame
 from pitchlens.schema.insights import Entities, Insight
 
 from .detectors import DEFAULT_DETECTORS, Candidate, Detector
 from .salience import salience
+
+if TYPE_CHECKING:
+    from pitchlens.sim.tracking import Tracking
 
 
 class ExplainEngine:
@@ -77,15 +81,28 @@ class ExplainEngine:
 
 
 def explain_match(
-    meta: MatchMeta, events: Iterable[MatchEvent], frames: Iterable[TrackingFrame] = ()
+    meta: MatchMeta,
+    events: Iterable[MatchEvent],
+    frames: Iterable[TrackingFrame] = (),
+    *,
+    tracking: Tracking | None = None,
+    frames_end: int | None = None,
 ) -> tuple[MatchState, list[Insight]]:
-    """Run interpret + explain over a stored match: the same code path as the live pipeline."""
+    """Run interpret + explain over a stored match: the same code path as the live pipeline. Pass
+    `tracking` (optionally only its frames `0..frames_end`) instead of `frames` for the bulk path, which
+    gives the same results without building a frame object per tick."""
     state = MatchState(meta)
     engine = ExplainEngine(state)
-    for item in timeline(events, frames):
+    items = timeline(events, frames) if tracking is None else tracked_timeline(events, tracking, frames_end)
+    for item in items:
         if isinstance(item, MatchEvent):
             engine.on_event(state.apply(item))
         else:
-            for alert in state.apply_frame(item):
+            if isinstance(item, range):
+                assert tracking is not None
+                alerts = state.apply_tracking(tracking, item.start, item.stop)
+            else:
+                alerts = state.apply_frame(item)
+            for alert in alerts:
                 engine.on_alert(alert)
     return state, engine.insights

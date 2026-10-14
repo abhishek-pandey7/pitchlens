@@ -6,6 +6,7 @@
 use pyo3::prelude::*;
 
 mod frames;
+mod physical;
 
 /// The crate version, so the engine can report which core it loaded.
 #[pyfunction]
@@ -17,5 +18,7 @@ fn version() -> &'static str {
 fn pitchlens_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(version, m)?)?;
     m.add_function(wrap_pyfunction!(frames::frames_json, m)?)?;
+    m.add_class::<physical::PyPhysicalTracker>()?;
+    m.add_function(wrap_pyfunction!(physical::physical_constants, m)?)?;
     Ok(())
 }
