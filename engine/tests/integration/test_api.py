@@ -49,6 +49,12 @@ def test_rest_basics(server) -> None:
     assert match["final_score"] == "2-3"
     assert any(m["match_id"] == match["match_id"] for m in httpx.get(f"{base}/matches").json())
     assert httpx.get(f"{base}/matches/nope").status_code == 404
+    packed = httpx.get(f"{base}/matches/{match['match_id']}/tracking-input")
+    assert packed.status_code == 200, packed.text
+    body = packed.json()
+    assert body["match_id"] == match["match_id"] and len(body["kind"]) == match["events"]
+    assert len(body["sides"]) == 2 and len(body["player_ids"]) == len(body["top_speed_kmh"])
+    assert all(p is None or len(p) == 2 for p in body["start"])
     clip = httpx.get(f"{base}/matches/{match['match_id']}/clips/goal")
     if core.RUST:  # built on demand, in milliseconds
         assert clip.status_code == 200 and clip.json()["frames"], clip.text
