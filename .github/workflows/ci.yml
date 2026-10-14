@@ -86,6 +86,19 @@ jobs:
         run: |
           npm run gen:types
           git diff --exit-code -- lib/types.ts
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine/core
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - name: Rust kernel for the browser (WebAssembly)
+        run: |
+          npm run build:kernel
+          npm run check:kernel
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
@@ -108,6 +121,17 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+        working-directory: web
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine/core
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - run: npm run build:kernel
         working-directory: web
       - run: npx playwright install --with-deps chromium
         working-directory: web
@@ -138,7 +162,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f engine/Dockerfile -t pitchlens-engine .
-      - run: docker build -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1 web
+      - run: docker build -f web/Dockerfile -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1 .
       - name: Engine container smoke test
         run: |
           docker run -d --name engine -p 8000:8080 pitchlens-engine
@@ -152,6 +176,7 @@ jobs:
           docker run -d --name web -p 3000:8080 pitchlens-web
           for i in $(seq 1 30); do curl -sf http://localhost:3000/ > /dev/null && break; sleep 1; done
           curl -sf "http://localhost:3000/watch" > /dev/null
+          curl -sf "http://localhost:3000/kernel/pitchlens_kernel_bg.wasm" -o /dev/null  # the Rust kernel is served
 
   secrets:
     runs-on: ubuntu-latest

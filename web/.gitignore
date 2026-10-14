@@ -43,3 +43,6 @@ next-env.d.ts
 # Playwright
 /test-results/
 /playwright-report/
+
+# Rust kernel built for the browser (npm run build:kernel)
+/public/kernel/
