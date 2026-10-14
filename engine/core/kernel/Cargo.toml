@@ -1,0 +1,10 @@
+[package]
+name = "pitchlens-kernel"
+description = "The PitchLens kernel in pure Rust: tracking build, physical metrics, frame JSON."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+ndarray.workspace = true

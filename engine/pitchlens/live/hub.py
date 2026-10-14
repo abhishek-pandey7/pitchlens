@@ -108,9 +108,8 @@ class Hub:
         self.session(match_id)  # subscribed before the replay publishes anything
         live = self._live[match_id]
         await self._stop_replay(live)
-        # Stored samples: players and ball from the cache, else built in the background for the next replay.
-        if frames and not await asyncio.to_thread(self.store.load_cached_tracking, record):
-            self.store.request_tracking(record)
+        if frames:  # players and ball: built inline by the Rust core, else cached or built in the background
+            await asyncio.to_thread(self.store.tracking_ready, record)
         tracking = record.tracking if frames else None
         live.session.tracking = tracking  # a seek applies the frames it skips in bulk
         replay = Replay(

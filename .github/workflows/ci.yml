@@ -39,8 +39,8 @@ jobs:
         working-directory: engine/core
         run: |
           cargo fmt --check
-          cargo clippy --all-targets -- -D warnings
-          cargo test
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
       - run: python scripts/build_core.py
       - run: pytest
         env:

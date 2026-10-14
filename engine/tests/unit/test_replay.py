@@ -119,9 +119,11 @@ async def test_memory_bus_fans_out_and_isolates_matches() -> None:
 
 
 def test_stored_matches_get_tracking_rebuilt_once_and_cached(tmp_path, monkeypatch) -> None:
+    """The Python fallback caches its slow builds on disk."""
     from pitchlens.live import store as store_module
     from pitchlens.live.store import MatchRecord, MatchStore
 
+    monkeypatch.setattr(store_module.core, "RUST", False)
     monkeypatch.setattr(store_module, "TRACKING_CACHE", tmp_path / "cache")
     source = MatchStore(data_dirs=[])
     made = source.generate(seed=3, storyline="comeback", tracking=False)
@@ -135,3 +137,24 @@ def test_stored_matches_get_tracking_rebuilt_once_and_cached(tmp_path, monkeypat
     assert store.ensure_tracking(again) and len(again.tracking) == len(stored.tracking)  # from the cache
     external = MatchRecord(meta=made.meta, events=made.events, source="external")
     assert not store.ensure_tracking(external) and external.tracking is None
+
+
+def test_rust_core_builds_stored_tracking_inline_without_the_cache(tmp_path, monkeypatch) -> None:
+    """With the Rust core a stored match gets players and ball on first use, built in memory."""
+    import pytest
+
+    from pitchlens.live import store as store_module
+    from pitchlens.live.store import MatchRecord, MatchStore
+
+    if not store_module.core.RUST:
+        pytest.skip("needs the Rust core")
+    monkeypatch.setattr(store_module, "TRACKING_CACHE", tmp_path / "cache")
+    source = MatchStore(data_dirs=[])
+    made = source.generate(seed=3, storyline="comeback", tracking=False)
+    stored = MatchRecord(meta=made.meta, events=made.events, source="stored")
+    store = MatchStore(data_dirs=[])
+    assert store.tracking_ready(stored) and stored.tracking is not None and len(stored.tracking) > 1000
+    assert not (tmp_path / "cache").exists()  # nothing written: rebuilding is faster than the cache
+    assert store.warm_tracking() == 0
+    external = MatchRecord(meta=made.meta, events=made.events, source="external")
+    assert not store.tracking_ready(external) and external.tracking is None

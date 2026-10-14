@@ -12,6 +12,7 @@ from concurrent.futures import Future, ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from pitchlens import core
 from pitchlens.schema.events import MatchEvent, MatchMeta
 from pitchlens.sim.rosters import League, load_league
 from pitchlens.sim.simulator import simulate
@@ -164,12 +165,32 @@ class MatchStore:
         )
         return True
 
-    def ensure_tracking(self, record: MatchRecord) -> bool:
-        """Load or build tracking now, in this process (blocking: for tests and scripts)."""
+    def tracking_ready(self, record: MatchRecord) -> bool:
+        """Players and ball for this match now, if that is cheap; True when `record.tracking` is set.
+
+        With the Rust core a build takes tens of milliseconds, so it happens inline on first use (faster
+        than reading the disk cache). With the Python fallback a build takes seconds: the disk cache is
+        used if present, otherwise a background build is queued for a later request."""
+        if record.tracking is not None:
+            return True
+        if record.source == "external":
+            return False
+        if core.RUST:
+            return self.ensure_tracking(record)
         if self.load_cached_tracking(record):
+            return True
+        self.request_tracking(record)
+        return False
+
+    def ensure_tracking(self, record: MatchRecord) -> bool:
+        """Load or build tracking now, in this process (blocking). The Rust core builds without the disk
+        cache, which only pays off for the slow Python build."""
+        if record.tracking is not None:
             return True
         if record.source == "external" or not record.events:
             return False
+        if not core.RUST and self.load_cached_tracking(record):
+            return True
         with self._tracking_locks[record.match_id]:
             if record.tracking is not None:
                 return True
@@ -177,6 +198,8 @@ class MatchStore:
                 record.tracking = generate_tracking(record.meta, record.events, self.league)
             except (StopIteration, KeyError, ValueError):  # clubs or players outside this league
                 return False
+            if core.RUST:
+                return True
             try:
                 target = cache_path(record.match_id, len(record.events))
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -186,7 +209,10 @@ class MatchStore:
             return True
 
     def warm_tracking(self) -> int:
-        """Queue background builds for every stored match not yet cached (call at startup)."""
+        """Queue background builds for every stored match not yet cached (call at startup). Nothing to do
+        with the Rust core, which builds on first use."""
+        if core.RUST:
+            return 0
         return sum(self.request_tracking(r) for r in self.list() if not self.load_cached_tracking(r))
 
     def close(self) -> None:

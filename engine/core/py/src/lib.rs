@@ -1,12 +1,13 @@
-//! Hot paths of the PitchLens engine, called from Python (`pitchlens/core.py`).
+//! Python bindings for the PitchLens kernel: the `pitchlens_core` module (`pitchlens/core.py`).
 //!
-//! Each function here has a pure-Python twin that stays the reference implementation: parity tests in
-//! `engine/tests/unit/test_core_parity.py` compare the two, and `PITCHLENS_CORE=python` switches back.
+//! Only conversion lives here (NumPy arrays and Python objects to kernel types, kernel errors to
+//! Python exceptions); all logic is in `pitchlens-kernel`.
 
 use pyo3::prelude::*;
 
 mod frames;
 mod physical;
+mod tracking;
 
 /// The crate version, so the engine can report which core it loaded.
 #[pyfunction]
@@ -17,6 +18,7 @@ fn version() -> &'static str {
 #[pymodule]
 fn pitchlens_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(version, m)?)?;
+    m.add_function(wrap_pyfunction!(tracking::build_tracking, m)?)?;
     m.add_function(wrap_pyfunction!(frames::frames_json, m)?)?;
     m.add_class::<physical::PyPhysicalTracker>()?;
     m.add_function(wrap_pyfunction!(physical::physical_constants, m)?)?;
