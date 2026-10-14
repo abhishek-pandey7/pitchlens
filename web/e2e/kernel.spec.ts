@@ -42,3 +42,20 @@ test("the browser builds a match's tracking with the Rust kernel, identical to t
     }
   }
 });
+
+test("after the whistle a fan scrubs through the whole match, built in their browser", async ({ page, request }) => {
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 11, storyline: "comeback", tracking: true } })).json();
+  await page.goto(`/watch?match=${match.match_id}&profile=p-casual-en-nhr`);
+  await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 600, from_ms: 88 * 60_000 } });
+  await expect(page.getByText("Full time", { exact: true })).toBeVisible({ timeout: 90_000 });
+
+  await page.getByRole("button", { name: "Replay the whole match" }).click();
+  await expect(page.getByTestId("kernel-built")).toContainText("Built in your browser by the Rust kernel", { timeout: 30_000 });
+  const slider = page.getByRole("slider", { name: "Match position" });
+  await expect(slider).toHaveAttribute("aria-valuetext", "1'");
+  const max = Number(await slider.getAttribute("max"));
+  await slider.fill(String(Math.round(max * 0.75)));
+  await expect(slider).not.toHaveAttribute("aria-valuetext", "1'");
+  await page.getByRole("button", { name: "Back to the match" }).click();
+  await expect(page.getByTestId("match-scrubber")).toHaveCount(0);
+});

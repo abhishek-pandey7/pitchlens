@@ -173,3 +173,27 @@ const FOCUS: Record<Lang, FocusStrings> = {
 export function focusStrings(lang: string | null | undefined): FocusStrings {
   return FOCUS[isLang(lang) ? lang : "en"];
 }
+
+type ScrubStrings = {
+  open: string;
+  building: string;
+  built: string; // {frames} and {ms} are filled in
+  failed: string;
+  back: string;
+  play: string;
+  pause: string;
+  position: string;
+};
+
+const SCRUB: Record<Lang, ScrubStrings> = {
+  en: { open: "Replay the whole match", building: "Building every player's run in your browser…", built: "Built in your browser by the Rust kernel: {frames} frames in {ms} ms", failed: "This browser couldn't build the replay.", back: "Back to the match", play: "Play", pause: "Pause", position: "Match position" },
+  es: { open: "Repetir todo el partido", building: "Reconstruyendo cada carrera en tu navegador…", built: "Construido en tu navegador por el núcleo en Rust: {frames} fotogramas en {ms} ms", failed: "Este navegador no pudo construir la repetición.", back: "Volver al partido", play: "Reproducir", pause: "Pausa", position: "Momento del partido" },
+  fr: { open: "Revoir tout le match", building: "Reconstruction de chaque course dans votre navigateur…", built: "Construit dans votre navigateur par le noyau Rust : {frames} images en {ms} ms", failed: "Ce navigateur n'a pas pu construire le replay.", back: "Retour au match", play: "Lecture", pause: "Pause", position: "Moment du match" },
+  pt: { open: "Rever a partida inteira", building: "Reconstruindo cada corrida no seu navegador…", built: "Construído no seu navegador pelo núcleo em Rust: {frames} quadros em {ms} ms", failed: "Este navegador não conseguiu construir o replay.", back: "Voltar à partida", play: "Reproduzir", pause: "Pausar", position: "Momento da partida" },
+  ar: { open: "إعادة المباراة كاملة", building: "نعيد بناء تحركات كل لاعب في متصفحك…", built: "بُنيت في متصفحك بنواة Rust: {frames} إطارًا في {ms} مللي ثانية", failed: "تعذّر على هذا المتصفح بناء الإعادة.", back: "العودة إلى المباراة", play: "تشغيل", pause: "إيقاف مؤقت", position: "لحظة المباراة" },
+  hi: { open: "पूरा मैच दोबारा देखें", building: "आपके ब्राउज़र में हर खिलाड़ी की दौड़ बनाई जा रही है…", built: "Rust कर्नेल ने आपके ब्राउज़र में बनाया: {frames} फ़्रेम, {ms} ms में", failed: "यह ब्राउज़र रीप्ले नहीं बना सका।", back: "मैच पर लौटें", play: "चलाएँ", pause: "रोकें", position: "मैच का समय" },
+};
+
+export function scrubStrings(lang: string | null | undefined): ScrubStrings {
+  return SCRUB[isLang(lang) ? lang : "en"];
+}

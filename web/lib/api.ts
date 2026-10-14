@@ -25,6 +25,9 @@ export type GoalClip = {
   frames: TrackingFrame[];
 };
 
+/** A match packed for the tracking build, for the Rust kernel in the browser (lib/kernel.ts). */
+export type TrackingInput = { match_id: string; player_ids: string[] } & Record<string, unknown>;
+
 export type AskStep = {
   agent: string;
   task?: string;
@@ -183,6 +186,7 @@ export const api = {
   storylines: () => call<string[]>("/matches/storylines"),
   match: (id: string) => call<MatchSummary & { meta: MatchMeta }>(`/matches/${id}`),
   goalClip: (id: string, index = 0) => call<GoalClip>(`/matches/${id}/clips/goal?index=${index}`),
+  trackingInput: (id: string) => call<TrackingInput>(`/matches/${id}/tracking-input`),
   createMatch: (body: { seed: number; storyline?: string; home?: string; away?: string; tracking?: boolean }) =>
     call<MatchSummary>("/matches", { method: "POST", body: JSON.stringify(body) }),
   replay: (id: string, body: { speed: number; from_ms?: number; frames?: boolean }) =>
