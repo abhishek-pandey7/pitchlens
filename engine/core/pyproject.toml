@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
+
+[project]
+name = "pitchlens-core"
+version = "0.1.0"
+description = "Rust hot paths for the PitchLens engine"
+requires-python = ">=3.12"
+dependencies = ["numpy>=2.0"]
+
+[tool.maturin]
+features = ["extension-module"]
+module-name = "pitchlens_core"

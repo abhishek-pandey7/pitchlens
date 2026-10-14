@@ -1,0 +1,25 @@
+[package]
+name = "pitchlens-core"
+version = "0.1.0"
+edition = "2021"
+description = "Hot paths of the PitchLens engine (tracking build, physical metrics, frame serialisation), called from Python."
+license = "MIT"
+publish = false
+
+[lib]
+name = "pitchlens_core"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# abi3: one wheel for every CPython >= 3.12. generate-import-lib: builds on Windows with the GNU
+# toolchain, without the Visual Studio C++ tools.
+pyo3 = { version = "0.25", features = ["abi3-py312", "generate-import-lib"] }
+numpy = "0.25"
+
+[features]
+# Enabled by maturin for the Python module; off for `cargo test`, which links a normal binary.
+extension-module = ["pyo3/extension-module"]
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

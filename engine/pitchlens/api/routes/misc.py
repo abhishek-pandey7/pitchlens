@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 
-from pitchlens import __version__
+from pitchlens import __version__, core
 from pitchlens.agents.safety import default_safety
 from pitchlens.api.deps import get_hub, get_profiles
 from pitchlens.api.models import IngestBatch
@@ -28,6 +28,7 @@ def health(request: Request) -> dict[str, Any]:
         "version": __version__,
         "bus": settings.bus,
         "llm_provider": settings.llm_provider,
+        "core": core.backend(),
     }
 
 
