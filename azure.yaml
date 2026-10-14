@@ -20,7 +20,7 @@ services:
     host: containerapp
     docker:
       path: ./Dockerfile
-      context: .
+      context: ..          # the image also builds the Rust kernel (engine/core) for the browser
       buildArgs:
         # The browser bundle calls the engine directly, and opens live streams on the edge; provisioning
         # outputs both URLs.

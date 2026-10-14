@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated: the Rust kernel compiled to WebAssembly (npm run build:kernel).
+    "public/kernel/**",
   ]),
 ]);
 

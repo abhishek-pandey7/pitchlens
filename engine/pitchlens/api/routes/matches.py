@@ -15,6 +15,7 @@ from pitchlens.live.hub import Hub, HubError
 from pitchlens.personalize.player_focus import focus_card
 from pitchlens.personalize.profiles import ProfileStore
 from pitchlens.sim.storylines import STORYLINES
+from pitchlens.sim.tracking import tracking_input
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
@@ -63,6 +64,23 @@ def get_match(match_id: str, hub: Hub = Depends(get_hub)) -> dict[str, Any]:
         "meta": record.meta.model_dump(mode="json"),
         "replay": hub.replay_state(match_id),
     }
+
+
+@router.get("/{match_id}/tracking-input")
+def get_tracking_input(match_id: str, hub: Hub = Depends(get_hub)) -> dict[str, Any]:
+    """The match packed for the tracking build (~150 KB, against ~5 MB of frames): the browser builds the
+    whole match's 5 Hz positions from it with the Rust kernel compiled to WebAssembly (web/lib/kernel.ts).
+    Matches from our simulator only: an external feed's players aren't in the league's rosters."""
+    try:
+        record = hub.record(match_id)
+    except HubError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    if record.source == "external" or not record.events:
+        raise HTTPException(404, "no tracking input for this match")
+    try:
+        return tracking_input(record.meta, record.events, hub.store.league)
+    except (StopIteration, KeyError) as exc:  # clubs or players outside this league
+        raise HTTPException(404, "no tracking input for this match") from exc
 
 
 @router.get("/{match_id}/clips/goal")

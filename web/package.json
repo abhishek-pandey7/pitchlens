@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "gen:types": "node scripts/gen-types.mjs",
+    "build:kernel": "node scripts/build-kernel.mjs",
+    "check:kernel": "node scripts/check-kernel.mjs",
     "typecheck": "next typegen && tsc --noEmit",
     "e2e": "playwright test",
     "docs:architecture": "node scripts/snapshot-architecture.mjs"

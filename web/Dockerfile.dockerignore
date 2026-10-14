@@ -1,0 +1,14 @@
+# Context for web/Dockerfile (the repository root): only web/ and the Rust kernel (engine/core) are needed.
+*
+!web/
+!engine/core/
+web/node_modules
+web/.next
+web/test-results
+web/playwright-report
+web/e2e
+web/**/*.tsbuildinfo
+web/.env
+web/.env.*
+web/public/kernel
+engine/core/target
