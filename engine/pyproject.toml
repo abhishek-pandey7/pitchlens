@@ -36,6 +36,7 @@ dev = [
   "ruff>=0.6",
   "mypy>=1.11",
   "types-PyYAML",
+  "maturin>=1.9,<2",  # builds the Rust core (engine/core)
 ]
 azure = [
   "azure-eventhub>=5.12",

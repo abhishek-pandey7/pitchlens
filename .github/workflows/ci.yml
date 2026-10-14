@@ -26,14 +26,48 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: engine/pyproject.toml
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine/core
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
+      - name: Rust core (fmt, clippy, unit tests)
+        working-directory: engine/core
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo test
+      - run: python scripts/build_core.py
       - run: pytest
+        env:
+          PITCHLENS_CORE: rust
       - name: Schemas are in sync with generated web contract
         run: |
           python -m pitchlens.schema.export_jsonschema
           git diff --exit-code -- ../web/lib/schemas
+
+  engine-python-only:
+    # The engine without the Rust core: the pure-Python reference must keep working on its own.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: engine/pyproject.toml
+      - run: pip install -e ".[dev]"
+      - run: pytest
+        env:
+          PITCHLENS_CORE: python
 
   web:
     runs-on: ubuntu-latest
