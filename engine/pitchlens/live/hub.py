@@ -112,6 +112,7 @@ class Hub:
         if frames and not await asyncio.to_thread(self.store.load_cached_tracking, record):
             self.store.request_tracking(record)
         tracking = record.tracking if frames else None
+        live.session.tracking = tracking  # a seek applies the frames it skips in bulk
         replay = Replay(
             self.bus,
             record.meta,

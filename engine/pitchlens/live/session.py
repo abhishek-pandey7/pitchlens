@@ -8,7 +8,9 @@ channel; insights are ranked per fan and carry instant template text, cues pass 
 and LLM narrations follow asynchronously as `narration` messages.
 
 While the replay is seeking (catch-up) nothing is streamed; when live play resumes each channel
-rebuilds its feed from the full insight list and receives one `sync` with the current picture.
+rebuilds its feed from the full insight list and receives one `sync` with the current picture. A seek
+replays events only; the tracking frames before the target are applied in bulk from `tracking` (set by
+the hub), so physical metrics after a seek match a replay from kick-off.
 """
 
 from __future__ import annotations
@@ -21,6 +23,8 @@ from collections import Counter, deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from typing import Any
+
+import numpy as np
 
 from pitchlens.explain.engine import ExplainEngine
 from pitchlens.ingest.bus import Bus, BusMessage, MessageKind
@@ -35,6 +39,7 @@ from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
 from pitchlens.schema.insights import Insight
 from pitchlens.schema.overlays import OverlayCue
 from pitchlens.schema.profiles import Persona, Profile
+from pitchlens.sim.tracking import Tracking
 from pitchlens.telemetry import LatencyRecorder
 
 LOG_SIZE = 5000
@@ -156,6 +161,9 @@ class MatchSession:
         self.engine = ExplainEngine(self.state)
         self.channels: dict[str, Channel] = {RAW: Channel(None)}
         self._catching_up = False
+        self.tracking: Tracking | None = None  # the replay's frames, for seek catch-up
+        self._frame_pos = 0  # tracking frames before this index are in the state
+        self._catch_up_to: int | None = None  # the seek target, while catching up
         self._last_state_wall = 0.0
         self._last_frame_wall = 0.0
         self._task: asyncio.Task[None] | None = None
@@ -201,6 +209,8 @@ class MatchSession:
     def reset(self) -> None:
         self.state = MatchState(self.meta)
         self.engine = ExplainEngine(self.state)
+        self._frame_pos = 0
+        self._catch_up_to = None
         for task in self._narrations:
             task.cancel()
         for channel in self.channels.values():
@@ -219,6 +229,7 @@ class MatchSession:
             if control.get("action") == "reset":
                 self.reset()
                 self._catching_up = True
+                self._catch_up_to = control.get("to_ms")
                 self.broadcast("reset", {"reason": "seek", "to_ms": control.get("to_ms")})
             else:
                 self._end_catch_up()
@@ -232,6 +243,8 @@ class MatchSession:
             self._end_catch_up()
 
         if message.kind is MessageKind.EVENT and message.event is not None:
+            if message.catch_up:
+                self._catch_up_frames(message.event.match_ms, inclusive=False)  # frames come after events
             start = time.perf_counter()
             with self.latency.stage("interpret"):
                 enriched = self.state.apply(message.event)
@@ -329,10 +342,27 @@ class MatchSession:
         await self.drain_narrations()
         self.broadcast("control", control)
 
+    def _catch_up_frames(self, until_ms: int, *, inclusive: bool) -> None:
+        """While seeking: apply the tracking frames before `until_ms` (or at it too, if `inclusive`) in one
+        go, as the live pipeline would have applied them one by one (alerts included)."""
+        tracking = self.tracking
+        if tracking is None:
+            return
+        end = int(np.searchsorted(tracking.ms, until_ms, side="right" if inclusive else "left"))
+        if end <= self._frame_pos:
+            return
+        with self.latency.stage("catch_up_frames"):
+            for alert in self.state.apply_tracking(tracking, self._frame_pos, end):
+                self.engine.on_alert(alert)
+        self._frame_pos = end
+
     def _end_catch_up(self) -> None:
         if not self._catching_up:
             return
         self._catching_up = False
+        if self._catch_up_to is not None:
+            self._catch_up_frames(self._catch_up_to, inclusive=True)
+            self._catch_up_to = None
         ctx = NarrationContext.from_state(self.state)
         for channel in self.channels.values():
             channel.delivered = [
