@@ -4,7 +4,11 @@
 # The Rust core (engine/core): built once into an abi3 wheel, then only the wheel is copied over, so the
 # runtime image carries no compiler.
 FROM python:3.12-slim AS core
-RUN apt-get update     && apt-get install -y --no-install-recommends curl build-essential     && rm -rf /var/lib/apt/lists/*     && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable     && /root/.cargo/bin/cargo --version
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl build-essential \
+    && rm -rf /var/lib/apt/lists/* \
+    && curl -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable \
+    && /root/.cargo/bin/cargo --version
 ENV PATH=/root/.cargo/bin:$PATH
 RUN pip install --no-cache-dir "maturin>=1.9,<2"
 COPY engine/core /src/core
