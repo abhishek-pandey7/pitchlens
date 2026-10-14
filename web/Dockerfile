@@ -1,7 +1,8 @@
 # PitchLens web: Next.js (standalone output) plus the Rust kernel compiled to WebAssembly. Build from the
 # repository root (the kernel lives in engine/core; web/Dockerfile.dockerignore keeps the context small):
 #   docker build -f web/Dockerfile -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=https://<engine>/api/v1 .
-# NEXT_PUBLIC_API_BASE is compiled into the browser bundle, so it is a build argument.
+# NEXT_PUBLIC_API_BASE (and the optional NEXT_PUBLIC_STREAM_BASE) are compiled into the browser bundle, so
+# they are build arguments.
 
 # The kernel for the browser: the same Rust the engine runs, as static files served from /kernel/.
 FROM rust:1-slim AS kernel
@@ -26,7 +27,10 @@ FROM deps AS build
 COPY web/ .
 COPY --from=kernel /kernel ./public/kernel
 ARG NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1
+# Live streams from the Rust broadcast edge; empty means from the engine (NEXT_PUBLIC_API_BASE).
+ARG NEXT_PUBLIC_STREAM_BASE=
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE \
+    NEXT_PUBLIC_STREAM_BASE=$NEXT_PUBLIC_STREAM_BASE \
     NEXT_OUTPUT=standalone \
     NEXT_TELEMETRY_DISABLED=1
 RUN npm run build

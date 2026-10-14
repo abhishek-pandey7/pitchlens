@@ -1,0 +1,47 @@
+[package]
+name = "pitchlens-edge"
+version = "0.1.0"
+edition = "2021"
+description = "PitchLens broadcast edge: fans one upstream SSE stream per channel out to many viewers"
+license = "MIT"
+publish = false
+
+[workspace]
+members = [".", "loadgen"]
+default-members = [".", "loadgen"]
+
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "pitchlens-edge"
+path = "src/main.rs"
+
+[features]
+default = ["tls"]
+# HTTPS to the engine (rustls). On by default; `--no-default-features` builds without a C toolchain
+# (ring needs one), which is enough for local runs and tests against a plain-HTTP engine.
+tls = ["reqwest/rustls-tls"]
+
+[dependencies]
+async-stream = "0.3"
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "query", "tokio", "tracing"] }
+bytes = "1"
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+reqwest = { version = "0.12", default-features = false, features = ["stream", "http2"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["raw_value"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "signal", "sync"] }
+tower-http = { version = "0.6", features = ["cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter", "fmt"] }
+
+[dev-dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["stream", "json"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"

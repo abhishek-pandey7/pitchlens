@@ -137,3 +137,37 @@ The second half of the comeback replayed at 6.0× on the `p-tactician-en` progra
   now de-duplicated by case, and provider errors stop a run instead of being scored.
 - **All numbers come from Groq's free tier** (`gpt-oss-120b`), which caps tokens a minute and a day, so
   latencies include rate-limit waits. The suites will be re-run on Microsoft Foundry at deployment.
+
+<!-- Hand-written below this line: `python -m pitchlens.evals report` keeps it. -->
+
+## Broadcast edge
+
+Load test of the Rust broadcast edge (`edge/`, plan §5.3), run locally on 2026-10-14 with `edge/loadgen`.
+
+**Setup.** Engine (`uvicorn`, mock LLM, Rust core) on one port, edge (release build) on another, and the load generator, all on one laptop over loopback: Intel Core i7-13620H (10 cores, 16 threads), 16 GB RAM of which only 1–2 GB was free during the runs (other work was running), Windows 11. The match is `SYN-NHR-SVC-7` (comeback, with tracking), replayed at **10× with frames**. Viewers are spread over **4 channels** (raw, `p-casual-es`, `p-analyst-en`, `p-tactician-en`) with `frames=true&events=false`, opened over 10–15 s, then measured for 60 s of live play.
+
+```bash
+cd edge
+cargo run --release -p pitchlens-loadgen -- --url http://127.0.0.1:8771/api/v1 --match SYN-NHR-SVC-7 \
+  --viewers 1500 --profiles raw,p-casual-es,p-analyst-en,p-tactician-en --frames true --events false \
+  --ramp 15 --duration 60 --engine http://127.0.0.1:8770/api/v1 --replay 10 --json edge-1500.json
+```
+
+**Delivery delay** is the engine's `sent_at` on each `state` message to its arrival at a viewer in the generator: the engine's own queueing, the hop to the edge, the fan-out, and the generator's parsing on the same machine.
+
+| Viewers | Connected | Delivery delay p50 / p95 / p99 (max) | Messages/s delivered | Throughput | Dropped | Resynced | Ids out of order |
+|---|---|---|---|---|---|---|---|
+| 500 | 500 | 17 / 51 / 70 ms (90) | 7,166 (14.3 per viewer) | 59 Mbit/s | 0 | 0 | 0 |
+| 1,500 | 1,500 | 94 / 188 / 238 ms (375) | 21,304 (14.2 per viewer) | 176 Mbit/s | 0 | 0 | 0 |
+
+- **Fan-out cost in the edge** (`/stats`, upstream message read → handed to a viewer's connection) at 500 viewers: p50 2.4 ms, p95 10.8 ms. The edge's working set was **27 MB** and it used about half a core, while the engine used 189 MB.
+- **One upstream per channel:** 4 upstream connections served 520 viewers (500 plus 20 from a warm-up run). The 520 joins cost **50 engine `/sync` calls**, because viewers joining together share one snapshot.
+- **No viewer was dropped or resynced**, and no id arrived twice or out of order, in either run.
+- **Below the plan's 250 ms p95 target at 1,500 viewers.** These runs don't show where the extra delay at 1,500 viewers comes from. The engine, the edge and a generator parsing 21,000 messages a second all share one laptop's CPU, and the edge's own fan-out delay was not sampled at that load.
+
+**Limits, stated honestly.**
+
+- **One machine for everything.** The generator, engine and edge compete for the same cores, so these numbers bound the edge from below. They are not its capacity.
+- **Stopped at 1,500 viewers** because the machine was short on memory. The plan's 5,000-viewer local run and the Azure runs (1k → 50k, E-5) are still to do.
+- **Not measured: the engine's direct `/stream` at the same loads.** That is the "before" number for the comparison, and it is still to do. Each direct viewer is a Python generator that serialises every message, which is what the edge exists to avoid.
+- **Edge CPU and memory were sampled only at 500 viewers.**

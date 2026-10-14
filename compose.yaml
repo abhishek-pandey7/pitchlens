@@ -1,4 +1,5 @@
-# The whole stack locally in containers: http://localhost:3000 (web) and http://localhost:8000 (engine).
+# The whole stack locally in containers: http://localhost:3000 (web), http://localhost:8000 (engine) and
+# http://localhost:8081 (the broadcast edge, which serves the web app's live streams).
 #   docker compose up --build
 # Keys and switches come from .env if present (LLM_PROVIDER, GROQ_API_KEY, ...); without it, everything
 # runs offline on the mock model and the local safety screen.
@@ -23,8 +24,24 @@ services:
       dockerfile: web/Dockerfile
       args:
         NEXT_PUBLIC_API_BASE: http://localhost:8000/api/v1
+        NEXT_PUBLIC_STREAM_BASE: http://localhost:8081/api/v1  # live streams through the edge
     ports:
       - "3000:8080"
+    depends_on:
+      engine:
+        condition: service_healthy
+      edge:
+        condition: service_healthy
+
+  # The Rust broadcast edge: one upstream stream per channel, fanned out to every viewer.
+  edge:
+    build:
+      context: edge
+    ports:
+      - "8081:8080"
+    environment:
+      ENGINE_URL: http://engine:8080
+      CORS_ORIGINS: http://localhost:3000
     depends_on:
       engine:
         condition: service_healthy

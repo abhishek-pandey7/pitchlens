@@ -1,4 +1,4 @@
-# Azure Developer CLI: `azd up` provisions infra/ and deploys both services (see docs/deploy.md).
+# Azure Developer CLI: `azd up` provisions infra/ and deploys the three services (see docs/deploy.md).
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 name: pitchlens
 metadata:
@@ -22,5 +22,15 @@ services:
       path: ./Dockerfile
       context: ..          # the image also builds the Rust kernel (engine/core) for the browser
       buildArgs:
-        # The browser bundle calls the engine directly; provisioning outputs its URL.
+        # The browser bundle calls the engine directly, and opens live streams on the edge; provisioning
+        # outputs both URLs.
         - NEXT_PUBLIC_API_BASE=${API_BASE_URL}
+        - NEXT_PUBLIC_STREAM_BASE=${STREAM_BASE_URL}
+  edge:
+    # The Rust broadcast edge: SSE fan-out to viewers (see edge/README.md).
+    project: ./edge
+    language: docker
+    host: containerapp
+    docker:
+      path: ./Dockerfile
+      context: .

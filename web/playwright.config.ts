@@ -34,7 +34,9 @@ export default defineConfig({
     {
       command: `npx next build && npx next start -p ${WEB_PORT}`,
       url: `http://127.0.0.1:${WEB_PORT}/watch`,
-      env: { NEXT_PUBLIC_API_BASE: API_BASE },
+      // NEXT_PUBLIC_STREAM_BASE from the environment runs the suite with streams through the broadcast
+      // edge (start it first, with ENGINE_URL=http://127.0.0.1:8765); unset, streams come from the engine.
+      env: { NEXT_PUBLIC_API_BASE: API_BASE, NEXT_PUBLIC_STREAM_BASE: process.env.NEXT_PUBLIC_STREAM_BASE ?? "" },
       reuseExistingServer: false,
       timeout: 240_000,
     },

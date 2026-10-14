@@ -2,6 +2,9 @@
 import type { MatchMeta, Profile, TrackingFrame } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1";
+// Live streams can come from the Rust broadcast edge (edge/), which serves the same /stream URLs.
+// Unset or empty: streams come from the engine, like everything else.
+export const STREAM_BASE = process.env.NEXT_PUBLIC_STREAM_BASE || API_BASE;
 
 export type MatchSummary = {
   match_id: string;
@@ -216,6 +219,6 @@ export const api = {
     if (opts.profileId) params.set("profile_id", opts.profileId);
     if (opts.frames) params.set("frames", "true");
     if (opts.events === false) params.set("events", "false");
-    return `${API_BASE}/matches/${id}/stream?${params}`;
+    return `${STREAM_BASE}/matches/${id}/stream?${params}`;
   },
 };
