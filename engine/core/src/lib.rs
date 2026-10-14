@@ -5,6 +5,9 @@
 
 use pyo3::prelude::*;
 
+pub mod shape;
+pub mod tracking;
+
 /// The crate version, so the engine can report which core it loaded.
 #[pyfunction]
 fn version() -> &'static str {
@@ -14,5 +17,6 @@ fn version() -> &'static str {
 #[pymodule]
 fn pitchlens_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(version, m)?)?;
+    m.add_function(wrap_pyfunction!(tracking::build_tracking, m)?)?;
     Ok(())
 }
