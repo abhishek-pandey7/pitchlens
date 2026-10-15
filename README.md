@@ -26,11 +26,27 @@ the image is regenerated with `npm run docs:architecture` in `web/`. Details: [a
 [insights](docs/insights.md) · [metrics](docs/metrics.md) · [API](docs/api.md) · [evaluation](docs/eval.md) ·
 [deployment](docs/deploy.md) · [responsible AI](docs/responsible-ai.md).
 
+## The Rust kernel
+
+The CPU-heavy work runs in one Rust kernel (`engine/core/kernel`), compiled for three places:
+
+| Where | How | What it does | Measured |
+|---|---|---|---|
+| The engine | PyO3 module `pitchlens_core` | Builds 5 Hz tracking from the events, runs physical metrics, writes frames as wire JSON | Tracking 5.8 s → 0.024 s; physical metrics 1.55 s → 0.042 s; frame JSON 7 s → 0.08 s per match |
+| The browser | WebAssembly in a web worker (`web/lib/kernel.ts`) | Rebuilds a whole match's tracking from ~160 KB of packed events, for the full-match replay | 49 KB gzipped; 78 ms per match in Chromium; byte-identical to the engine |
+| The broadcast edge | axum + tokio service (`edge/`) | Fans each fan channel's live stream out to many viewers from one upstream | 1,500 viewers on a laptop, p95 188 ms, no drops; 13.6 MB image |
+
+Every Rust function has a Python twin that stays the reference implementation. Parity tests compare the
+two, and the engine runs without Rust when `PITCHLENS_CORE=python`. Plans and results:
+[rust-core-plan.md](docs/rust-core-plan.md) and [rust-expansion-plan.md](docs/rust-expansion-plan.md).
+
 ## Repository layout
 
 | Path | What |
 |---|---|
 | `engine/` | Python engine: simulator, metrics, insight detection, agents, API |
+| `engine/core/` | The Rust kernel and its bindings: `kernel` (pure Rust), `py` (PyO3), `wasm` (WebAssembly) |
+| `edge/` | Rust broadcast edge (axum): SSE fan-out between the engine and viewers |
 | `web/` | Next.js apps: `/overlay`, `/watch`, `/analyst`, `/studio`, `/compare` |
 | `data/` | Synthetic rosters and generated matches |
 | `docs/` | Schemas, metrics, overlay contract, dataset, agents |
@@ -43,6 +59,7 @@ the image is regenerated with `npm run docs:architecture` in `web/`. Details: [a
 cd engine
 python -m venv .venv && source .venv/Scripts/activate   # Windows Git Bash; use .venv/bin/activate on macOS/Linux
 pip install -e ".[dev]"
+python scripts/build_core.py  # optional: the Rust core (needs Rust); without it the Python reference runs
 pytest
 python scripts/e2e_smoke.py   # whole system, start to finish (36 checks)
 
@@ -52,6 +69,7 @@ uvicorn pitchlens.api.main:app --reload --port 8000
 # Web
 cd ../web
 npm install
+npm run build:kernel   # optional: the Rust kernel for the browser (Rust + wasm-bindgen; see scripts/build-kernel.mjs)
 npm run dev            # http://localhost:3000/watch
 npm run e2e            # browser end-to-end tests (boots engine + web, drives Chromium)
 ```
@@ -59,7 +77,7 @@ npm run e2e            # browser end-to-end tests (boots engine + web, drives Ch
 ## Run with Docker
 
 ```bash
-docker compose up --build      # web on http://localhost:3000, engine on http://localhost:8000
+docker compose up --build      # web on http://localhost:3000, engine on :8000, broadcast edge on :8081
 ```
 
 ## Deploy to Azure
@@ -67,7 +85,7 @@ docker compose up --build      # web on http://localhost:3000, engine on http://
 ```bash
 azd auth login
 azd env new pitchlens-dev && azd env set AZURE_LOCATION swedencentral
-azd up                         # Microsoft Foundry, Container Apps, Content Safety, Key Vault, App Insights
+azd up                         # Microsoft Foundry, Container Apps (engine, edge, web), Content Safety, Key Vault, App Insights
 ```
 
 See [`docs/deploy.md`](docs/deploy.md) for what gets created, quota, cost and teardown.
