@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from .enriched import EnrichedEvent, PhysicalAlert
 from .events import MatchEvent, MatchMeta, TrackingFrame
+from .futures import Futures, FuturesInput
 from .insights import Insight
 from .overlays import OverlayCue
 from .profiles import Narration, Profile
@@ -27,6 +28,8 @@ PUBLIC_MODELS: dict[str, type[BaseModel]] = {
     "overlay_cue": OverlayCue,
     "profile": Profile,
     "narration": Narration,
+    "futures": Futures,
+    "futures_input": FuturesInput,
 }
 
 DEFAULT_OUT = Path(__file__).resolve().parents[3] / "web" / "lib" / "schemas"

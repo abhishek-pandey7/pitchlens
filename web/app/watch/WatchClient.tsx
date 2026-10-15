@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { AskPanel } from "@/components/AskPanel";
+import { FuturesPanel } from "@/components/FuturesPanel";
+import { WhatIfSandbox } from "@/components/WhatIfSandbox";
 import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { MatchLauncher, fanLabel } from "@/components/MatchLauncher";
@@ -72,6 +74,8 @@ export function WatchClient() {
               <Stat label={t(lang, "shots")} home={String(view.state.home.shots)} away={String(view.state.away.shots)} />
             </dl>
           )}
+          <FuturesPanel futures={view.state?.dynamics.futures} meta={view.meta} lang={lang} />
+          <WhatIfSandbox matchId={matchId} meta={view.meta} lang={lang} />
           <PlayerFocusPanel
             matchId={matchId}
             meta={view.meta}

@@ -28,12 +28,12 @@ export function dir(lang: string | null | undefined): "rtl" | "ltr" {
 
 // Feed labels for insight types (keys match the engine's InsightType).
 const TYPE_LABELS: Record<Lang, Record<string, string>> = {
-  en: { goal: "Goal", big_chance: "Big chance", xg_swing: "Chance quality", win_prob_swing: "Turning point", momentum_shift: "Momentum", pressure_change: "Pressing", control_chaos_flip: "Control vs chaos", rhythm_break: "Tempo", pass_of_note: "Pass of note", shot_speed_record: "Shot speed", sprint_threshold: "Top speed", distance_milestone: "Work rate", career_milestone: "Milestone", player_streak: "On a roll", tactical_note: "Tactics", fatigue_alert: "Fatigue", duel: "Duel", card: "Card", red_card: "Red card", yellow_card: "Yellow card" },
-  es: { goal: "Gol", big_chance: "Ocasión clara", xg_swing: "Calidad de ocasiones", win_prob_swing: "Momento clave", momentum_shift: "Dominio", pressure_change: "Presión", control_chaos_flip: "Control o caos", rhythm_break: "Ritmo", pass_of_note: "Gran pase", shot_speed_record: "Velocidad de disparo", sprint_threshold: "Velocidad punta", distance_milestone: "Despliegue físico", career_milestone: "Hito", player_streak: "En racha", tactical_note: "Táctica", fatigue_alert: "Cansancio", duel: "Duelo", card: "Tarjeta", red_card: "Tarjeta roja", yellow_card: "Tarjeta amarilla" },
-  fr: { goal: "But", big_chance: "Grosse occasion", xg_swing: "Qualité des occasions", win_prob_swing: "Tournant", momentum_shift: "Dynamique", pressure_change: "Pressing", control_chaos_flip: "Contrôle ou désordre", rhythm_break: "Rythme", pass_of_note: "Passe remarquable", shot_speed_record: "Vitesse de frappe", sprint_threshold: "Vitesse de pointe", distance_milestone: "Volume de course", career_milestone: "Cap", player_streak: "En série", tactical_note: "Tactique", fatigue_alert: "Fatigue", duel: "Duel", card: "Carton", red_card: "Carton rouge", yellow_card: "Carton jaune" },
-  pt: { goal: "Gol", big_chance: "Chance clara", xg_swing: "Qualidade das chances", win_prob_swing: "Momento decisivo", momentum_shift: "Domínio", pressure_change: "Pressão", control_chaos_flip: "Controle ou caos", rhythm_break: "Ritmo", pass_of_note: "Grande passe", shot_speed_record: "Velocidade do chute", sprint_threshold: "Velocidade máxima", distance_milestone: "Intensidade", career_milestone: "Marco", player_streak: "Em sequência", tactical_note: "Tática", fatigue_alert: "Cansaço", duel: "Duelo", card: "Cartão", red_card: "Cartão vermelho", yellow_card: "Cartão amarelo" },
-  ar: { goal: "هدف", big_chance: "فرصة كبيرة", xg_swing: "جودة الفرص", win_prob_swing: "لحظة حاسمة", momentum_shift: "الأفضلية", pressure_change: "الضغط", control_chaos_flip: "السيطرة أم الفوضى", rhythm_break: "الإيقاع", pass_of_note: "تمريرة مميزة", shot_speed_record: "سرعة التسديد", sprint_threshold: "السرعة القصوى", distance_milestone: "المجهود البدني", career_milestone: "إنجاز", player_streak: "سلسلة مميزة", tactical_note: "تكتيك", fatigue_alert: "إرهاق", duel: "صراع ثنائي", card: "بطاقة", red_card: "بطاقة حمراء", yellow_card: "بطاقة صفراء" },
-  hi: { goal: "गोल", big_chance: "बड़ा मौका", xg_swing: "मौकों की गुणवत्ता", win_prob_swing: "निर्णायक पल", momentum_shift: "मोमेंटम", pressure_change: "प्रेसिंग", control_chaos_flip: "नियंत्रण या अफ़रा-तफ़री", rhythm_break: "रफ़्तार", pass_of_note: "शानदार पास", shot_speed_record: "शॉट की रफ़्तार", sprint_threshold: "टॉप स्पीड", distance_milestone: "मेहनत", career_milestone: "उपलब्धि", player_streak: "लगातार", tactical_note: "रणनीति", fatigue_alert: "थकान", duel: "द्वंद्व", card: "कार्ड", red_card: "रेड कार्ड", yellow_card: "येलो कार्ड" },
+  en: { goal: "Goal", big_chance: "Big chance", xg_swing: "Chance quality", win_prob_swing: "Turning point", momentum_shift: "Momentum", pressure_change: "Pressing", control_chaos_flip: "Control vs chaos", rhythm_break: "Tempo", pass_of_note: "Pass of note", shot_speed_record: "Shot speed", sprint_threshold: "Top speed", distance_milestone: "Work rate", career_milestone: "Milestone", player_streak: "On a roll", tactical_note: "Tactics", fatigue_alert: "Fatigue", duel: "Duel", card: "Card", red_card: "Red card", yellow_card: "Yellow card", futures_swing: "Futures" },
+  es: { goal: "Gol", big_chance: "Ocasión clara", xg_swing: "Calidad de ocasiones", win_prob_swing: "Momento clave", momentum_shift: "Dominio", pressure_change: "Presión", control_chaos_flip: "Control o caos", rhythm_break: "Ritmo", pass_of_note: "Gran pase", shot_speed_record: "Velocidad de disparo", sprint_threshold: "Velocidad punta", distance_milestone: "Despliegue físico", career_milestone: "Hito", player_streak: "En racha", tactical_note: "Táctica", fatigue_alert: "Cansancio", duel: "Duelo", card: "Tarjeta", red_card: "Tarjeta roja", yellow_card: "Tarjeta amarilla", futures_swing: "Futuros" },
+  fr: { goal: "But", big_chance: "Grosse occasion", xg_swing: "Qualité des occasions", win_prob_swing: "Tournant", momentum_shift: "Dynamique", pressure_change: "Pressing", control_chaos_flip: "Contrôle ou désordre", rhythm_break: "Rythme", pass_of_note: "Passe remarquable", shot_speed_record: "Vitesse de frappe", sprint_threshold: "Vitesse de pointe", distance_milestone: "Volume de course", career_milestone: "Cap", player_streak: "En série", tactical_note: "Tactique", fatigue_alert: "Fatigue", duel: "Duel", card: "Carton", red_card: "Carton rouge", yellow_card: "Carton jaune", futures_swing: "Projections" },
+  pt: { goal: "Gol", big_chance: "Chance clara", xg_swing: "Qualidade das chances", win_prob_swing: "Momento decisivo", momentum_shift: "Domínio", pressure_change: "Pressão", control_chaos_flip: "Controle ou caos", rhythm_break: "Ritmo", pass_of_note: "Grande passe", shot_speed_record: "Velocidade do chute", sprint_threshold: "Velocidade máxima", distance_milestone: "Intensidade", career_milestone: "Marco", player_streak: "Em sequência", tactical_note: "Tática", fatigue_alert: "Cansaço", duel: "Duelo", card: "Cartão", red_card: "Cartão vermelho", yellow_card: "Cartão amarelo", futures_swing: "Futuros" },
+  ar: { goal: "هدف", big_chance: "فرصة كبيرة", xg_swing: "جودة الفرص", win_prob_swing: "لحظة حاسمة", momentum_shift: "الأفضلية", pressure_change: "الضغط", control_chaos_flip: "السيطرة أم الفوضى", rhythm_break: "الإيقاع", pass_of_note: "تمريرة مميزة", shot_speed_record: "سرعة التسديد", sprint_threshold: "السرعة القصوى", distance_milestone: "المجهود البدني", career_milestone: "إنجاز", player_streak: "سلسلة مميزة", tactical_note: "تكتيك", fatigue_alert: "إرهاق", duel: "صراع ثنائي", card: "بطاقة", red_card: "بطاقة حمراء", yellow_card: "بطاقة صفراء", futures_swing: "المستقبلات" },
+  hi: { goal: "गोल", big_chance: "बड़ा मौका", xg_swing: "मौकों की गुणवत्ता", win_prob_swing: "निर्णायक पल", momentum_shift: "मोमेंटम", pressure_change: "प्रेसिंग", control_chaos_flip: "नियंत्रण या अफ़रा-तफ़री", rhythm_break: "रफ़्तार", pass_of_note: "शानदार पास", shot_speed_record: "शॉट की रफ़्तार", sprint_threshold: "टॉप स्पीड", distance_milestone: "मेहनत", career_milestone: "उपलब्धि", player_streak: "लगातार", tactical_note: "रणनीति", fatigue_alert: "थकान", duel: "द्वंद्व", card: "कार्ड", red_card: "रेड कार्ड", yellow_card: "येलो कार्ड", futures_swing: "फ़्यूचर्स" },
 };
 
 export function typeLabel(lang: string | null | undefined, type: string): string {
@@ -174,6 +174,78 @@ export function focusStrings(lang: string | null | undefined): FocusStrings {
   return FOCUS[isLang(lang) ? lang : "en"];
 }
 
+// Futures: the rest of the match simulated many times by the engine.
+type FuturesStrings = {
+  title: string;
+  simulated: (paths: string, minute: string) => string;
+  likely: string;
+  comeback: (team: string, avoid: string, win: string) => string;
+  nextGoal: (home: string, homePct: string, away: string, awayPct: string, none: string) => string;
+  waiting: string;
+  overTime: string;
+};
+
+const FUTURES: Record<Lang, FuturesStrings> = {
+  en: {
+    title: "Futures",
+    simulated: (n, m) => `${n} simulated endings from ${m}`,
+    likely: "Most likely final scores",
+    comeback: (team, avoid, win) => `${team} avoid defeat in ${avoid} of futures and win ${win} of them.`,
+    nextGoal: (h, hp, a, ap, none) => `Next goal: ${h} ${hp}, ${a} ${ap}; no more goals in ${none}.`,
+    waiting: "The rest of the match is simulated once it kicks off.",
+    overTime: "Futures over time",
+  },
+  es: {
+    title: "Futuros",
+    simulated: (n, m) => `${n} finales simulados desde el ${m}`,
+    likely: "Resultados finales más probables",
+    comeback: (team, avoid, win) => `${team} evita la derrota en el ${avoid} de los futuros y gana en el ${win}.`,
+    nextGoal: (h, hp, a, ap, none) => `Próximo gol: ${h} ${hp}, ${a} ${ap}; sin más goles en el ${none}.`,
+    waiting: "El resto del partido se simula en cuanto empieza.",
+    overTime: "Futuros a lo largo del partido",
+  },
+  fr: {
+    title: "Projections",
+    simulated: (n, m) => `${n} fins de match simulées depuis ${m}`,
+    likely: "Scores finaux les plus probables",
+    comeback: (team, avoid, win) => `${team} évite la défaite dans ${avoid} des projections et gagne dans ${win}.`,
+    nextGoal: (h, hp, a, ap, none) => `Prochain but : ${h} ${hp}, ${a} ${ap} ; plus aucun but dans ${none}.`,
+    waiting: "La suite du match est simulée dès le coup d'envoi.",
+    overTime: "Projections au fil du match",
+  },
+  pt: {
+    title: "Futuros",
+    simulated: (n, m) => `${n} finais simulados a partir de ${m}`,
+    likely: "Placares finais mais prováveis",
+    comeback: (team, avoid, win) => `${team} evita a derrota em ${avoid} dos futuros e vence em ${win}.`,
+    nextGoal: (h, hp, a, ap, none) => `Próximo gol: ${h} ${hp}, ${a} ${ap}; sem mais gols em ${none}.`,
+    waiting: "O resto do jogo é simulado assim que a bola rola.",
+    overTime: "Futuros ao longo do jogo",
+  },
+  ar: {
+    title: "المستقبلات",
+    simulated: (n, m) => `${n} نهاية محاكاة منذ ${m}`,
+    likely: "النتائج النهائية الأرجح",
+    comeback: (team, avoid, win) => `يتجنب ${team} الخسارة في ${avoid} من المستقبلات ويفوز في ${win}.`,
+    nextGoal: (h, hp, a, ap, none) => `الهدف التالي: ${h} ${hp}، ${a} ${ap}؛ ولا أهداف أخرى في ${none}.`,
+    waiting: "تُحاكى بقية المباراة فور انطلاقها.",
+    overTime: "المستقبلات على مدار المباراة",
+  },
+  hi: {
+    title: "फ़्यूचर्स",
+    simulated: (n, m) => `${m} से ${n} सिम्युलेटेड अंत`,
+    likely: "सबसे संभावित अंतिम स्कोर",
+    comeback: (team, avoid, win) => `${team} ${avoid} फ़्यूचर्स में हार से बचता है और ${win} में जीतता है।`,
+    nextGoal: (h, hp, a, ap, none) => `अगला गोल: ${h} ${hp}, ${a} ${ap}; ${none} में और कोई गोल नहीं।`,
+    waiting: "मैच शुरू होते ही बाकी मैच सिम्युलेट होता है।",
+    overTime: "पूरे मैच में फ़्यूचर्स",
+  },
+};
+
+export function futuresStrings(lang: string | null | undefined): FuturesStrings {
+  return FUTURES[isLang(lang) ? lang : "en"];
+}
+
 type ScrubStrings = {
   open: string;
   building: string;
@@ -196,4 +268,35 @@ const SCRUB: Record<Lang, ScrubStrings> = {
 
 export function scrubStrings(lang: string | null | undefined): ScrubStrings {
   return SCRUB[isLang(lang) ? lang : "en"];
+}
+
+type WhatIfStrings = {
+  open: string;
+  title: string;
+  score: string;
+  minute: string;
+  reds: string;
+  momentum: string;
+  onTop: (team: string) => string;
+  level: string;
+  more: (what: string) => string;
+  fewer: (what: string) => string;
+  hypothetical: string;
+  inBrowser: (paths: string, ms: string) => string;
+  fromEngine: string;
+  back: string;
+  reset: string;
+};
+
+const WHATIF: Record<Lang, WhatIfStrings> = {
+  en: { open: "What if…", title: "What if", score: "Score", minute: "Minute", reds: "Red cards", momentum: "Momentum", onTop: (t) => `${t} on top`, level: "Even", more: (w) => `One more: ${w}`, fewer: (w) => `One fewer: ${w}`, hypothetical: "A what-if, not the match.", inBrowser: (n, ms) => `${n} futures simulated in your browser by the Rust kernel in ${ms} ms.`, fromEngine: "Simulated by the engine.", back: "Back to the match", reset: "Reset to now" },
+  es: { open: "¿Y si…?", title: "¿Y si…?", score: "Marcador", minute: "Minuto", reds: "Rojas", momentum: "Dominio", onTop: (t) => `Domina ${t}`, level: "Igualado", more: (w) => `Uno más: ${w}`, fewer: (w) => `Uno menos: ${w}`, hypothetical: "Una hipótesis, no el partido.", inBrowser: (n, ms) => `${n} finales simulados en tu navegador por el núcleo en Rust en ${ms} ms.`, fromEngine: "Simulado por el motor.", back: "Volver al partido", reset: "Volver a ahora" },
+  fr: { open: "Et si…", title: "Et si…", score: "Score", minute: "Minute", reds: "Cartons rouges", momentum: "Dynamique", onTop: (t) => `${t} domine`, level: "Équilibré", more: (w) => `Un de plus : ${w}`, fewer: (w) => `Un de moins : ${w}`, hypothetical: "Une hypothèse, pas le match.", inBrowser: (n, ms) => `${n} fins simulées dans votre navigateur par le noyau Rust en ${ms} ms.`, fromEngine: "Simulé par le moteur.", back: "Retour au match", reset: "Revenir à maintenant" },
+  pt: { open: "E se…", title: "E se…", score: "Placar", minute: "Minuto", reds: "Vermelhos", momentum: "Domínio", onTop: (t) => `${t} por cima`, level: "Equilibrado", more: (w) => `Mais um: ${w}`, fewer: (w) => `Menos um: ${w}`, hypothetical: "Uma hipótese, não a partida.", inBrowser: (n, ms) => `${n} finais simulados no seu navegador pelo núcleo em Rust em ${ms} ms.`, fromEngine: "Simulado pelo motor.", back: "Voltar à partida", reset: "Voltar ao agora" },
+  ar: { open: "ماذا لو…", title: "ماذا لو", score: "النتيجة", minute: "الدقيقة", reds: "البطاقات الحمراء", momentum: "الأفضلية", onTop: (t) => `الأفضلية لـ${t}`, level: "متكافئ", more: (w) => `واحد أكثر: ${w}`, fewer: (w) => `واحد أقل: ${w}`, hypothetical: "افتراض، وليس المباراة.", inBrowser: (n, ms) => `${n} نهاية محاكاة في متصفحك بنواة Rust في ${ms} مللي ثانية.`, fromEngine: "محاكاة من المحرك.", back: "العودة إلى المباراة", reset: "العودة إلى الآن" },
+  hi: { open: "अगर ऐसा होता…", title: "अगर ऐसा होता", score: "स्कोर", minute: "मिनट", reds: "रेड कार्ड", momentum: "मोमेंटम", onTop: (t) => `${t} हावी`, level: "बराबरी", more: (w) => `एक और: ${w}`, fewer: (w) => `एक कम: ${w}`, hypothetical: "यह एक अनुमान है, असली मैच नहीं।", inBrowser: (n, ms) => `Rust कर्नेल ने आपके ब्राउज़र में ${ms} ms में ${n} संभावित अंत सिम्युलेट किए।`, fromEngine: "इंजन ने सिम्युलेट किया।", back: "मैच पर लौटें", reset: "अभी पर लौटें" },
+};
+
+export function whatIfStrings(lang: string | null | undefined): WhatIfStrings {
+  return WHATIF[isLang(lang) ? lang : "en"];
 }

@@ -102,3 +102,28 @@ async def test_over_the_cap_agents_stand_down() -> None:
         assert any(e["reason"] == "the agents' budget for this match is used up" for e in log)
     finally:
         await hub.shutdown()
+
+
+async def test_full_time_never_waits_forever_for_stuck_work(caplog: pytest.LogCaptureFixture) -> None:
+    """Background work that never finishes is logged with its stack and cancelled; the session moves on."""
+    hub = Hub(MatchStore(data_dirs=[]), narrate=False)
+    record = hub.store.generate(seed=7, storyline="comeback", tracking=False)
+    try:
+        session = hub.session(record.match_id)
+        finished = asyncio.Event()
+
+        async def quick() -> None:
+            await asyncio.sleep(0.01)
+            finished.set()
+
+        async def stuck() -> None:
+            await asyncio.Event().wait()  # never set
+
+        session.track(quick())
+        session.track(stuck())
+        with caplog.at_level("WARNING", logger="pitchlens.live.session"):
+            await asyncio.wait_for(session.drain_narrations(timeout=0.5), 10)
+        assert finished.is_set() and not session._narrations
+        assert "background work still running" in caplog.text and "in stuck" in caplog.text
+    finally:
+        await hub.shutdown()

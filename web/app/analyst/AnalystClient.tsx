@@ -4,11 +4,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { LineChart, type ChartMarker } from "@/components/charts/LineChart";
+import { FuturesPanel } from "@/components/FuturesPanel";
+import { WhatIfSandbox } from "@/components/WhatIfSandbox";
 import { cardKind } from "@/components/InsightFeed";
 import { MatchLauncher } from "@/components/MatchLauncher";
 import { ReplayControls } from "@/components/ReplayControls";
 import { Scoreboard } from "@/components/Scoreboard";
-import { api, type SeriesRow } from "@/lib/api";
+import { api, type FuturesPoint, type SeriesRow } from "@/lib/api";
 import { minuteLabel } from "@/lib/clock";
 import { typeLabel } from "@/lib/i18n";
 import type { FeedItem } from "@/lib/stream";
@@ -33,6 +35,9 @@ export function AnalystClient() {
   // Refresh the series as the replay advances (rows are every 30 s of match time).
   // Fresh series every 30 s of match time; the charts keep the last series on screen while it loads.
   const rows = usePoll(matchId, () => api.series(matchId ?? ""), 4000, Math.floor(view.matchMs / 30_000)) ?? [];
+  // Futures runs land after key moments and every 5 match minutes; refetch the history when one does.
+  const futures = view.state?.dynamics.futures ?? null;
+  const history = usePoll(matchId, () => api.futuresHistory(matchId ?? ""), 8000, futures?.match_ms) ?? [];
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = view.feed.find((f) => f.insight.insight_id === selectedId) ?? null;
 
@@ -55,6 +60,11 @@ export function AnalystClient() {
       <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,7fr)_minmax(340px,3fr)]">
         <section className="flex min-w-0 flex-col gap-4" aria-label="Charts">
           <Scoreboard meta={view.meta} state={view.state} status={view.status} lang="en" />
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+            <FuturesPanel futures={futures} meta={view.meta} lang="en" scores={5} />
+            <FuturesChart history={history} feed={view.feed} home={home} away={away} highlight={selected ? minute(selected.insight.match_ms) : null} />
+          </div>
+          <WhatIfSandbox matchId={matchId} meta={view.meta} lang="en" />
           <Charts rows={rows} feed={view.feed} home={home} away={away} highlight={selected ? minute(selected.insight.match_ms) : null} />
         </section>
         <section className="min-w-0" aria-label="Evidence inspector">
@@ -65,18 +75,46 @@ export function AnalystClient() {
   );
 }
 
+function goalMarkers(feed: FeedItem[]): ChartMarker[] {
+  return feed
+    .filter((f) => f.insight.type === "goal")
+    .map((f) => {
+      const score = f.insight.evidence.find((e) => e.metric === "score")?.value;
+      return { x: minute(f.insight.match_ms), label: typeof score === "string" ? score : "goal" };
+    });
+}
+
+/** Futures over time: each run's share of simulated endings per result (engine /futures/history). */
+function FuturesChart({ history, feed, home, away, highlight }: { history: FuturesPoint[]; feed: FeedItem[]; home: string; away: string; highlight: number | null }) {
+  const x = useMemo(() => history.map((h) => minute(h.match_ms)), [history]);
+  const goals = useMemo(() => goalMarkers(feed), [feed]);
+  if (!history.length) {
+    return <p className="panel text-sm text-muted">The futures chart fills in as the replay runs: a point after every key moment and every 5 minutes.</p>;
+  }
+  return (
+    <LineChart
+      testId="chart-futures"
+      title="Futures over time"
+      subtitle="share of simulated endings per result"
+      x={x}
+      series={[
+        { label: home, color: HOME, values: history.map((h) => h.result[0]) },
+        { label: "Draw", color: "var(--muted)", values: history.map((h) => h.result[1]), dashed: true },
+        { label: away, color: AWAY, values: history.map((h) => h.result[2]) },
+      ]}
+      yMin={0}
+      yMax={1}
+      yTicks={[0, 0.5, 1]}
+      formatY={pct}
+      markers={goals}
+      highlight={highlight}
+    />
+  );
+}
+
 function Charts({ rows, feed, home, away, highlight }: { rows: SeriesRow[]; feed: FeedItem[]; home: string; away: string; highlight: number | null }) {
   const x = useMemo(() => rows.map((r) => minute(r.match_ms)), [rows]);
-  const goals: ChartMarker[] = useMemo(
-    () =>
-      feed
-        .filter((f) => f.insight.type === "goal")
-        .map((f) => {
-          const score = f.insight.evidence.find((e) => e.metric === "score")?.value;
-          return { x: minute(f.insight.match_ms), label: typeof score === "string" ? score : "goal" };
-        }),
-    [feed],
-  );
+  const goals = useMemo(() => goalMarkers(feed), [feed]);
   const col = <T,>(pick: (r: SeriesRow) => T) => rows.map(pick);
   const xgMax = Math.max(1, ...rows.map((r) => Math.max(r.xg[0], r.xg[1]))) + 0.25;
   const pressMax = Math.max(0.5, ...rows.map((r) => Math.max(r.press_rate[0], r.press_rate[1])));

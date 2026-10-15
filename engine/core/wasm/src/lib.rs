@@ -3,6 +3,8 @@
 //! Only conversion lives here (JS values to kernel types and back); all logic is in `pitchlens-kernel`.
 //! The web app loads the package in a worker (`web/lib/kernel.worker.ts`), so builds never block the page.
 
+mod futures;
+
 use serde::Deserialize;
 use wasm_bindgen::prelude::*;
 

@@ -1,6 +1,6 @@
 [package]
 name = "pitchlens-kernel"
-description = "The PitchLens kernel in pure Rust: tracking build, physical metrics, frame JSON."
+description = "The PitchLens kernel in pure Rust: tracking build, physical metrics, frame JSON, win probability, futures."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,3 +8,11 @@ publish.workspace = true
 
 [dependencies]
 ndarray.workspace = true
+rand_xoshiro = "0.7"
+rayon = { version = "1.10", optional = true }
+
+[features]
+default = []
+# Futures paths split across cores: on for Python, off for WebAssembly (no threads there). Results are
+# identical either way.
+parallel = ["dep:rayon"]

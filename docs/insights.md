@@ -36,6 +36,7 @@ Source: `engine/pitchlens/explain/`. Entry points: `ExplainEngine.on_event / on_
 | `control_chaos_flip` (`.to_control`, `.to_chaos`) | control index enters ≥ 60 or ≤ 40 and holds 4 min | index before → after, every component, controlling side's possession | 6 min |
 | `rhythm_break` (`.faster`, `.slower`) | tempo z-score beyond ±1.8 for two samples (1 min) | tempo, match baseline, stoppage share | 10 min |
 | `xg_swing` (`.lead_flipped`, `.gap_moved`) | xG lead changes hands (beyond ±0.3) or the gap moves ≥ 0.8 in 10 min | both teams' xG, gap before → after | 10 min |
+| `futures_swing` (`.win_up`, `.win_down`, `.comeback_up`, `.comeback_down`) | between two live futures runs, a side's share of simulated wins, or the trailing side's share of endings without defeat, moves ≥ 15 points | the swing (`futures_win` / `futures_comeback` before → after), result split, most likely score and its share, paths simulated | 3 min per team |
 | `sprint_threshold` / `distance_milestone` | tracking alerts: 33 km/h; 5 / 8 / 10 / 12 km; 10 / 20 / 30 sprints | value and threshold | once per player per threshold |
 
 ### Detecting a change in pressing
@@ -61,6 +62,13 @@ On the `pressure_surge` storyline (away press switched on at 55') this fired bet
 The result is evidence (`from` = what happened, `to` = the what-if), so it is grounded like every other
 number. Detail templates in all six languages narrate it ("What if it had gone in? Stonegate would be at
 65% to win, not 33%"), and the overlay's lower third shows a "What if" strip with both values.
+
+Each what-if also runs the futures model (docs/rust-expansion-plan.md §3) from the hypothetical, with
+20,000 paths (10,000 without the Rust core): `what_if_futures_win` / `no_red_futures_win` is the team's
+share of simulated endings won and `what_if_futures_score` / `no_red_futures_score` the most likely
+final score ("In simulated futures Stonegate would win 84% of them; the most likely final score would be
+2-0"). The futures model lets the trailing side push and the leader sit deeper, so it can differ from the
+closed-form number next to it.
 
 ## Salience
 

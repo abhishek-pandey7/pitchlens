@@ -1,5 +1,5 @@
 // REST helpers for the PitchLens engine API (see docs/api.md).
-import type { MatchMeta, Profile, TrackingFrame } from "./types";
+import type { Futures, FuturesInput, MatchMeta, Profile, TrackingFrame } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1";
 // Live streams can come from the Rust broadcast edge (edge/), which serves the same /stream URLs.
@@ -121,6 +121,27 @@ export type ProgrammeState = {
   log: ProgrammeLogEntry[];
 };
 
+/** The futures model's input for the match as it stands, and the moment it describes. */
+export type FuturesNow = {
+  input: FuturesInput;
+  match_id: string;
+  team_ids: [string, string];
+  match_ms: number;
+  clock_ms: number;
+  period: number;
+};
+
+/** One futures run of a live session (engine MatchState.set_futures): result split, comeback, top score. */
+export type FuturesPoint = {
+  match_ms: number;
+  clock_ms: number;
+  period: number;
+  score: [number, number];
+  result: [number, number, number]; // home, draw, away
+  comeback: ["home" | "away", number, number] | null; // side behind, P(avoid defeat), P(win)
+  top_score: [number, number] | null;
+};
+
 /** One row of the match's time series (every 30 s of match time; see engine MatchState.readings). */
 export type SeriesRow = {
   match_ms: number;
@@ -210,6 +231,11 @@ export const api = {
       { method: "POST", body: JSON.stringify({ action }) },
     ),
   series: (id: string) => call<SeriesRow[]>(`/matches/${id}/series`),
+  futures: (id: string, paths?: number) => call<Futures>(`/matches/${id}/futures${paths ? `?paths=${paths}` : ""}`),
+  futuresHistory: (id: string) => call<FuturesPoint[]>(`/matches/${id}/futures/history`),
+  futuresInput: (id: string) => call<FuturesNow>(`/matches/${id}/futures/input`),
+  futuresWhatIf: (id: string, body: Record<string, unknown>) =>
+    call<Futures>(`/matches/${id}/futures/whatif`, { method: "POST", body: JSON.stringify(body) }),
   focus: (id: string, playerId: string, profileId?: string | null) =>
     call<FocusCard>(
       `/matches/${id}/players/${encodeURIComponent(playerId)}/focus${profileId ? `?profile_id=${encodeURIComponent(profileId)}` : ""}`,

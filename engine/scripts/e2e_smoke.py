@@ -187,6 +187,31 @@ def run_smoke(base: str) -> Report:
         "raw: five goal insights in order",
         raw_goals,
     )
+    # ---------------------------------------------------------------- futures
+    with_futures = [m for m in raw.of("state") if (m.data.get("dynamics") or {}).get("futures")]
+    report.check(bool(with_futures), "futures: pushed in state messages", f"{len(with_futures)} states")
+    history = client.get(f"/matches/{mid}/futures/history").json()
+    # The Rust core runs 100k paths in about a millisecond and keeps up with a 600x replay: a run at least
+    # every 5 match-minutes. The NumPy fallback shares the GIL with the event loop at that speed, so it
+    # only guarantees runs at the triggers that matter, ending with the final whistle.
+    rust = (client.get("/health").json().get("core") or {}).get("backend") == "rust"
+    report.check(
+        len(history) >= (19 if rust else 2) and history[-1]["result"] == [0.0, 0.0, 1.0],
+        "futures: runs through the match, ending 2-3" + (" (one at least every 5 minutes)" if rust else ""),
+        f"{len(history)} runs ({'rust' if rust else 'python'})",
+    )
+    report.check(
+        bool(insights_of(raw, "futures_swing")),
+        "futures: swing insights",
+        len(insights_of(raw, "futures_swing")),
+    )
+    whatif = client.post(f"/matches/{mid}/futures/whatif", json={"home_goals": 5, "minute": 85}).json()
+    report.check(
+        whatif.get("hypothetical") and whatif.get("home", 0) > 0.9,
+        "futures: what-if from 5-3 at 85'",
+        {k: whatif.get(k) for k in ("home", "draw", "away", "paths", "ms")},
+    )
+
     for name, s in streams.items():
         ids = [m.id for m in s.messages if m.id is not None]
         report.check(ids == sorted(set(ids)) and ids, f"{name}: ids strictly increasing", f"{len(ids)} ids")

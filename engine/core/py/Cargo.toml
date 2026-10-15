@@ -11,7 +11,7 @@ name = "pitchlens_core"
 crate-type = ["cdylib"]
 
 [dependencies]
-pitchlens-kernel = { path = "../kernel" }
+pitchlens-kernel = { path = "../kernel", features = ["parallel"] }
 # abi3: one wheel for every CPython >= 3.12. generate-import-lib: builds on Windows with the GNU
 # toolchain, without the Visual Studio C++ tools.
 pyo3 = { version = "0.25", features = ["abi3-py312", "generate-import-lib"] }

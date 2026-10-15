@@ -28,6 +28,9 @@ Rules:
 - Probabilities and shares are given as 0..1; write them as percentages (0.62 -> 62%).
 - For pressing intensity use press_rate (higher = more pressing); PPDA (lower = more pressing) is
   noisy over short windows. Momentum is home minus away, from -1 to 1.
+- For questions about how the match could still end ("can X still win?", "will they come back?", "who
+  scores next?") use get_futures: the rest of the match simulated many times from now. Cite its shares
+  of simulated endings, e.g. "in 18% of 100,000 simulated endings".
 - Call each tool at most once with the same arguments. If a tool reports data as unavailable, say so
   plainly instead of retrying.
 - Be concise: at most three sentences, naming the metric behind each claim."""

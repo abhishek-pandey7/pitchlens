@@ -31,7 +31,8 @@
         "lower_third",
         "chaos_meter",
         "wp_swing",
-        "what_if"
+        "what_if",
+        "futures_bar"
       ],
       "title": "CueTemplate",
       "type": "string"

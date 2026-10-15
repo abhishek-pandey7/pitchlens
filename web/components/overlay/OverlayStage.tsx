@@ -9,7 +9,7 @@ import { dir } from "@/lib/i18n";
 import type { MatchView } from "@/lib/stream";
 import type { OverlayCue } from "@/lib/types";
 import { ScaledStage } from "./ScaledStage";
-import { ChaosMeter, LowerThird, MomentumBar, PassCard, PlayerTag, ShotSpeed, WinProbSwing, cueAccent } from "./cues";
+import { ChaosMeter, FuturesBar, LowerThird, MomentumBar, PassCard, PlayerTag, ShotSpeed, WinProbSwing, cueAccent } from "./cues";
 
 const LENGTH = 105;
 const WIDTH = 68;
@@ -26,6 +26,8 @@ function CueView({ cue, view }: { cue: OverlayCue; view: MatchView }) {
       return <ChaosMeter cue={cue} />;
     case "momentum_bar":
       return <MomentumBar cue={cue} meta={view.meta} />;
+    case "futures_bar":
+      return <FuturesBar cue={cue} meta={view.meta} />;
     case "player_tag":
       return <PlayerTag cue={cue} meta={view.meta} />;
     default:

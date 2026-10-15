@@ -30,6 +30,7 @@ big_chance.saved:
     - "{shot_distance_m} मीटर से {xg} xG का मौका था।"
     - "शॉट की रफ़्तार {shot_speed_kmh} किमी/घंटा।"
     - "अगर यह गोल हो जाता? {team} की जीत की संभावना {what_if_win_prob_from_pct} की जगह {what_if_win_prob_to_pct} होती।"
+    - "सिम्युलेटेड फ़्यूचर्स में {team} {what_if_futures_win_pct} बार जीतता; सबसे संभावित अंतिम स्कोर {what_if_futures_score} होता।"
 big_chance.missed:
   headline: "{player} ने {team} के लिए बड़ा मौका गंवाया।"
   detail: *chance_detail
@@ -59,6 +60,7 @@ card.second_yellow:
   detail: &card_detail
     - "{team} की जीत की संभावना: {win_prob_from_pct} → {win_prob_to_pct}."
     - "ग्यारह खिलाड़ियों के साथ {team} की जीत की संभावना {no_red_win_prob_to_pct} होती।"
+    - "ग्यारह खिलाड़ियों के साथ {team} {no_red_futures_win_pct} सिम्युलेटेड फ़्यूचर्स में जीतता।"
 card.red:
   headline: "लाल कार्ड! {player} बाहर, {team} के पास अब {players_on_pitch} खिलाड़ी।"
   detail: *card_detail
@@ -111,3 +113,18 @@ distance_milestone.sprints:
 # Written by the Analyst agent and approved by the Fact-Checker; the note itself is in English.
 tactical_note.agent:
   headline: "विश्लेषण: {note}"
+# From the futures: the rest of the match simulated many times (interpret/futures.py).
+futures_swing.win_up:
+  headline: "फ़्यूचर्स: {team} अब {futures_win_to_pct} सिम्युलेटेड अंत में जीतता है, पहले {futures_win_from_pct}।"
+  detail: &futures_detail
+    - "सबसे संभावित अंतिम स्कोर: {futures_top_score} ({futures_top_score_p_pct})।"
+    - "सभी सिम्युलेटेड अंत में घरेलू जीत, ड्रॉ, मेहमान जीत: {futures_home_pct}, {futures_draw_pct}, {futures_away_pct}।"
+futures_swing.win_down:
+  headline: "फ़्यूचर्स: {team} अब सिर्फ़ {futures_win_to_pct} सिम्युलेटेड अंत में जीतता है, पहले {futures_win_from_pct}।"
+  detail: *futures_detail
+futures_swing.comeback_up:
+  headline: "फ़्यूचर्स: {team} अब {futures_comeback_to_pct} सिम्युलेटेड अंत में हार से बचता है, पहले {futures_comeback_from_pct}।"
+  detail: *futures_detail
+futures_swing.comeback_down:
+  headline: "फ़्यूचर्स: {team} अब सिर्फ़ {futures_comeback_to_pct} सिम्युलेटेड अंत में हार से बचता है, पहले {futures_comeback_from_pct}।"
+  detail: *futures_detail

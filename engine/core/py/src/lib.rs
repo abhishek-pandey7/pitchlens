@@ -6,6 +6,7 @@
 use pyo3::prelude::*;
 
 mod frames;
+mod futures;
 mod physical;
 mod tracking;
 
@@ -22,5 +23,10 @@ fn pitchlens_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(frames::frames_json, m)?)?;
     m.add_class::<physical::PyPhysicalTracker>()?;
     m.add_function(wrap_pyfunction!(physical::physical_constants, m)?)?;
+    m.add_function(wrap_pyfunction!(futures::win_probability, m)?)?;
+    m.add_function(wrap_pyfunction!(futures::futures_seed, m)?)?;
+    m.add_function(wrap_pyfunction!(futures::simulate_futures, m)?)?;
+    m.add_function(wrap_pyfunction!(futures::futures_constants, m)?)?;
+    m.add_function(wrap_pyfunction!(futures::red_card_rate_90, m)?)?;
     Ok(())
 }

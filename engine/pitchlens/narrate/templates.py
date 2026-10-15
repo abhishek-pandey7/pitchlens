@@ -27,6 +27,8 @@ DETAIL_PERSONAS = {Persona.ANALYST, Persona.TACTICIAN}
 DECIMAL_COMMA = {"es", "fr", "pt"}
 PCT_METRICS = {
     "win_prob", "field_tilt", "possession_5m", "stoppage_share", "what_if_win_prob", "no_red_win_prob",
+    "futures_win", "futures_comeback", "futures_home", "futures_draw", "futures_away", "futures_top_score_p",
+    "what_if_futures_win", "no_red_futures_win",
 }  # fmt: skip
 # Decimal places per metric (default: 1). Integers always print without decimals.
 PRECISION = {
