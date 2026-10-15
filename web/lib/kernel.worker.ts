@@ -5,6 +5,8 @@
 type KernelModule = {
   default: (opts: { module_or_path: string }) => Promise<unknown>;
   version: () => string;
+  simulateFutures: (input: unknown) => unknown;
+  remainingMinutes: (clockMinute: number, period: number) => number;
   buildTracking: (input: unknown) => {
     ms: Float64Array;
     period: Int8Array;
@@ -52,6 +54,13 @@ self.onmessage = async (e: MessageEvent<{ id: number; op: string; args: unknown 
       t.free();
       // The arrays are copies out of WebAssembly memory: hand them over without another copy.
       postMessage({ id, ok: true, result }, { transfer: [result.ms.buffer, result.period.buffer, result.ball.buffer, result.xy.buffer] });
+    } else if (op === "simulateFutures") {
+      const started = performance.now();
+      const raw = k.simulateFutures(args);
+      postMessage({ id, ok: true, result: { raw, ms: performance.now() - started } });
+    } else if (op === "remainingMinutes") {
+      const [clock, period] = args as [number, number];
+      postMessage({ id, ok: true, result: k.remainingMinutes(clock, period) });
     } else {
       postMessage({ id, ok: false, error: `unknown kernel op ${op}` });
     }

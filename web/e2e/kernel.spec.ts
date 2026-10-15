@@ -59,3 +59,46 @@ test("after the whistle a fan scrubs through the whole match, built in their bro
   await page.getByRole("button", { name: "Back to the match" }).click();
   await expect(page.getByTestId("match-scrubber")).toHaveCount(0);
 });
+
+test("what if: the browser's futures equal the engine's, and the sandbox recalculates in the browser", async ({ page, request }) => {
+  const match = await (await request.post(`${API}/matches`, { data: { seed: 13, storyline: "comeback", tracking: false } })).json();
+  await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 600, from_ms: 55 * 60_000, frames: false } });
+  // Both sides must start from the same match state (the seed comes from the latest event): wait for the
+  // whistle, after which nothing changes.
+  const inputNow = async () => (await request.get(`${API}/matches/${match.match_id}/futures/input`)).json();
+  await expect.poll(async () => (await inputNow()).input?.minutes_left, { timeout: 60_000 }).toBe(0);
+  const now = await inputNow();
+
+  // The same hypothetical, the same seed and paths: single-threaded in Chromium, multi-threaded in the engine.
+  const paths = 20_000;
+  const engine = await (await request.post(`${API}/matches/${match.match_id}/futures/whatif`, {
+    data: { home_goals: 1, away_goals: 1, minute: 70, paths },
+  })).json();
+  await page.goto("/");
+  const browser = await page.evaluate(async ({ base, paths }) => {
+    const glue = "/kernel/pitchlens_kernel.js";
+    const kernel = await import(/* webpackIgnore: true */ glue);
+    await kernel.default({ module_or_path: "/kernel/pitchlens_kernel_bg.wasm" });
+    const input = { ...base, score: [1, 1], minute: 70, minutes_left: kernel.remainingMinutes(70, 2), paths };
+    return kernel.simulateFutures(input);
+  }, { base: now.input, paths });
+  const r4 = (v: number) => Number(v.toFixed(4)); // Python's round(v, 4), as the engine reports them
+  expect([r4(browser.home), r4(browser.draw), r4(browser.away)]).toEqual([engine.home, engine.draw, engine.away]);
+  expect(browser.scores.slice(0, 5).map(([h, a, p]: [number, number, number]) => [h, a, r4(p)])).toEqual(
+    engine.scores.slice(0, 5).map((s: { home: number; away: number; p: number }) => [s.home, s.away, s.p]),
+  );
+
+  // The sandbox: one more goal for the home side, recalculated in the browser.
+  await page.goto(`/analyst?match=${match.match_id}`);
+  await page.getByRole("button", { name: "What if…" }).click();
+  const sandbox = page.getByTestId("whatif");
+  await expect(sandbox.getByTestId("whatif-where")).toContainText("simulated in your browser by the Rust kernel", { timeout: 30_000 });
+  const before = Number(await sandbox.getByTestId("whatif-score-0").textContent());
+  await sandbox.getByRole("button", { name: /^One more: .* Score$/ }).first().click();
+  await expect(sandbox.getByTestId("whatif-score-0")).toHaveText(String(before + 1));
+  await expect(sandbox.getByTestId("futures-paths")).toContainText("50,000");
+  await page.waitForTimeout(1000); // the result bar animates for 700 ms
+  await sandbox.screenshot({ path: "test-results/whatif-sandbox.png" });
+  await sandbox.getByRole("button", { name: "Back to the match" }).click();
+  await expect(page.getByTestId("whatif")).toHaveCount(0);
+});

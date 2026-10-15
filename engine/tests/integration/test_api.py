@@ -283,6 +283,9 @@ def test_futures_endpoints_and_live_futures(server) -> None:
     assert kickoff["paths"] == 5000 and kickoff["score"] == [0, 0] and not kickoff["hypothetical"]
     assert abs(kickoff["home"] + kickoff["draw"] + kickoff["away"] - 1) < 1e-3
     assert kickoff["input"]["seed"] < 2**53 and kickoff["backend"] == ("rust" if core.RUST else "python")
+    now = httpx.get(f"{base}/matches/{mid}/futures/input").json()  # what the browser's sandbox starts from
+    assert now["match_id"] == mid and len(now["team_ids"]) == 2
+    assert {**now["input"], "paths": 5000} == kickoff["input"] and now["period"] == kickoff["period"]
     again = httpx.get(f"{base}/matches/{mid}/futures", params={"paths": 5000}).json()
     assert {**again, "ms": 0} == {**kickoff, "ms": 0}  # seeded from the match: same moment, same futures
     whatif = httpx.post(
