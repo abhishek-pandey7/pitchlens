@@ -187,6 +187,27 @@ def run_smoke(base: str) -> Report:
         "raw: five goal insights in order",
         raw_goals,
     )
+    # ---------------------------------------------------------------- futures
+    with_futures = [m for m in raw.of("state") if (m.data.get("dynamics") or {}).get("futures")]
+    report.check(bool(with_futures), "futures: pushed in state messages", f"{len(with_futures)} states")
+    history = client.get(f"/matches/{mid}/futures/history").json()
+    report.check(
+        len(history) >= 19 and history[-1]["result"] == [0.0, 0.0, 1.0],
+        "futures: a run every 5 minutes at least, ending 2-3",
+        f"{len(history)} runs",
+    )
+    report.check(
+        bool(insights_of(raw, "futures_swing")),
+        "futures: swing insights",
+        len(insights_of(raw, "futures_swing")),
+    )
+    whatif = client.post(f"/matches/{mid}/futures/whatif", json={"home_goals": 5, "minute": 85}).json()
+    report.check(
+        whatif.get("hypothetical") and whatif.get("home", 0) > 0.9,
+        "futures: what-if from 5-3 at 85'",
+        {k: whatif.get(k) for k in ("home", "draw", "away", "paths", "ms")},
+    )
+
     for name, s in streams.items():
         ids = [m.id for m in s.messages if m.id is not None]
         report.check(ids == sorted(set(ids)) and ids, f"{name}: ids strictly increasing", f"{len(ids)} ids")

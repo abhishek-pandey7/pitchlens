@@ -24,10 +24,18 @@ test("a Spanish fan watches the comeback's finale live", async ({ page, request 
   await expect(page.getByLabel("2 - 1")).toBeVisible({ timeout: 30_000 }); // caught up after the seek
   await expect(page.getByText(/¡GOOOL!/).first()).toBeVisible({ timeout: 30_000 }); // goals so far, in Spanish
   await expect(page.getByLabel("2 - 2")).toBeVisible({ timeout: 90_000 }); // 84' equaliser, live
+  // Futures: the rest of the match simulated by the engine, pushed with the live state.
+  const futures = page.getByTestId("futures");
+  await expect(futures.getByRole("heading", { name: "Futuros" })).toBeVisible();
+  await expect(futures.getByTestId("futures-result")).toContainText("%", { timeout: 30_000 });
+  await expect(futures.getByTestId("futures-scores").locator("li").first()).toBeVisible();
+  await expect(futures.getByTestId("futures-sentence")).toContainText("%");
+  const ranFrom = await futures.getByTestId("futures-paths").textContent();
   await expect(page.getByText("IA", { exact: true }).first()).toBeVisible({ timeout: 30_000 }); // AI narration
   await page.screenshot({ path: "test-results/watch-es-live.png", fullPage: true });
 
   await expect(page.getByText("Final", { exact: true })).toBeVisible({ timeout: 120_000 });
+  await expect(futures.getByTestId("futures-paths")).not.toHaveText(ranFrom ?? ""); // new runs as play went on
   await expect(page.getByLabel("2 - 3")).toBeVisible();
   const goals = page.locator("li").filter({ hasText: "GOOOL" });
   await expect(page.locator("li").filter({ hasText: "Gol" }).first()).toBeVisible(); // localized type label

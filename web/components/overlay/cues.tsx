@@ -1,6 +1,6 @@
 // Broadcast graphics for overlay cues. Every number shown comes from the cue's `data` (the insight's
 // evidence); every sentence from `text` (template or grounded AI narration).
-import { t } from "@/lib/i18n";
+import { futuresStrings, t } from "@/lib/i18n";
 import type { MatchMeta, OverlayCue } from "@/lib/types";
 
 type Change = { from: number | null; to: number | null };
@@ -157,6 +157,44 @@ export function MomentumBar({ cue, meta }: { cue: OverlayCue; meta: MatchMeta | 
       <p className="mt-1 text-center text-sm">
         {cue.text.headline}
         {tilt != null && <span className="ms-2 text-muted">field tilt {pct(tilt)}</span>}
+      </p>
+    </Panel>
+  );
+}
+
+/** Futures: the rest of the match simulated many times. The result split in kit colours and the most
+ *  likely final score, from the futures_swing insight's evidence; the sentence is the narration. */
+export function FuturesBar({ cue, meta }: { cue: OverlayCue; meta: MatchMeta | null }) {
+  const s = futuresStrings(cue.text.lang);
+  const [h, d, a] = ["futures_home", "futures_draw", "futures_away"].map((k) => value(cue, k) ?? 0);
+  const top = cue.data["futures_top_score"];
+  const topP = value(cue, "futures_top_score_p");
+  const width = (v: number) => `${Math.round(v * 100)}%`;
+  return (
+    <Panel className="mx-auto w-[64%] px-6 py-4">
+      <div className="flex items-baseline gap-3 text-sm" data-testid="futures-bar">
+        <span className="font-semibold text-accent">{s.title}</span>
+        <span className="font-semibold">{meta?.home.short_name}</span>
+        <span className="font-mono text-2xl font-bold tabular-nums">{pct(h)}</span>
+        <span className="ms-auto text-muted">
+          {t(cue.text.lang, "draw")} <span className="font-mono tabular-nums text-foreground">{pct(d)}</span>
+        </span>
+        <span className="ms-auto font-mono text-2xl font-bold tabular-nums">{pct(a)}</span>
+        <span className="font-semibold">{meta?.away.short_name}</span>
+      </div>
+      <div className="mt-2 flex h-2.5 gap-0.5 overflow-hidden rounded-full" aria-hidden>
+        <span className="rounded-s-full transition-all duration-1000" style={{ width: width(h), background: meta?.home.colors[0] ?? "var(--home)" }} />
+        <span className="bg-white/20 transition-all duration-1000" style={{ width: width(d) }} />
+        <span className="rounded-e-full transition-all duration-1000" style={{ width: width(a), background: meta?.away.colors[0] ?? "var(--away)" }} />
+      </div>
+      <p className="mt-2 flex items-baseline gap-3 text-base">
+        <span className="me-auto leading-snug">{cue.text.headline}</span>
+        {typeof top === "string" && (
+          <span className="shrink-0 text-sm text-muted">
+            {s.likely}: <span className="font-mono text-lg font-bold tabular-nums text-foreground">{top.replace("-", "–")}</span>
+            {topP != null && <span className="ms-1 font-mono tabular-nums">{pct(topP)}</span>}
+          </span>
+        )}
       </p>
     </Panel>
   );
