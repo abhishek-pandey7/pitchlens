@@ -168,6 +168,8 @@ offline client, which is how CI keeps them working (`tests/unit/test_evals.py`).
 """
 
 
+KEEP_MARKER = "<!-- Hand-written below this line: `python -m pitchlens.evals report` keeps it. -->"
+
 FINDINGS = """## Findings and next steps
 
 - **The Fact-Checker meets both targets** after one instruction fix the eval itself found: judge what a
@@ -201,5 +203,10 @@ def write(directory: Path = RESULTS_DIR, doc: Path = DOC) -> Path:
     parts += ask_section(*load("ask", directory))
     parts += director_section(*load("director", directory))
     parts.append(FINDINGS)
-    doc.write_text("\n".join(parts).rstrip() + "\n", encoding="utf-8")
+    text = "\n".join(parts).rstrip() + "\n"
+    # Hand-written sections (e.g. the broadcast edge's load test) sit after a marker and are kept.
+    old = doc.read_text(encoding="utf-8") if doc.exists() else ""
+    if KEEP_MARKER in old:
+        text += "\n" + old[old.index(KEEP_MARKER) :].rstrip() + "\n"
+    doc.write_text(text, encoding="utf-8")
     return doc

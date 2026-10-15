@@ -27,10 +27,12 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `GET /matches/storylines` | Available scripted storylines |
 | `POST /matches` | Simulate a match: `{seed, storyline?, home?, away?, tracking=true}` |
 | `GET /matches/{id}` | Metadata (teams, lineups, pre-match strengths) and summary |
+| `GET /matches/{id}/tracking-input` | The match packed for the tracking build (event columns as codes, the two sides, players' top speeds; points `[x, y]` or `null`). About 150 KB against about 5 MB of frames: the browser builds the whole match's 5 Hz positions from it with the Rust kernel compiled to WebAssembly (`web/lib/kernel.ts`). 404 for external feeds |
 | `GET /matches/{id}/clips/goal` | Tracking frames around a goal, for animations that are not live (the home page's 3D replay). Query: `index` (0 the first goal, -1 the last), `before_ms` (default 10000), `after_ms` (default 4000), 60 s at most. 404 while a stored sample's tracking is still being rebuilt |
 | `POST /matches/{id}/replay` | Start or restart: `{speed (≤600), from_ms, frames}` |
 | `POST /matches/{id}/control` | `{action: pause \| resume \| seek \| speed, to_ms?, speed?}` |
-| `GET /matches/{id}/stream` | **SSE** live stream (below). Query: `profile_id`, `frames` |
+| `GET /matches/{id}/stream` | **SSE** live stream (below). Query: `profile_id`, `frames`, `events` |
+| `GET /matches/{id}/sync` | The `sync` snapshot a new subscriber would get now, with the id of the last message it covers (below). Query: `profile_id`, `frames`, `events` |
 | `GET /matches/{id}/state` | Current score, clock, team stats and dynamics readings |
 | `GET /matches/{id}/insights` | Insights so far. Query: `since_ms`, `min_salience` |
 | `GET /matches/{id}/series` | 30 s time series (win probability, xG, momentum, tilt, PPDA, press rate, control, tempo) |
@@ -65,13 +67,30 @@ curl -X POST $B/matches/SYN-NHR-SVC-7/control -H 'content-type: application/json
 | `event` | every match event | `EnrichedEvent` (event + metrics + score + possession) |
 | `insight` | when a detector fires | `Insight` |
 | `alert` | physical thresholds | `PhysicalAlert` |
-| `state` | about 2 Hz, and as soon as a futures run lands | state snapshot including `dynamics` (with `dynamics.futures`, the latest `Futures` run without its input) |
+| `state` | about 2 Hz, and as soon as a futures run lands | state snapshot including `dynamics` (with `dynamics.futures`, the latest `Futures` run without its input), plus `sent_at` (epoch ms when the engine sent it, for measuring delivery delay) |
 | `frame` | about 25 Hz, only with `frames=true` | `TrackingFrame` |
 | `control` | replay finished, etc. | `{action}` |
 
 Every message except `frame` has an `id`. Reconnect with `Last-Event-ID: <id>` to receive exactly the messages you missed (the server keeps the last 5,000). If the gap is older than that, you get a fresh `sync`.
 
 During a seek, the skipped stretch of the match is applied instantly but not broadcast: clients get `reset`, then one `sync` with the caught-up state, then live messages.
+
+Ids are numbered per channel: one channel per fan profile, plus the raw channel when there is no `profile_id`. `frames` and `events` only filter what a subscriber receives, so with `events=false` the ids it sees skip the numbers of the `event` messages. The `sync` that opens a new connection has no id.
+
+### Snapshot for relays: `GET /matches/{id}/sync`
+
+```json
+{"last_id": 1287, "sync": {"meta": {...}, "profile": {...}, "state": {...}, "insights": [...]}}
+```
+
+- `sync` is, byte for byte, the data of the `sync` message that `/stream` with the same query would send a new subscriber at that moment. `profile` is `null` on the raw channel.
+- `last_id` is the id of the last message on the channel that the snapshot covers: everything with an id up to and including it is folded in, and the next message on the channel gets `last_id + 1`. It is `0` when nothing has been sent on the channel yet.
+- `frames` and `events` are accepted so a relay can pass its stream query through unchanged. They don't change the snapshot.
+- `404` for an unknown match or profile, like `/stream`. Responses are `Cache-Control: no-store`.
+
+**The contract.** After a snapshot with id N, a client that applies the snapshot and then every message with id > N from the live stream (dropping ids ≤ N) sees exactly what a subscriber connected from the start sees, with no gap and no duplicate. Two ways to get the messages after N: attach to a stream that was already open before the snapshot was taken and drop ids ≤ N, or open `/stream` with `Last-Event-ID: N`, which replays from N + 1 while N is still in the engine's 5,000-message log. `tests/integration/test_api.py::test_snapshot_id_contract` checks both halves: what follows N, and that the snapshot's insights, score and clock are exactly those of the messages up to N.
+
+The Rust broadcast edge ([`edge/`](../edge/README.md)) uses this to let viewers join a channel mid-match: it takes a snapshot, sends it to the newcomer, then attaches the newcomer to the channel's broadcast and skips ids ≤ N.
 
 ## Latency
 

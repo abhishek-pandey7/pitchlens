@@ -457,7 +457,8 @@ class MatchSession:
         now = time.monotonic()
         if force or now - self._last_state_wall >= STATE_EVERY_S or self.state.finished:
             self._last_state_wall = now
-            self.broadcast("state", self.state.snapshot())
+            # `sent_at` (epoch ms, wall clock): viewers and relays (the edge) can measure delivery delay.
+            self.broadcast("state", {**self.state.snapshot(), "sent_at": int(time.time() * 1000)})
 
     # ------------------------------------------------------------------ fan-out
     def broadcast(self, event: str, payload: dict[str, Any], *, ephemeral: bool = False) -> None:
@@ -475,6 +476,13 @@ class MatchSession:
             "state": self.state.snapshot(),
             "insights": channel.delivered,
         }
+
+    def snapshot(self, profile_id: str | None = None) -> tuple[int, str]:
+        """The `sync` a new subscriber of this channel would get now (as JSON text), and the id of the last
+        message it covers: every message with an id up to and including it is folded into the snapshot, and
+        the channel's next message gets id + 1. Synchronous, so nothing can be published in between."""
+        channel = self.channel(profile_id)
+        return channel.next_id - 1, _json(self.sync_payload(channel))
 
     def channel(self, profile_id: str | None) -> Channel:
         if profile_id is None:
@@ -529,7 +537,7 @@ class MatchSession:
                 if out.id is not None and out.id > last_event_id and (events or out.event != "event"):
                     sub.queue.put_nowait(out)
         else:
-            sub.queue.put_nowait(Outgoing(None, "sync", _json(self.sync_payload(channel))))
+            sub.queue.put_nowait(Outgoing(None, "sync", self.snapshot(profile_id)[1]))
         channel.subscribers.add(sub)
         return sub
 

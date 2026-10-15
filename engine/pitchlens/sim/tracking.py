@@ -314,6 +314,41 @@ def _pack(meta: MatchMeta, events: list[MatchEvent], league: League) -> tuple[li
     return player_ids, packed
 
 
+def tracking_input(meta: MatchMeta, events: list[MatchEvent], league: League) -> dict[str, object]:
+    """`_pack` as JSON for the browser build of the kernel (`web/lib/kernel`): the same columns as lists,
+    points as `[x, y]` or `None` where `_pack` has NaN, and the sides as objects. Far smaller than the
+    tracking it builds (a match is ~150 KB against ~5 MB of frames)."""
+    player_ids, packed = _pack(meta, events, league)
+
+    def points(arr: np.ndarray) -> list[list[float] | None]:
+        return [None if math.isnan(x) else [x, y] for x, y in arr.tolist()]
+
+    sides = packed["sides"]
+    assert isinstance(sides, list)
+    out: dict[str, object] = {
+        "match_id": meta.match_id,
+        "player_ids": player_ids,
+        **{
+            name: packed[name].tolist()  # type: ignore[attr-defined]
+            for name in ("kind", "flags", *_INT_COLUMNS, "top_speed_kmh")
+        },
+        "start": points(packed["start"]),  # type: ignore[arg-type]
+        "end": points(packed["end"]),  # type: ignore[arg-type]
+        "sides": [
+            {
+                "is_home": is_home,
+                "players": players,
+                "anchors": [list(a) for a in anchors],
+                "units": units,
+                "press": press,
+                "width": width,
+            }
+            for is_home, players, anchors, units, press, width in sides
+        ],
+    }
+    return out
+
+
 def generate_tracking_py(meta: MatchMeta, events: list[MatchEvent], league: League) -> Tracking:
     """The reference implementation in pure Python (and the fallback when the Rust core isn't built)."""
     ball = BallPath(events)

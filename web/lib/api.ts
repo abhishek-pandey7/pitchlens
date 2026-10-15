@@ -2,6 +2,9 @@
 import type { Futures, MatchMeta, Profile, TrackingFrame } from "./types";
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000/api/v1";
+// Live streams can come from the Rust broadcast edge (edge/), which serves the same /stream URLs.
+// Unset or empty: streams come from the engine, like everything else.
+export const STREAM_BASE = process.env.NEXT_PUBLIC_STREAM_BASE || API_BASE;
 
 export type MatchSummary = {
   match_id: string;
@@ -21,6 +24,9 @@ export type GoalClip = {
   moment: { type: "goal"; match_ms: number; team_id: string; player_id: string | null; goals: number };
   frames: TrackingFrame[];
 };
+
+/** A match packed for the tracking build, for the Rust kernel in the browser (lib/kernel.ts). */
+export type TrackingInput = { match_id: string; player_ids: string[] } & Record<string, unknown>;
 
 export type AskStep = {
   agent: string;
@@ -191,6 +197,7 @@ export const api = {
   storylines: () => call<string[]>("/matches/storylines"),
   match: (id: string) => call<MatchSummary & { meta: MatchMeta }>(`/matches/${id}`),
   goalClip: (id: string, index = 0) => call<GoalClip>(`/matches/${id}/clips/goal?index=${index}`),
+  trackingInput: (id: string) => call<TrackingInput>(`/matches/${id}/tracking-input`),
   createMatch: (body: { seed: number; storyline?: string; home?: string; away?: string; tracking?: boolean }) =>
     call<MatchSummary>("/matches", { method: "POST", body: JSON.stringify(body) }),
   replay: (id: string, body: { speed: number; from_ms?: number; frames?: boolean }) =>
@@ -225,6 +232,6 @@ export const api = {
     if (opts.profileId) params.set("profile_id", opts.profileId);
     if (opts.frames) params.set("frames", "true");
     if (opts.events === false) params.set("events", "false");
-    return `${API_BASE}/matches/${id}/stream?${params}`;
+    return `${STREAM_BASE}/matches/${id}/stream?${params}`;
   },
 };

@@ -8,7 +8,7 @@ import { FuturesPanel } from "@/components/FuturesPanel";
 import { RecapPanel } from "@/components/RecapPanel";
 import { InsightFeed } from "@/components/InsightFeed";
 import { MatchLauncher, fanLabel } from "@/components/MatchLauncher";
-import { PitchView } from "@/components/PitchView";
+import { MatchScrubber } from "@/components/MatchScrubber";
 import { PlayerFocusPanel } from "@/components/PlayerFocusPanel";
 import { Scoreboard } from "@/components/Scoreboard";
 import { api } from "@/lib/api";
@@ -65,7 +65,7 @@ export function WatchClient() {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(320px,2fr)]">
         <section className="flex flex-col gap-4">
           <Scoreboard meta={view.meta} state={view.state} status={view.status} lang={lang} />
-          <PitchView frame={view.frame} meta={view.meta} focusPlayerId={focus} />
+          <MatchScrubber matchId={matchId} meta={view.meta} liveFrame={view.frame} status={view.status} focusPlayerId={focus} lang={lang} />
           {view.state && (
             <dl className="text-sm">
               <Stat label={t(lang, "possession")} home={`${Math.round(view.state.home.possession * 100)}%`} away={`${Math.round(view.state.away.possession * 100)}%`} />

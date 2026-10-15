@@ -69,6 +69,25 @@ jobs:
         env:
           PITCHLENS_CORE: python
 
+  edge:
+    # The Rust broadcast edge (edge/): format, lints, unit tests and the fake-engine integration tests.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: edge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: edge
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+
   web:
     runs-on: ubuntu-latest
     defaults:
@@ -86,6 +105,19 @@ jobs:
         run: |
           npm run gen:types
           git diff --exit-code -- lib/types.ts
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine/core
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - name: Rust kernel for the browser (WebAssembly)
+        run: |
+          npm run build:kernel
+          npm run check:kernel
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build
@@ -108,6 +140,17 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+        working-directory: web
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: engine/core
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-bindgen@0.2.129
+      - run: npm run build:kernel
         working-directory: web
       - run: npx playwright install --with-deps chromium
         working-directory: web
@@ -132,26 +175,55 @@ jobs:
       - run: az bicep lint --file infra/main.bicep
 
   containers:
-    # Both images build, and the engine container serves a match end to end.
+    # All three images build, the engine container serves a match end to end, and the edge container
+    # relays its live stream.
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - run: docker build -f engine/Dockerfile -t pitchlens-engine .
-      - run: docker build -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1 web
+      - run: docker build -f web/Dockerfile -t pitchlens-web --build-arg NEXT_PUBLIC_API_BASE=http://localhost:8000/api/v1 .
+      - run: docker build -t pitchlens-edge edge
       - name: Engine container smoke test
         run: |
-          docker run -d --name engine -p 8000:8080 pitchlens-engine
+          docker network create pitchlens
+          docker run -d --name engine --network pitchlens -p 8000:8080 pitchlens-engine
           for i in $(seq 1 30); do curl -sf http://localhost:8000/api/v1/health && break; sleep 1; done
           curl -sf http://localhost:8000/api/v1/health/ready
           curl -sf http://localhost:8000/api/v1/health | grep -q '"backend":"rust"'  # the Rust core loaded
           id=$(curl -sf -X POST http://localhost:8000/api/v1/matches -H 'content-type: application/json'             -d '{"seed":7,"storyline":"comeback","tracking":false}' | python3 -c 'import sys,json; print(json.load(sys.stdin)["match_id"])')
           curl -sf -X POST "http://localhost:8000/api/v1/matches/$id/ask" -H 'content-type: application/json'             -d '{"question":"Who won?"}' | grep -q '2-3'
+          echo "MATCH_ID=$id" >> "$GITHUB_ENV"
+      - name: Edge container smoke test
+        run: |
+          size=$(docker image inspect -f '{{.Size}}' pitchlens-edge)
+          echo "edge image: $((size / 1024 / 1024)) MB"
+          test "$size" -lt 20000000
+          docker run -d --name edge --network pitchlens -p 8081:8080 -e ENGINE_URL=http://engine:8080 pitchlens-edge
+          for i in $(seq 1 20); do curl -sf http://localhost:8081/health && break; sleep 1; done
+          curl -sf http://localhost:8081/health | grep -q '"status":"ok"'
+          # A viewer on the edge while the engine replays the match: the edge's snapshot, then live messages
+          # with the engine's ids, including state messages stamped with sent_at.
+          (timeout 20 curl -sN "http://localhost:8081/api/v1/matches/$MATCH_ID/stream?events=true" > stream.txt || true) &
+          sleep 2
+          curl -sf -X POST "http://localhost:8000/api/v1/matches/$MATCH_ID/replay" -H 'content-type: application/json' \
+            -d '{"speed":600,"frames":false}'
+          wait
+          head -c 400 stream.txt; echo
+          head -n 3 stream.txt | grep -q '^event: sync'
+          grep -q '^event: state' stream.txt
+          grep -q '"sent_at":' stream.txt
+          grep -q '^id: ' stream.txt
+          curl -sf http://localhost:8081/stats | tee stats.json
+          grep -q '"upstream_connects":1' stats.json
+          docker logs edge 2>&1 | tail -n 5
+          docker stop -t 15 edge  # graceful shutdown on SIGTERM
       - name: Web container serves the app
         run: |
           docker run -d --name web -p 3000:8080 pitchlens-web
           for i in $(seq 1 30); do curl -sf http://localhost:3000/ > /dev/null && break; sleep 1; done
           curl -sf "http://localhost:3000/watch" > /dev/null
+          curl -sf "http://localhost:3000/kernel/pitchlens_kernel_bg.wasm" -o /dev/null  # the Rust kernel is served
 
   secrets:
     runs-on: ubuntu-latest

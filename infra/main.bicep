@@ -36,6 +36,7 @@ param groqApiKey string = ''
 @description('Images set by azd after the first deploy (empty on the very first provision).')
 param engineImageName string = ''
 param webImageName string = ''
+param edgeImageName string = ''
 
 var tags = { 'azd-env-name': environmentName, app: 'pitchlens' }
 
@@ -62,10 +63,11 @@ module resources 'resources.bicep' = {
     groqApiKey: groqApiKey
     engineImageName: engineImageName
     webImageName: webImageName
+    edgeImageName: edgeImageName
   }
 }
 
-// azd reads these outputs into its environment (and the web build reads API_BASE_URL).
+// azd reads these outputs into its environment (and the web build reads API_BASE_URL and STREAM_BASE_URL).
 output AZURE_LOCATION string = location
 output AZURE_RESOURCE_GROUP string = rg.name
 output AZURE_CONTAINER_REGISTRY_ENDPOINT string = resources.outputs.registryEndpoint
@@ -74,5 +76,6 @@ output AZURE_OPENAI_FAST_DEPLOYMENT string = resources.outputs.fastDeployment
 output AZURE_OPENAI_QUALITY_DEPLOYMENT string = resources.outputs.qualityDeployment
 output CONTENT_SAFETY_ENDPOINT string = resources.outputs.contentSafetyEndpoint
 output API_BASE_URL string = resources.outputs.apiBaseUrl
+output STREAM_BASE_URL string = resources.outputs.streamBaseUrl
 output WEB_URL string = resources.outputs.webUrl
 output MCP_URL string = resources.outputs.mcpUrl

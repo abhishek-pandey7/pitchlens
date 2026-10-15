@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["kernel", "py"]
+members = ["kernel", "py", "wasm"]
 
 [workspace.package]
 version = "0.1.0"

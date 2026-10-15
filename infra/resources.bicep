@@ -1,13 +1,14 @@
 // Everything PitchLens runs on, in one resource group (called from main.bicep).
 //
 //   Microsoft Foundry (Azure AI Services)  model deployments (fast, quality) + Azure AI Content Safety
-//   Azure Container Apps                   engine (FastAPI, agents, MCP) and web (Next.js)
+//   Azure Container Apps                   engine (FastAPI, agents, MCP), web (Next.js) and edge (Rust SSE fan-out)
 //   Azure Container Registry               images, pulled with the managed identity
 //   Key Vault                              third-party secrets, referenced by the container apps
 //   Log Analytics + Application Insights   logs, traces, per-stage latency
 //
-// One user-assigned managed identity runs both apps. It gets just the roles it needs (pull images, call
-// the models and Content Safety, read Key Vault secrets). Local (key) auth on the AI account is disabled.
+// One user-assigned managed identity runs the engine and web apps. It gets just the roles it needs (pull
+// images, call the models and Content Safety, read Key Vault secrets). The edge has its own identity that
+// can only pull images. Local (key) auth on the AI account is disabled.
 
 param environmentName string
 param location string
@@ -23,15 +24,22 @@ param modelCapacity int
 param groqApiKey string
 param engineImageName string
 param webImageName string
+param edgeImageName string
 
 @description('Engine replicas: live match sessions are in memory, so exactly one (scale-out needs Event Hubs, T-71).')
 param engineReplicas int = 1
 @description('Web minimum replicas: 0 scales to zero when idle (a few seconds of cold start).')
 param webMinReplicas int = 0
+@description('Edge replicas: at least one stays warm, so live viewers never wait for a cold start.')
+param edgeMinReplicas int = 1
+param edgeMaxReplicas int = 10
+@description('Concurrent requests (open SSE viewers) per edge replica before KEDA adds another.')
+param edgeViewersPerReplica int = 5000
 
 var token = toLower(uniqueString(subscription().id, resourceGroup().id, environmentName))
 var engineName = 'ca-engine-${token}'
 var webName = 'ca-web-${token}'
+var edgeName = 'ca-edge-${token}'
 var placeholderImage = 'mcr.microsoft.com/dotnet/samples:aspnetapp' // listens on 8080, like our images
 var deployQuality = qualityModelName != fastModelName || qualityModelVersion != fastModelVersion
 var fastDeploymentName = 'pitchlens-fast'
@@ -88,6 +96,23 @@ resource acrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: registry
   properties: {
     principalId: identity.properties.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.acrPull)
+  }
+}
+
+// The edge only relays public streams: its identity can pull its image and nothing else.
+resource edgeIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: 'id-edge-${token}'
+  location: location
+  tags: tags
+}
+
+resource edgeAcrPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(registry.id, edgeIdentity.id, roles.acrPull)
+  scope: registry
+  properties: {
+    principalId: edgeIdentity.properties.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', roles.acrPull)
   }
@@ -218,6 +243,7 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
 
 var engineFqdn = '${engineName}.${environment.properties.defaultDomain}'
 var webFqdn = '${webName}.${environment.properties.defaultDomain}'
+var edgeFqdn = '${edgeName}.${environment.properties.defaultDomain}'
 var openAiEndpoint = 'https://ai-${token}.openai.azure.com/'
 
 var groqSecrets = empty(groqApiKey)
@@ -324,6 +350,52 @@ resource web 'Microsoft.App/containerApps@2024-03-01' = {
   dependsOn: [acrPull]
 }
 
+// The Rust broadcast edge (edge/): viewers' live streams. One upstream connection to the engine per
+// channel, fanned out to every viewer of it; KEDA adds replicas on concurrent connections.
+var edgeProbes = empty(edgeImageName)
+  ? tcpProbes
+  : concat(tcpProbes, [
+      { type: 'Readiness', httpGet: { path: '/health', port: 8080 }, periodSeconds: 10, failureThreshold: 3 }
+    ])
+
+resource edge 'Microsoft.App/containerApps@2024-03-01' = {
+  name: edgeName
+  location: location
+  tags: union(tags, { 'azd-service-name': 'edge' })
+  identity: { type: 'UserAssigned', userAssignedIdentities: { '${edgeIdentity.id}': {} } }
+  properties: {
+    environmentId: environment.id
+    workloadProfileName: 'Consumption'
+    configuration: {
+      activeRevisionsMode: 'Single'
+      ingress: { external: true, targetPort: 8080, transport: 'auto', allowInsecure: false }
+      registries: [{ server: registry.properties.loginServer, identity: edgeIdentity.id }]
+    }
+    template: {
+      containers: [
+        {
+          name: 'edge'
+          image: empty(edgeImageName) ? placeholderImage : edgeImageName
+          resources: { cpu: json('0.5'), memory: '1Gi' }
+          env: [
+            { name: 'ENGINE_URL', value: 'https://${engineFqdn}' }
+            { name: 'CORS_ORIGINS', value: 'https://${webFqdn}' }
+            { name: 'PORT', value: '8080' }
+            { name: 'RUST_LOG', value: 'info' }
+          ]
+          probes: edgeProbes
+        }
+      ]
+      scale: {
+        minReplicas: edgeMinReplicas
+        maxReplicas: edgeMaxReplicas
+        rules: [{ name: 'viewers', http: { metadata: { concurrentRequests: string(edgeViewersPerReplica) } } }]
+      }
+    }
+  }
+  dependsOn: [edgeAcrPull]
+}
+
 output registryEndpoint string = registry.properties.loginServer
 output openAiEndpoint string = openAiEndpoint
 output fastDeployment string = fastDeploymentName
@@ -331,4 +403,5 @@ output qualityDeployment string = qualityDeploymentName
 output contentSafetyEndpoint string = ai.properties.endpoint
 output apiBaseUrl string = 'https://${engineFqdn}/api/v1'
 output webUrl string = 'https://${webFqdn}'
+output streamBaseUrl string = 'https://${edgeFqdn}/api/v1'
 output mcpUrl string = 'https://${engineFqdn}/mcp'
