@@ -82,6 +82,8 @@ test("what if: the browser's futures equal the engine's, and the sandbox recalcu
     const input = { ...base, score: [1, 1], minute: 70, minutes_left: kernel.remainingMinutes(70, 2), paths };
     return kernel.simulateFutures(input);
   }, { base: now.input, paths });
+  // Digit-for-digit equality needs the engine on the same Rust kernel (its NumPy fallback draws other paths).
+  expect(engine.backend).toBe("rust");
   const r4 = (v: number) => Number(v.toFixed(4)); // Python's round(v, 4), as the engine reports them
   expect([r4(browser.home), r4(browser.draw), r4(browser.away)]).toEqual([engine.home, engine.draw, engine.away]);
   expect(browser.scores.slice(0, 5).map(([h, a, p]: [number, number, number]) => [h, a, r4(p)])).toEqual(

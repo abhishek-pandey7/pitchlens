@@ -152,6 +152,11 @@ jobs:
           tool: wasm-bindgen@0.2.129
       - run: npm run build:kernel
         working-directory: web
+      - name: Rust core for the engine (the e2e engine runs on it, as deployed)
+        run: |
+          pip install "maturin>=1.9,<2"
+          python scripts/build_core.py
+        working-directory: engine
       - run: npx playwright install --with-deps chromium
         working-directory: web
       - run: npx playwright test
