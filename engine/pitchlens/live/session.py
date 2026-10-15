@@ -61,6 +61,7 @@ FUTURES_EVENTS = {EventType.GOAL, EventType.OWN_GOAL, EventType.CARD, EventType.
                   EventType.PERIOD_START, EventType.MATCH_END}  # fmt: skip
 FUTURES_INSIGHTS = {InsightType.MOMENTUM_SHIFT, InsightType.PRESSURE_CHANGE}
 FUTURES_EVERY_MS = 5 * 60_000  # match time between futures runs when nothing else triggers one
+FUTURES_TIMEOUT_S = 30.0  # a run that takes longer is dropped (full time and seeks never wait on it)
 FRAMES_PER_S = 25  # tracking frames forwarded to clients (all frames still feed the physical metrics)
 SUBSCRIBER_QUEUE_LIMIT = 20_000  # a client this far behind is disconnected
 RAW = "*"
@@ -426,7 +427,7 @@ class MatchSession:
 
     async def _run_futures(self, inp: FuturesInput, moment: tuple[int, int, int], generation: int) -> None:
         try:
-            raw, backend = await asyncio.to_thread(simulate, inp)
+            raw, backend = await asyncio.wait_for(asyncio.to_thread(simulate, inp), FUTURES_TIMEOUT_S)
         except Exception:  # never let a failed run take the session down; the next trigger retries
             self.latency.record("futures_failed", 0.0)
             return
