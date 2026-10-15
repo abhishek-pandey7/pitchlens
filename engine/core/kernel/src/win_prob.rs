@@ -1,12 +1,13 @@
-//! In-play win probability: a port of `pitchlens/interpret/win_prob.py`, bit for bit.
+//! In-play win probability: a line-for-line port of `pitchlens/interpret/win_prob.py`.
 //!
 //! Remaining goals for each side follow independent Poisson distributions over a 0..=10 grid. The
 //! arithmetic follows Python's order of operations exactly: `float ** int` and `float ** float` are the C
 //! library's `pow` (CPython's `float_pow` calls it for every case these functions reach), `math.exp` is
 //! the C library's `exp`, and `math.factorial(k)` is exact, so dividing by it is dividing by the same
-//! double. Rust's `powf` and `exp` call the same C library functions, so on one platform the results
-//! are identical (`engine/tests/unit/test_core_parity_win_prob.py` checks every state of several
-//! matches). Across platforms the C libraries may round `pow`/`exp` differently in the last bit.
+//! double. Results agree with Python to the last bit or one rounding step: C libraries may round
+//! `pow`/`exp` differently in the last bit, and the compiler simplifies some calls once the 0..=10 grid
+//! is unrolled. Measured: up to 1.1e-16 on Linux, 2.2e-16 on Windows; the parity test
+//! (`engine/tests/unit/test_core_parity_win_prob.py`, every state of five matches) holds it under 1e-14.
 
 pub const MAX_GOALS: usize = 10;
 pub const LIVE_WEIGHT_AT_FULL_TIME: f64 = 0.5;

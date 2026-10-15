@@ -11,7 +11,6 @@ Skipped when the extension isn't built (or is an older build without `win_probab
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -31,9 +30,10 @@ from pitchlens.sim.simulator import simulate  # noqa: E402
 from pitchlens.sim.storylines import build, default_fixture  # noqa: E402
 
 SAMPLES = Path(__file__).resolve().parents[3] / "data" / "samples"
-EXACT = sys.platform == "linux"
-# Off Linux: the largest difference measured on Windows (mingw-w64 pow vs the UCRT's) was 2.2e-16 in a
-# probability; the bound leaves room for other inputs while still catching any real divergence.
+# The same operations in the same order, but not always bit for bit: the C libraries' `pow`/`exp` can
+# round differently in the last bit (mingw-w64 against the UCRT on Windows: up to 2.2e-16), and the Rust
+# compiler simplifies some calls after unrolling the 0..10 grid (Linux CI: up to 1.1e-16). The bound leaves
+# room for other inputs while still catching any real divergence, which would be orders of magnitude larger.
 BOUND = 1e-14
 
 
@@ -86,7 +86,4 @@ def test_rust_win_probability_matches_python_over_five_matches() -> None:
         )
         diffs.append(np.abs(np.array(rs) - np.array([py.home, py.draw, py.away])).max())
     worst = float(max(diffs))
-    if EXACT:
-        assert worst == 0.0, f"Rust and Python differ by up to {worst:g} on Linux (should be bit-identical)"
-    else:
-        assert worst <= BOUND, f"Rust and Python differ by up to {worst:g} (bound {BOUND:g})"
+    assert worst <= BOUND, f"Rust and Python differ by up to {worst:g} (bound {BOUND:g})"

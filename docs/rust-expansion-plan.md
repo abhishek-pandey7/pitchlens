@@ -87,7 +87,7 @@ Output per run (the `Futures` schema):
 
 ### 3.4 Win probability in Rust
 
-The headline win probability stays closed-form, because it is stable and many tests depend on it. It is ported to the kernel bit for bit, removing the largest Python cost left (about 140 ms of the 424 ms needed to run a whole match through the pipeline).
+The headline win probability stays closed-form, because it is stable and many tests depend on it. It is ported to the kernel line for line (agreeing with Python to within one rounding step), removing the largest Python cost left (about 140 ms of the 424 ms needed to run a whole match through the pipeline).
 
 ### 3.5 Without the Rust core
 
@@ -127,7 +127,7 @@ Each effect has a switch (`FuturesInput.effects`); with all three off the model 
 | Sense checks | 0–0 at 89′ (4 added): draw > 0.85; 3–0 at 60′: trailing side wins < 0.02; a red card lowers that side's win share by > 3 points; momentum and game state move goals the expected way |
 | Python fallback | NumPy (10k paths) within 3σ of Rust (100k) at 20 states, plus its own calibration and sense checks |
 | Speed | 100k paths from kick-off 4.2 ms (48 ms on one thread); from 80′ 1.3 ms (11 ms on one thread). NumPy 10k: 24 ms and 7.6 ms |
-| Win-probability port | Linux: Rust and CPython call the same glibc `pow`/`exp`, bit-identical. Windows (GNU toolchain): mingw-w64's `pow` differs from the UCRT's in the last bits; over every state of 5 matches (19,486 calls) 57% are bit-identical and the largest difference is 2.2e-16 |
+| Win-probability port | Within one rounding step of Python over every state of 5 matches (19,486 calls): largest difference 1.1e-16 on Linux CI (the compiler simplifies some `pow` calls after unrolling the grid) and 2.2e-16 on Windows (mingw-w64's `pow` against the UCRT's; 57% bit-identical). The parity test bounds it at 1e-14 |
 
 ## 4. W: the kernel in the browser
 

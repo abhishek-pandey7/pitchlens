@@ -4,8 +4,9 @@ Remaining goals for each side follow independent Poisson distributions. The scor
 pre-match expectation with the live xG rate (the live rate earns more weight as the match goes on).
 Red cards scale rates (x0.7 for the short-handed side, x1.2 for their opponents per dismissal).
 
-`win_probability` runs in the Rust core when it is loaded (`pitchlens_core.win_probability`, a bit-for-bit
-port; see engine/core/kernel/src/win_prob.rs) and here otherwise (`win_probability_py`, the reference).
+`win_probability` runs in the Rust core when it is loaded (`pitchlens_core.win_probability`, a line-for-line
+port that agrees to within one rounding step, ~1e-16; see engine/core/kernel/src/win_prob.rs) and here
+otherwise (`win_probability_py`, the reference).
 """
 
 from __future__ import annotations
