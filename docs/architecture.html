@@ -40,8 +40,8 @@
   .stages { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .stage ul { margin: 6px 0 0; padding-left: 16px; color: var(--muted); font-size: 12px; }
   .stage li { margin: 1px 0; }
-  .budget { margin-top: 10px; display: flex; gap: 10px; font-size: 12px; color: var(--muted); }
-  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--surface-2); }
+  .budget { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 8px 10px; font-size: 12px; color: var(--muted); }
+  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--surface-2); white-space: nowrap; }
   .pill b { color: var(--strong); }
 
   .agents { margin-top: 26px; border: 2px dashed var(--strong); border-radius: 14px; padding: 16px 12px 12px; position: relative; }
@@ -87,7 +87,7 @@
     <div class="col">
       <div class="col-title">Sources</div>
       <div class="box"><h3>Match simulator</h3><p>Seeded possession-chain model, 20 fictional clubs, 5 storylines, ~2,500 events a match</p></div>
-      <div class="box"><h3>Tracking frames</h3><p>Ball and 22 players at 5 Hz, consistent with the events</p></div>
+      <div class="box"><h3>Tracking frames</h3><p>Ball and 22 players at 5 Hz, rebuilt from the events by the Rust kernel in ~25 ms a match</p></div>
       <div class="box"><h3>Replay</h3><p>1–600×, pause, seek with catch-up</p></div>
       <div class="box"><h3>External feeds</h3><p><code>POST /ingest</code>: schema-validated <code>events.v1</code> batches (partners, CV)</p></div>
     </div>
@@ -116,12 +116,14 @@
         <span class="pill">event → screen budget <b>&lt; 300 ms</b> · event → broadcast <b>0.7 ms</b> p95 measured</span>
         <span class="pill">no model on the hot path</span>
         <span class="pill">grounding validator on every AI line</span>
+        <span class="pill"><b>Rust kernel</b> (PyO3): tracking, physical metrics, frame JSON, bit-identical to the Python reference</span>
       </div>
     </div>
     <div class="arrow">→</div>
     <div class="col">
       <div class="col-title">Delivery</div>
       <div class="box"><h3>FastAPI engine</h3><p>REST · per-fan SSE streams with <code>Last-Event-ID</code> resume</p></div>
+      <div class="box"><h3>Rust broadcast edge</h3><p>axum: one upstream per fan channel, fanned out to thousands of viewers; snapshot join, ring-buffer resume</p></div>
       <div class="box"><h3>Narration worker</h3><p>One job per insight for every fan it reaches; cached, de-duplicated, shed under load</p></div>
       <div class="box"><h3>MCP server <code>/mcp</code></h3><p>12 match tools for GitHub Copilot, Foundry agents, Claude</p></div>
       <div class="box"><h3>Exports</h3><p>WebVTT chapters and captions, full-match cue JSON</p></div>
@@ -130,7 +132,7 @@
     <div class="col">
       <div class="col-title">Experiences (Next.js)</div>
       <div class="box"><h3>/overlay</h3><p>Transparent broadcast graphics for OBS and vision mixers</p></div>
-      <div class="box"><h3>/watch</h3><p>Fan second screen: feed, pitch, Ask the Match, recaps, player focus</p></div>
+      <div class="box"><h3>/watch</h3><p>Fan second screen: 3D pitch, feed, Ask the Match, recaps, player focus; whole-match replay built in the browser by the Rust kernel (WebAssembly)</p></div>
       <div class="box"><h3>/studio</h3><p>Producer console: replay, Director approvals, agent trace, latency HUD</p></div>
       <div class="box"><h3>/analyst · /compare</h3><p>Live charts and evidence inspector; two fans side by side</p></div>
     </div>
@@ -159,7 +161,7 @@
   <div class="azure">
     <div class="band-label">Runs on Azure · one command: azd up</div>
     <div class="azure-grid">
-      <div class="box az"><h3>Container Apps</h3><p>engine (FastAPI, agents, MCP) and web (Next.js), health and readiness probes</p></div>
+      <div class="box az"><h3>Container Apps</h3><p>engine (FastAPI, agents, MCP, Rust core), broadcast edge (Rust) and web (Next.js), health probes, HTTP autoscaling</p></div>
       <div class="box az"><h3>Microsoft Foundry</h3><p>Model deployments (fast and quality tiers), Entra ID only</p></div>
       <div class="box az"><h3>AI Content Safety</h3><p>Same Foundry resource: text analysis and Prompt Shields</p></div>
       <div class="box az"><h3>Container Registry</h3><p>Images pulled with the managed identity</p></div>
@@ -194,7 +196,7 @@
   </div>
 
   <footer>
-    <span>Python 3.12 · FastAPI · Pydantic · Microsoft Agent Framework · MCP · Next.js · TypeScript · Tailwind · Playwright · Bicep</span>
+    <span>Rust (PyO3 · WebAssembly · axum) · Python 3.12 · FastAPI · Microsoft Agent Framework · MCP · Next.js · three.js · Playwright · Bicep</span>
     <span>Built for the Inside the Game Developer Hackathon (Microsoft × Premier League) · all data synthetic</span>
   </footer>
 </div>
