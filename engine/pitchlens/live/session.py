@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 import time
 from collections import Counter, deque
 from collections.abc import Callable, Coroutine
@@ -60,6 +61,8 @@ STATE_NOW = {EventType.GOAL, EventType.OWN_GOAL, EventType.CARD, EventType.PERIO
 FUTURES_EVENTS = {EventType.GOAL, EventType.OWN_GOAL, EventType.CARD, EventType.SUBSTITUTION,
                   EventType.PERIOD_START, EventType.MATCH_END}  # fmt: skip
 FUTURES_INSIGHTS = {InsightType.MOMENTUM_SHIFT, InsightType.PRESSURE_CHANGE}
+log = logging.getLogger(__name__)
+DRAIN_TIMEOUT_S = 60.0  # full time waits this long for background work, then cancels what is left
 FUTURES_EVERY_MS = 5 * 60_000  # match time between futures runs when nothing else triggers one
 FUTURES_TIMEOUT_S = 30.0  # a run that takes longer is dropped (full time and seeks never wait on it)
 FRAMES_PER_S = 25  # tracking frames forwarded to clients (all frames still feed the physical metrics)
@@ -214,10 +217,30 @@ class MatchSession:
         for sub in self.subscribers:
             sub.queue.put_nowait(None)
 
-    async def drain_narrations(self) -> None:
-        """Wait for in-flight LLM narrations (used by tests and graceful shutdown)."""
+    async def drain_narrations(self, timeout: float = DRAIN_TIMEOUT_S) -> None:
+        """Wait for in-flight background work (narrations, futures, agents) at full time, in tests and at
+        shutdown. Work can start more work, so this loops; but never forever: whatever is still running
+        after `timeout` is logged with its stack and cancelled, so one stuck task can't hold the session."""
+        deadline = time.monotonic() + timeout
         while self._narrations:
-            await asyncio.gather(*list(self._narrations), return_exceptions=True)
+            left = deadline - time.monotonic()
+            if left <= 0:
+                for task in list(self._narrations):
+                    stack = "".join(
+                        f"  {frame.f_code.co_filename}:{frame.f_lineno} in {frame.f_code.co_name}\n"
+                        for frame in task.get_stack()
+                    )
+                    log.warning(
+                        "%s: background work still running after %.0f s, cancelled: %s\n%s",
+                        self.match_id,
+                        timeout,
+                        task.get_coro(),
+                        stack,
+                    )
+                    task.cancel()
+                await asyncio.wait(list(self._narrations), timeout=5)  # let the cancellations land
+                return
+            await asyncio.wait(list(self._narrations), timeout=left)
 
     async def _consume(self, subscription: Any) -> None:
         async for message in subscription:
