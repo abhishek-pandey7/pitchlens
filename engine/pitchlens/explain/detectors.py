@@ -1,10 +1,11 @@
 """Moment detectors (§9, T-31). Each proposes `Candidate`s; the engine adds ids, cooldowns and salience.
 
-Three kinds of input:
+Four kinds of input:
 - `on_event(x)`: every enriched event (goals, chances, passes, cards, streaks, milestones)
 - `on_tick(row)`: every 30 s dynamics sample from `MatchState.readings()` (momentum, pressing, control,
   rhythm, xG swings)
 - `on_alert(alert)`: physical thresholds from tracking (top speed, distance, sprints)
+- `on_futures(f)`: each futures run the live session makes (futures swings)
 
 Evidence only ever carries values the interpret stage computed; detectors decide *that* something matters
 and record *why* (why_tags), never invent numbers.
@@ -22,6 +23,7 @@ from pitchlens.interpret.geometry import OWN_DEFENSIVE_60_X, PRESS_ZONE_X
 from pitchlens.interpret.state import MatchState
 from pitchlens.schema.enriched import AlertKind, EnrichedEvent, PhysicalAlert
 from pitchlens.schema.events import EventType, Outcome
+from pitchlens.schema.futures import Futures
 from pitchlens.schema.insights import Evidence, InsightType
 
 from .changepoint import RateShift, rate_shift
@@ -67,6 +69,9 @@ class Detector:
         return []
 
     def on_alert(self, alert: PhysicalAlert) -> list[Candidate]:
+        return []
+
+    def on_futures(self, futures: Futures) -> list[Candidate]:
         return []
 
     # helpers
@@ -225,6 +230,7 @@ class BigChanceDetector(Detector):
         if "shot_speed_kmh" in x.metrics:
             evidence.append(ev("shot_speed_kmh", x.metrics["shot_speed_kmh"], unit="km/h"))
         evidence.append(counterfactual.if_scored(self.state, e.team_id))  # what if it had gone in
+        evidence += counterfactual.futures_if_scored(self.state, e.team_id)  # ...and its simulated futures
         return [
             Candidate(
                 InsightType.BIG_CHANCE,
@@ -396,6 +402,7 @@ class CardDetector(Detector):
         if dismissal:
             evidence.append(ev("players_on_pitch", len(self.state.teams[e.team_id].on_pitch), team=e.team_id))
             evidence.append(counterfactual.if_eleven(self.state, e.team_id))  # what if still eleven
+            evidence += counterfactual.futures_if_eleven(self.state, e.team_id)
         return [
             Candidate(
                 InsightType.CARD,
@@ -764,6 +771,62 @@ class PhysicalAlertDetector(Detector):
         ]
 
 
+# ======================================================================== futures detectors
+class FuturesSwingDetector(Detector):
+    """A side's chance of winning, or the trailing side's chance of avoiding defeat, moved by at least
+    15 points between two futures runs. Evidence: the swing itself, the result split and the most likely
+    score, all from the futures."""
+
+    name = "futures_swing"
+    THRESHOLD = 0.15
+
+    def __init__(self, state: MatchState) -> None:
+        super().__init__(state)
+        self._last: Futures | None = None
+
+    def on_futures(self, futures: Futures) -> list[Candidate]:
+        if futures.hypothetical:
+            return []
+        prev, self._last = self._last, futures
+        if prev is None:
+            return []
+        home, away = self.state.home_id, self.state.away_id
+        swings: list[tuple[float, str, str, float, float]] = [
+            (futures.home - prev.home, "win", home, prev.home, futures.home),
+            (futures.away - prev.away, "win", away, prev.away, futures.away),
+        ]
+        if prev.comeback and futures.comeback and prev.comeback.team == futures.comeback.team:
+            a, b = prev.comeback.avoid_defeat, futures.comeback.avoid_defeat
+            swings.append((b - a, "comeback", futures.comeback.team, a, b))
+        delta, kind, team, before, after = max(swings, key=lambda s: abs(s[0]))
+        if abs(delta) < self.THRESHOLD:
+            return []
+        evidence = [
+            ev(f"futures_{kind}", team=team, from_=round(before, 3), to=round(after, 3)),
+            ev("futures_home", round(futures.home, 3)),
+            ev("futures_draw", round(futures.draw, 3)),
+            ev("futures_away", round(futures.away, 3)),
+            ev("futures_paths", futures.paths),
+        ]
+        if futures.scores:
+            top = futures.scores[0]
+            evidence.append(ev("futures_top_score", f"{top.home}-{top.away}"))
+            evidence.append(ev("futures_top_score_p", round(top.p, 3)))
+        return [
+            Candidate(
+                InsightType.FUTURES_SWING,
+                f"futures_swing.{kind}_{'up' if delta > 0 else 'down'}",
+                evidence,
+                teams=[team],
+                why_tags=["futures", "comeback" if kind == "comeback" else "win_probability"],
+                wp_delta=delta,
+                rarity=min(1.0, abs(delta) * 2),
+                cooldown_key=f"futures_swing:{team}",
+                cooldown_ms=3 * MIN,
+            )
+        ]
+
+
 DEFAULT_DETECTORS: tuple[type[Detector], ...] = (
     GoalDetector,
     AppearanceMilestoneDetector,
@@ -779,4 +842,5 @@ DEFAULT_DETECTORS: tuple[type[Detector], ...] = (
     RhythmBreakDetector,
     XgSwingDetector,
     PhysicalAlertDetector,
+    FuturesSwingDetector,
 )

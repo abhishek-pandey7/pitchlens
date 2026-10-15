@@ -4,8 +4,9 @@
 
 Writes, under engine/core/kernel/tests/data: shape_cases.txt (`pitch.team_shape` for every formation x
 possession x press x width over several ball positions), ball_cases.txt (`BallPath.at` over real match
-events plus interrupted flights and repeated timestamps) and hypot_cases.txt (`math.hypot` and
-`np.hypot`). Floats are written with
+events plus interrupted flights and repeated timestamps), hypot_cases.txt (`math.hypot` and
+`np.hypot`) and win_prob_cases.txt (`win_probability_py` over every state of a match, with what-if
+variants). Floats are written with
 `repr`, so the Rust side reads back exactly the same doubles. Rerun after changing either function.
 """
 
@@ -17,6 +18,9 @@ from pathlib import Path
 
 import numpy as np
 
+from pitchlens.interpret import state as state_module
+from pitchlens.interpret.state import build_state
+from pitchlens.interpret.win_prob import win_probability_py
 from pitchlens.schema.common import Point
 from pitchlens.schema.events import EventType, Height, MatchEvent, Position
 from pitchlens.sim.pitch import FORMATION_ANCHORS, _unit, team_shape
@@ -125,12 +129,50 @@ def hypot_cases() -> list[str]:
     return lines
 
 
+def win_prob_cases() -> list[str]:
+    """`win_probability_py` for every call a match makes as it plays through (every 4th kept), plus
+    one goal more and two red cards more for some of them."""
+    calls: list[tuple] = []
+
+    def record(home_goals, away_goals, *, home_rate_90, away_rate_90, minutes_left, home_reds=0, away_reds=0):
+        calls.append((home_goals, away_goals, home_rate_90, away_rate_90, minutes_left, home_reds, away_reds))
+        return win_probability_py(
+            home_goals, away_goals, home_rate_90=home_rate_90, away_rate_90=away_rate_90,
+            minutes_left=minutes_left, home_reds=home_reds, away_reds=away_reds,
+        )  # fmt: skip
+
+    league = generate_league()
+    home, away = default_fixture(league, "red_card_turn")
+    match = simulate(league, home, away, seed=3, storyline=build(league, "red_card_turn", home, away))
+    original = state_module.win_probability
+    state_module.win_probability = record
+    try:
+        build_state(match.meta, match.events)
+    finally:
+        state_module.win_probability = original
+    cases = calls[::4]
+    cases += [(hg + 1, ag, *rest) for hg, ag, *rest in calls[::40]]
+    cases += [(hg, ag, hr, ar, left, rh + 1, ra + 2) for hg, ag, hr, ar, left, rh, ra in calls[::40]]
+    lines = ["# wp <home goals> <away goals> <home rate> <away rate> <minutes left> <home reds> <away reds>"
+             " <home> <draw> <away>"]  # fmt: skip
+    for hg, ag, hr, ar, left, rh, ra in cases:
+        wp = win_probability_py(
+            hg, ag, home_rate_90=hr, away_rate_90=ar, minutes_left=left, home_reds=rh, away_reds=ra
+        )
+        lines.append(
+            f"wp {hg} {ag} {float(hr)!r} {float(ar)!r} {float(left)!r} {rh} {ra} "
+            f"{wp.home!r} {wp.draw!r} {wp.away!r}"
+        )
+    return lines
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     files = (
         ("shape_cases.txt", shape_cases()),
         ("ball_cases.txt", ball_cases()),
         ("hypot_cases.txt", hypot_cases()),
+        ("win_prob_cases.txt", win_prob_cases()),
     )
     for name, lines in files:
         (OUT / name).write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")

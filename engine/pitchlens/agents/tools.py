@@ -18,6 +18,7 @@ from typing import Annotated, Any
 from pydantic import Field
 
 from pitchlens.clock import minute_label
+from pitchlens.interpret.futures import run_futures
 from pitchlens.interpret.state import MatchState
 from pitchlens.schema.insights import Insight, InsightType
 
@@ -357,6 +358,44 @@ class MatchTools:
 
         return self._record("what_if", {"home_goals": home_goals, "away_goals": away_goals}, run)
 
+    def get_futures(self) -> dict[str, Any]:
+        """The rest of the match simulated many times from now (futures): how often each result happens,
+        the most likely final scores, the trailing team's chances of avoiding defeat and of winning, who
+        scores next and the goals still expected. Use it for "can X still win?" or "will they come back?"."""
+
+        def run() -> dict[str, Any]:
+            s = self.state
+            f = run_futures(s)
+            home, away = self._names()
+            name = {s.home_id: home, s.away_id: away}
+            comeback: dict[str, Any] | str = "the score is level: no team is behind"
+            if f.comeback is not None:
+                comeback = {
+                    "team": name[f.comeback.team],
+                    "avoid_defeat": f.comeback.avoid_defeat,
+                    "win": f.comeback.win,
+                }
+            return {
+                **self._now(),
+                "score": f"{home} {s.score[0]}-{s.score[1]} {away}",
+                "simulated_endings": f.paths,
+                "method": f"{f.paths:,} simulated endings of the match from this moment",
+                "result": {home: f.home, "draw": f.draw, away: f.away},
+                "most_likely_final_scores": [
+                    {"score": f"{home} {c.home}-{c.away} {away}", "share": c.p} for c in f.scores[:5]
+                ],
+                "comeback": comeback,
+                "next_goal": {
+                    home: f.next_goal.home,
+                    away: f.next_goal.away,
+                    "no_more_goals": f.next_goal.none,
+                    "median_minute": f.next_goal.median_minute,
+                },
+                "expected_goals_left": {home: f.goals_left[0], away: f.goals_left[1]},
+            }
+
+        return self._record("get_futures", {}, run)
+
     def get_player_card(self, player: str) -> dict[str, Any]:
         """Everything about one player in this match: involvement, passing, shooting, defending, running."""
 
@@ -541,6 +580,7 @@ class MatchTools:
         """The tool callables, in the order agents see them."""
         return [
             self.get_match_state, self.get_metric, self.get_window, self.compare_periods, self.win_prob_at,
-            self.what_if, self.get_player_card, self.top_players, self.get_insights, self.get_goals,
+            self.what_if, self.get_futures, self.get_player_card, self.top_players, self.get_insights,
+            self.get_goals,
             self.player_of_the_match,
         ]  # fmt: skip

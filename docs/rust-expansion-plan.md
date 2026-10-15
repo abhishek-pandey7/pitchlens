@@ -1,6 +1,6 @@
 # Rust, phase 2: futures, the browser and the broadcast edge
 
-Status: **in progress.** X-1 (workspace split) is done: `engine/core` is a Cargo workspace with `kernel` (pure Rust) and `py` (PyO3 bindings); `wasm` arrives with W-1. Follows [rust-core-plan.md](rust-core-plan.md); that plan's tasks R-0 to R-7 are built.
+Status: **in progress.** X-1 (workspace split) is done: `engine/core` is a Cargo workspace with `kernel` (pure Rust) and `py` (PyO3 bindings); `wasm` arrives with W-1. Track F (futures, F-1 to F-3) is built; its results are in §3.7. Follows [rust-core-plan.md](rust-core-plan.md); that plan's tasks R-0 to R-7 are built.
 
 ## 1. Goal
 
@@ -87,7 +87,7 @@ Output per run (the `Futures` schema):
 
 ### 3.4 Win probability in Rust
 
-The headline win probability stays closed-form, because it is stable and many tests depend on it. It is ported to the kernel bit for bit, removing the largest Python cost left (about 140 ms of the 424 ms needed to run a whole match through the pipeline).
+The headline win probability stays closed-form, because it is stable and many tests depend on it. It is ported to the kernel line for line (agreeing with Python to within one rounding step), removing the largest Python cost left (about 140 ms of the 424 ms needed to run a whole match through the pipeline).
 
 ### 3.5 Without the Rust core
 
@@ -103,6 +103,31 @@ A NumPy version of the same model runs 10,000 paths, vectorised over paths. Its 
 | Python fallback | NumPy results within 3σ of Rust at 20 states |
 | Speed | 100k paths from kick-off < 30 ms on a 2-vCPU Container App; from 80′ < 10 ms |
 | Win-probability port | Bit-identical to `win_prob.py` over every state of 5 matches |
+
+### 3.7 As built
+
+**Model constants** (`engine/core/kernel/src/futures.rs`, twins in `pitchlens/interpret/futures.py`; a test checks they agree):
+
+| Effect | Constants | Why |
+|---|---|---|
+| Game state | trailing side's rate up to ×1.30, leading side's down to ×0.85 by full time; ×1.5 stronger at two goals or more; zero with 90 minutes left, growing linearly | Score-effects studies find late trailing sides score roughly a quarter to a third more and leaders noticeably less; kept moderate so the headline stays close to the closed form |
+| Momentum | lift up to ±35% from 0.7 × momentum + 0.3 × field tilt (as −1..1), halving every 4 minutes | A dominant spell matters for the next few minutes, not the next half; the integrated effect is about 2 minutes of extra scoring |
+| Discipline | 0.08 red cards per team per 90 at average behaviour (2 cards, 11 fouls per 90), scaled by the side's own card and foul rates blended with 30 minutes of average, clamped to ×0.25..×4; at most 3 dismissals per side; each applies ×0.7 / ×1.2 | League red-card rates; the blend stops one early booking from dominating |
+
+Each effect has a switch (`FuturesInput.effects`); with all three off the model is the closed form. Fatigue is not modelled (no fatigue detector yet).
+
+**Simulation.** Rates are constant within each 0.25-minute step. Each path draws the time to its next event from a table of cumulative hazards for its state (goal difference category × red cards), which is the same process as per-step Poisson draws at a few draws per event. Paths run in 2,048-path chunks, each seeded from the run's seed (FNV-1a of the match id mixed with the event's seq, 53 bits) and its index, so results are identical with or without rayon.
+
+**Results (Windows, 16 threads; one-thread figures stand in for a 2-vCPU Container App at about half):**
+
+| Check | Result |
+|---|---|
+| Calibration | effects off vs closed form at 50 states, 40k paths each: all within 4σ (cargo test) |
+| Determinism | same seed identical, parallel equals sequential, next seq differs (cargo and pytest) |
+| Sense checks | 0–0 at 89′ (4 added): draw > 0.85; 3–0 at 60′: trailing side wins < 0.02; a red card lowers that side's win share by > 3 points; momentum and game state move goals the expected way |
+| Python fallback | NumPy (10k paths) within 3σ of Rust (100k) at 20 states, plus its own calibration and sense checks |
+| Speed | 100k paths from kick-off 4.2 ms (48 ms on one thread); from 80′ 1.3 ms (11 ms on one thread). NumPy 10k: 24 ms and 7.6 ms |
+| Win-probability port | Within one rounding step of Python over every state of 5 matches (19,486 calls): largest difference 1.1e-16 on Linux CI (the compiler simplifies some `pow` calls after unrolling the grid) and 2.2e-16 on Windows (mingw-w64's `pow` against the UCRT's; 57% bit-identical). The parity test bounds it at 1e-14 |
 
 ## 4. W: the kernel in the browser
 

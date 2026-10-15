@@ -1,0 +1,138 @@
+{
+  "$defs": {
+    "FuturesEffects": {
+      "additionalProperties": false,
+      "description": "Which effects a run models. All off reproduces the closed-form win probability.",
+      "properties": {
+        "game_state": {
+          "default": true,
+          "description": "Trailing sides push, leading sides sit deeper.",
+          "title": "Game State",
+          "type": "boolean"
+        },
+        "momentum": {
+          "default": true,
+          "description": "Momentum and field tilt lift the side on top, fading.",
+          "title": "Momentum",
+          "type": "boolean"
+        },
+        "discipline": {
+          "default": true,
+          "description": "Further red cards at each side's card/foul rate.",
+          "title": "Discipline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "game_state",
+        "momentum",
+        "discipline"
+      ],
+      "title": "FuturesEffects",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Home first in every pair.",
+  "properties": {
+    "score": {
+      "description": "Goals so far.",
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Score",
+      "type": "array"
+    },
+    "minute": {
+      "description": "Clock minute the simulation starts from.",
+      "maximum": 200,
+      "minimum": 0,
+      "title": "Minute",
+      "type": "number"
+    },
+    "minutes_left": {
+      "description": "Including expected added time.",
+      "maximum": 200,
+      "minimum": 0,
+      "title": "Minutes Left",
+      "type": "number"
+    },
+    "rate_90": {
+      "description": "Scoring rates per 90 minutes before red cards.",
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Rate 90",
+      "type": "array"
+    },
+    "reds": {
+      "description": "Red cards so far.",
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Reds",
+      "type": "array"
+    },
+    "momentum": {
+      "description": "Home minus away decayed threat.",
+      "maximum": 1,
+      "minimum": -1,
+      "title": "Momentum",
+      "type": "number"
+    },
+    "field_tilt": {
+      "description": "Home share of final-third touches.",
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Field Tilt",
+      "type": "number"
+    },
+    "red_rate_90": {
+      "description": "Red cards per 90 minutes from here, per side.",
+      "items": {
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "title": "Red Rate 90",
+      "type": "array"
+    },
+    "effects": {
+      "$ref": "#/$defs/FuturesEffects"
+    },
+    "paths": {
+      "maximum": 1000000,
+      "minimum": 1,
+      "title": "Paths",
+      "type": "integer"
+    },
+    "seed": {
+      "description": "From the match id and the latest event's seq.",
+      "exclusiveMaximum": 9007199254740992,
+      "minimum": 0,
+      "title": "Seed",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "score",
+    "minute",
+    "minutes_left",
+    "rate_90",
+    "reds",
+    "momentum",
+    "field_tilt",
+    "red_rate_90",
+    "effects",
+    "paths",
+    "seed"
+  ],
+  "title": "FuturesInput",
+  "type": "object"
+}

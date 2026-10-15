@@ -25,6 +25,7 @@ from pitchlens.schema.events import (
     Position,
     TrackingFrame,
 )
+from pitchlens.schema.futures import Futures
 
 from . import passes as pass_model
 from . import shots as shot_model
@@ -176,6 +177,7 @@ class MatchState:
         self._possession_since = 0
         self.goals: list[Goal] = []
         self.events_applied = 0
+        self.last_seq = 0  # the latest event's sequence number (seeds the futures)
         self._last_frame: TrackingFrame | None = None
         self._frame_source: tuple[Tracking, int] | None = None  # set by apply_tracking: built on demand
         self._last_completed_pass: tuple[MatchEvent, float] | None = None  # event, difficulty
@@ -186,6 +188,9 @@ class MatchState:
         self.win_prob = self.compute_win_probability()
         self.series: list[dict[str, Any]] = []
         self._next_sample_ms = 0
+        # Futures (interpret/futures.py) are run by the live session, off the event loop, and land here.
+        self.futures: Futures | None = None
+        self.futures_history: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------ helpers
     def is_home(self, club_id: str | None) -> bool:
@@ -355,6 +360,7 @@ class MatchState:
             self._next_sample_ms += SAMPLE_EVERY_MS
 
         self.events_applied += 1
+        self.last_seq = e.seq
         home, away = self.score
         return EnrichedEvent(
             event=e, metrics=metrics, home_score=home, away_score=away, possession_team=self.possession_team
@@ -379,20 +385,49 @@ class MatchState:
         home_goals, away_goals = score or self.score
         if self.finished:
             return win_probability(home_goals, away_goals, home_rate_90=0, away_rate_90=0, minutes_left=0)
+        home, away = self.teams[self.home_id], self.teams[self.away_id]
+        home_rate, away_rate, left = self.scoring_inputs()
+        return win_probability(
+            home_goals,
+            away_goals,
+            home_rate_90=home_rate,
+            away_rate_90=away_rate,
+            minutes_left=left,
+            home_reds=reds[0] if reds else home.red_cards,
+            away_reds=reds[1] if reds else away.red_cards,
+        )
+
+    def scoring_inputs(self) -> tuple[float, float, float]:
+        """(home goals per 90, away goals per 90, minutes left) as the win probability uses them now; the
+        futures start from the same numbers."""
         minute = self.clock_ms / 60_000
         played = max(0.0, self.match_ms / 60_000)
         home, away = self.teams[self.home_id], self.teams[self.away_id]
         regulation_end = 45 * self.period
         added = self.added_minutes.get(self.period) if minute >= regulation_end - 1 else None
         left = remaining_minutes(minute, self.period, added)
-        return win_probability(
-            home_goals,
-            away_goals,
-            home_rate_90=scoring_rate_per_90(self.meta.pre_match.home_strength, home.xg, played),
-            away_rate_90=scoring_rate_per_90(self.meta.pre_match.away_strength, away.xg, played),
-            minutes_left=left,
-            home_reds=reds[0] if reds else home.red_cards,
-            away_reds=reds[1] if reds else away.red_cards,
+        return (
+            scoring_rate_per_90(self.meta.pre_match.home_strength, home.xg, played),
+            scoring_rate_per_90(self.meta.pre_match.away_strength, away.xg, played),
+            left,
+        )
+
+    def set_futures(self, futures: Futures) -> None:
+        """Record a futures run for the match as it stands (not a what-if)."""
+        self.futures = futures
+        comeback = futures.comeback
+        self.futures_history.append(
+            {
+                "match_ms": futures.match_ms,
+                "clock_ms": futures.clock_ms,
+                "period": futures.period,
+                "score": futures.score,
+                "result": [futures.home, futures.draw, futures.away],
+                "comeback": None
+                if comeback is None
+                else [comeback.side, comeback.avoid_defeat, comeback.win],
+                "top_score": [futures.scores[0].home, futures.scores[0].away] if futures.scores else None,
+            }
         )
 
     def readings(self) -> dict[str, Any]:
@@ -538,6 +573,9 @@ class MatchState:
                 "red_cards": t.red_cards,
             }
 
+        futures = None
+        if self.futures is not None:  # the run's input stays out of every state message
+            futures = self.futures.model_copy(update={"input": None}).model_dump(mode="json")
         return {
             "match_id": self.match_id,
             "period": self.period,
@@ -545,7 +583,7 @@ class MatchState:
             "clock_ms": self.clock_ms,
             "finished": self.finished,
             "possession_team": self.possession_team,
-            "dynamics": self.readings(),
+            "dynamics": {**self.readings(), "futures": futures},
             "home": team_view(home),
             "away": team_view(away),
         }

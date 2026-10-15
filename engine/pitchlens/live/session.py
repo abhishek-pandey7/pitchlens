@@ -11,6 +11,13 @@ While the replay is seeking (catch-up) nothing is streamed; when live play resum
 rebuilds its feed from the full insight list and receives one `sync` with the current picture. A seek
 replays events only; the tracking frames before the target are applied in bulk from `tracking` (set by
 the hub), so physical metrics after a seek match a replay from kick-off.
+
+Futures (interpret/futures.py) run after goals, cards, substitutions and phase changes, after a
+momentum or pressing insight, and otherwise every 5 match minutes, in a worker thread so the event loop
+never waits. One run at a time: a trigger during a run asks for one more run when it lands. Each result
+goes on `state.futures` (and so into the next `state` message, pushed at once), is recorded in the
+futures history, and can raise a `futures_swing` insight. Nothing runs while seeking; one run follows
+the catch-up.
 """
 
 from __future__ import annotations
@@ -18,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import json
+import logging
 import time
 from collections import Counter, deque
 from collections.abc import Callable, Coroutine
@@ -28,6 +36,7 @@ import numpy as np
 
 from pitchlens.explain.engine import ExplainEngine
 from pitchlens.ingest.bus import Bus, BusMessage, MessageKind
+from pitchlens.interpret.futures import futures_input, simulate, to_futures
 from pitchlens.interpret.state import MatchState
 from pitchlens.narrate.templates import NarrationContext, render
 from pitchlens.narrate.worker import NarrationWorker
@@ -36,7 +45,8 @@ from pitchlens.personalize.ranker import rank
 from pitchlens.render.cues import CueScheduler, build_cue
 from pitchlens.render.programme import Mode, ProgrammeGate
 from pitchlens.schema.events import EventType, MatchEvent, MatchMeta
-from pitchlens.schema.insights import Insight
+from pitchlens.schema.futures import FuturesInput
+from pitchlens.schema.insights import Insight, InsightType
 from pitchlens.schema.overlays import OverlayCue
 from pitchlens.schema.profiles import Persona, Profile
 from pitchlens.sim.tracking import Tracking
@@ -48,6 +58,13 @@ STATE_EVERY_S = 0.5  # wall-clock throttle for `state` snapshots
 # stale score bug, whatever the replay speed.
 STATE_NOW = {EventType.GOAL, EventType.OWN_GOAL, EventType.CARD, EventType.PERIOD_START, EventType.PERIOD_END,
              EventType.MATCH_END}  # fmt: skip
+FUTURES_EVENTS = {EventType.GOAL, EventType.OWN_GOAL, EventType.CARD, EventType.SUBSTITUTION,
+                  EventType.PERIOD_START, EventType.MATCH_END}  # fmt: skip
+FUTURES_INSIGHTS = {InsightType.MOMENTUM_SHIFT, InsightType.PRESSURE_CHANGE}
+log = logging.getLogger(__name__)
+DRAIN_TIMEOUT_S = 60.0  # full time waits this long for background work, then cancels what is left
+FUTURES_EVERY_MS = 5 * 60_000  # match time between futures runs when nothing else triggers one
+FUTURES_TIMEOUT_S = 30.0  # a run that takes longer is dropped (full time and seeks never wait on it)
 FRAMES_PER_S = 25  # tracking frames forwarded to clients (all frames still feed the physical metrics)
 SUBSCRIBER_QUEUE_LIMIT = 20_000  # a client this far behind is disconnected
 RAW = "*"
@@ -169,6 +186,10 @@ class MatchSession:
         self._task: asyncio.Task[None] | None = None
         self._narrations: set[asyncio.Task[None]] = set()
         self._finishing: asyncio.Future[None] | None = None
+        self._futures_task: asyncio.Task[None] | None = None
+        self._futures_again = False  # a trigger arrived during a run
+        self._futures_due_ms = 0  # the next periodic run, in match time
+        self._generation = 0  # bumped by every reset: results from before it are dropped
         self.messages_in = 0
         # Called after each live (not catch-up) event with the insights it produced; agents hook in here.
         self.observers: list[Callable[[MatchSession, list[Insight], MatchEvent | None], None]] = []
@@ -196,10 +217,30 @@ class MatchSession:
         for sub in self.subscribers:
             sub.queue.put_nowait(None)
 
-    async def drain_narrations(self) -> None:
-        """Wait for in-flight LLM narrations (used by tests and graceful shutdown)."""
+    async def drain_narrations(self, timeout: float = DRAIN_TIMEOUT_S) -> None:
+        """Wait for in-flight background work (narrations, futures, agents) at full time, in tests and at
+        shutdown. Work can start more work, so this loops; but never forever: whatever is still running
+        after `timeout` is logged with its stack and cancelled, so one stuck task can't hold the session."""
+        deadline = time.monotonic() + timeout
         while self._narrations:
-            await asyncio.gather(*list(self._narrations), return_exceptions=True)
+            left = deadline - time.monotonic()
+            if left <= 0:
+                for task in list(self._narrations):
+                    stack = "".join(
+                        f"  {frame.f_code.co_filename}:{frame.f_lineno} in {frame.f_code.co_name}\n"
+                        for frame in task.get_stack()
+                    )
+                    log.warning(
+                        "%s: background work still running after %.0f s, cancelled: %s\n%s",
+                        self.match_id,
+                        timeout,
+                        task.get_coro(),
+                        stack,
+                    )
+                    task.cancel()
+                await asyncio.wait(list(self._narrations), timeout=5)  # let the cancellations land
+                return
+            await asyncio.wait(list(self._narrations), timeout=left)
 
     async def _consume(self, subscription: Any) -> None:
         async for message in subscription:
@@ -211,6 +252,10 @@ class MatchSession:
         self.engine = ExplainEngine(self.state)
         self._frame_pos = 0
         self._catch_up_to = None
+        self._generation += 1
+        self._futures_again = False
+        self._futures_task = None  # cancelled below with the other background work
+        self._futures_due_ms = 0
         for task in self._narrations:
             task.cancel()
         for channel in self.channels.values():
@@ -260,6 +305,7 @@ class MatchSession:
                         self.publish_insight(insight)
                 for observe in self.observers:
                     observe(self, insights, message.event)
+                self._maybe_futures(message.event, insights)
                 self._maybe_state(force=message.event.type in STATE_NOW)
                 self.latency.record("event_to_broadcast", (time.perf_counter() - start) * 1000)
         elif message.kind is MessageKind.FRAME and message.frame is not None:
@@ -371,6 +417,64 @@ class MatchSession:
                 item for i in self.engine.insights if (item := channel.personalise(i, ctx)[0])
             ]
             channel.send("sync", _json(self.sync_payload(channel)))
+        self.request_futures()
+
+    # ------------------------------------------------------------------ futures
+    def _maybe_futures(self, event: MatchEvent, insights: list[Insight]) -> None:
+        if (
+            event.type in FUTURES_EVENTS
+            or any(i.type in FUTURES_INSIGHTS for i in insights)
+            or self.state.match_ms >= self._futures_due_ms
+        ):
+            self.request_futures()
+
+    def request_futures(self) -> None:
+        """Run futures for the match as it stands, in a worker thread; if a run is in flight, one more
+        follows it."""
+        if self._futures_task is not None and not self._futures_task.done():
+            self._futures_again = True
+            return
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return  # driven synchronously (some tests): no loop to run futures on
+        self._futures_again = False
+        state = self.state
+        self._futures_due_ms = state.match_ms + FUTURES_EVERY_MS
+        inp = futures_input(state)  # read on the event loop; only the simulation leaves it
+        moment = (state.match_ms, state.clock_ms, state.period)
+        task = asyncio.ensure_future(self._run_futures(inp, moment, self._generation))
+        self._futures_task = task
+        self._narrations.add(task)  # a seek cancels it; full time waits for it
+        task.add_done_callback(self._narrations.discard)
+
+    async def _run_futures(self, inp: FuturesInput, moment: tuple[int, int, int], generation: int) -> None:
+        try:
+            raw, backend = await asyncio.wait_for(asyncio.to_thread(simulate, inp), FUTURES_TIMEOUT_S)
+        except Exception:  # never let a failed run take the session down; the next trigger retries
+            self.latency.record("futures_failed", 0.0)
+            return
+        if generation != self._generation:
+            return  # a seek or restart happened meanwhile: this run describes a state that is gone
+        state = self.state
+        futures = to_futures(
+            raw,
+            inp,
+            backend=backend,
+            match_id=state.match_id,
+            team_ids=(state.home_id, state.away_id),
+            match_ms=moment[0],
+            clock_ms=moment[1],
+            period=moment[2],
+        )
+        state.set_futures(futures)
+        self.latency.record("futures", futures.ms)
+        for insight in self.engine.on_futures(futures):
+            self.publish_insight(insight)
+        self._maybe_state(force=True)
+        if self._futures_again and not self._catching_up:
+            self._futures_task = None
+            self.request_futures()
 
     def _maybe_state(self, *, force: bool = False) -> None:
         now = time.monotonic()

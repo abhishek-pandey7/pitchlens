@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from pitchlens.interpret.state import MatchState, timeline, tracked_timeline
 from pitchlens.schema.enriched import EnrichedEvent, PhysicalAlert
 from pitchlens.schema.events import MatchEvent, MatchMeta, TrackingFrame
+from pitchlens.schema.futures import Futures
 from pitchlens.schema.insights import Entities, Insight
 
 from .detectors import DEFAULT_DETECTORS, Candidate, Detector
@@ -42,6 +43,13 @@ class ExplainEngine:
         out: list[Insight] = []
         for d in self.detectors:
             out += self._emit(d.on_alert(alert), alert.match_ms, clock, self.state.period)
+        return out
+
+    def on_futures(self, futures: Futures) -> list[Insight]:
+        """A futures run for the match as it stands (the live session runs them off the event loop)."""
+        out: list[Insight] = []
+        for d in self.detectors:
+            out += self._emit(d.on_futures(futures), futures.match_ms, futures.clock_ms, futures.period)
         return out
 
     def _emit(self, candidates: list[Candidate], match_ms: int, clock_ms: int, period: int) -> list[Insight]:

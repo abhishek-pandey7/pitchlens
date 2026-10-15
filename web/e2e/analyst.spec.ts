@@ -7,7 +7,7 @@ test("the analyst reads the match in charts and inspects a goal's evidence", asy
   await page.goto(`/analyst?match=${match.match_id}`);
   await request.post(`${API}/matches/${match.match_id}/replay`, { data: { speed: 600, from_ms: 0, frames: false } });
 
-  for (const chart of ["wp", "xg", "momentum", "pressing", "territory", "control"]) {
+  for (const chart of ["futures", "wp", "xg", "momentum", "pressing", "territory", "control"]) {
     await expect(page.getByTestId(`chart-${chart}`).locator("path").first()).toBeVisible({ timeout: 60_000 });
   }
   const inspector = page.getByRole("region", { name: "Evidence inspector" });
@@ -16,6 +16,9 @@ test("the analyst reads the match in charts and inspects a goal's evidence", asy
   const detail = inspector.getByTestId("evidence-detail");
   await expect(detail).toContainText("score");
   await expect(detail).toContainText("Salience");
-  await expect(page.getByTestId("chart-highlight")).toHaveCount(6); // the moment is marked on every chart
+  await expect(page.getByTestId("chart-highlight")).toHaveCount(7); // the moment is marked on every chart
+  const futures = page.getByTestId("futures");
+  await expect(futures.getByTestId("futures-result")).toContainText("%");
+  await expect(futures.getByTestId("futures-scores").locator("li").first()).toBeVisible();
   await page.screenshot({ path: "test-results/analyst.png", fullPage: true });
 });

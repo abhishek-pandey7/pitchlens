@@ -30,6 +30,7 @@ big_chance.saved:
     - "كانت فرصة بقيمة {xg} من الأهداف المتوقعة من مسافة {shot_distance_m} م."
     - "سرعة التسديدة {shot_speed_kmh} كم/س."
     - "ماذا لو دخلت؟ كان احتمال فوز {team} سيصبح {what_if_win_prob_to_pct} بدلًا من {what_if_win_prob_from_pct}."
+    - "في المستقبلات المحاكاة كان {team} سيفوز في {what_if_futures_win_pct} منها، وكانت النتيجة النهائية الأرجح {what_if_futures_score}."
 big_chance.missed:
   headline: "{player} يهدر فرصة كبيرة لـ{team}."
   detail: *chance_detail
@@ -59,6 +60,7 @@ card.second_yellow:
   detail: &card_detail
     - "احتمال فوز {team}: {win_prob_from_pct} ← {win_prob_to_pct}."
     - "لو بقي {team} بأحد عشر لاعبًا لكان احتمال فوزه {no_red_win_prob_to_pct}."
+    - "بأحد عشر لاعبًا، كان {team} سيفوز في {no_red_futures_win_pct} من المستقبلات المحاكاة."
 card.red:
   headline: "بطاقة حمراء! طرد {player} و{team} يلعب بـ{players_on_pitch} لاعبين."
   detail: *card_detail
@@ -111,3 +113,18 @@ distance_milestone.sprints:
 # Written by the Analyst agent and approved by the Fact-Checker; the note itself is in English.
 tactical_note.agent:
   headline: "تحليل: {note}"
+# From the futures: the rest of the match simulated many times (interpret/futures.py).
+futures_swing.win_up:
+  headline: "المستقبلات: يفوز {team} الآن في {futures_win_to_pct} من النهايات المحاكاة، بعد أن كانت {futures_win_from_pct}."
+  detail: &futures_detail
+    - "النتيجة النهائية الأرجح: {futures_top_score} ({futures_top_score_p_pct})."
+    - "فوز المضيف والتعادل وفوز الضيف في كل النهايات المحاكاة: {futures_home_pct} و{futures_draw_pct} و{futures_away_pct}."
+futures_swing.win_down:
+  headline: "المستقبلات: لم يعد {team} يفوز إلا في {futures_win_to_pct} من النهايات المحاكاة، بعد أن كانت {futures_win_from_pct}."
+  detail: *futures_detail
+futures_swing.comeback_up:
+  headline: "المستقبلات: يتجنب {team} الخسارة في {futures_comeback_to_pct} من النهايات المحاكاة، بعد أن كانت {futures_comeback_from_pct}."
+  detail: *futures_detail
+futures_swing.comeback_down:
+  headline: "المستقبلات: لم يعد {team} يتجنب الخسارة إلا في {futures_comeback_to_pct} من النهايات المحاكاة، بعد أن كانت {futures_comeback_from_pct}."
+  detail: *futures_detail

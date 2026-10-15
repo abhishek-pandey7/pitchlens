@@ -16,6 +16,7 @@ from .events import (
     TrackedPlayer,
     TrackingFrame,
 )
+from .futures import Comeback, Futures, FuturesEffects, FuturesInput, NextGoal, ScoreChance
 from .insights import Entities, Evidence, Insight, InsightType
 from .overlays import CueAnchor, CueTemplate, CueText, OverlayCue, Region
 from .profiles import FocusMetric, Grounding, Narration, Persona, PlayerFocus, Profile, Verbosity
@@ -26,6 +27,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "AlertKind",
     "BodyPart",
+    "Comeback",
     "CueAnchor",
     "CueTemplate",
     "CueText",
@@ -34,6 +36,9 @@ __all__ = [
     "EventType",
     "Evidence",
     "FocusMetric",
+    "Futures",
+    "FuturesEffects",
+    "FuturesInput",
     "Grounding",
     "Height",
     "Insight",
@@ -42,6 +47,7 @@ __all__ = [
     "MatchEvent",
     "MatchMeta",
     "Narration",
+    "NextGoal",
     "Outcome",
     "OverlayCue",
     "Persona",
@@ -53,6 +59,7 @@ __all__ = [
     "PreMatch",
     "Profile",
     "Region",
+    "ScoreChance",
     "TeamInfo",
     "TrackedPlayer",
     "TrackingFrame",

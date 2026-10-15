@@ -36,6 +36,7 @@ Built on **Microsoft Agent Framework (Python)**, pinned at `agent-framework-core
 | `compare_periods(metric, a_from, a_to, b_from, b_to)` | Mean per team in two periods and the change ("how did the press change after 60'?") |
 | `win_prob_at(minute)` | Score and win probability at a past minute |
 | `what_if(home_goals, away_goals)` | Counterfactual win probability with a different scoreline |
+| `get_futures()` | The rest of the match simulated 100,000 times from now: result split, most likely final scores, the trailing side's chances of avoiding defeat and of winning, next goal ("Can Southvale still win?") |
 | `get_player_card(player)` | One player's match: involvement, passing, shooting, defending, running |
 | `top_players(stat, team?)` | Leaders for a stat (goals, xg, key_passes, tackles, distance_km, top_speed_kmh, ...) |
 | `get_insights(type?, team?, since_minute?)` | Detected key moments with compact evidence ("win_prob Southvale 0.052→0.963") |

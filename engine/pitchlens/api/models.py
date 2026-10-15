@@ -7,6 +7,7 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from pitchlens.schema.events import MatchMeta
+from pitchlens.schema.futures import MAX_FUTURES_PATHS, FuturesEffects
 
 
 class CreateMatch(BaseModel):
@@ -27,6 +28,20 @@ class ControlRequest(BaseModel):
     action: Literal["pause", "resume", "seek", "speed"]
     to_ms: int | None = Field(default=None, ge=0)
     speed: float | None = Field(default=None, gt=0, le=600)
+
+
+class FuturesWhatIf(BaseModel):
+    """A hypothetical for the futures: anything left out stays as the match stands now."""
+
+    home_goals: int | None = Field(default=None, ge=0, le=20)
+    away_goals: int | None = Field(default=None, ge=0, le=20)
+    minute: float | None = Field(default=None, ge=0, le=120, description="Clock minute to restart from.")
+    home_reds: int | None = Field(default=None, ge=0, le=4)
+    away_reds: int | None = Field(default=None, ge=0, le=4)
+    momentum: float | None = Field(default=None, ge=-1, le=1, description="Home minus away, -1..1.")
+    field_tilt: float | None = Field(default=None, ge=0, le=1, description="Home share, 0..1.")
+    paths: int | None = Field(default=None, ge=1, le=MAX_FUTURES_PATHS)
+    effects: FuturesEffects | None = None
 
 
 class ExternalMatch(BaseModel):

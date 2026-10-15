@@ -1,5 +1,5 @@
 // Folds the engine's SSE messages into a match view. Pure: the React hook in useMatchStream.ts drives it.
-import type { EnrichedEvent, Insight, MatchMeta, Narration, OverlayCue, PhysicalAlert, Profile, TrackingFrame } from "./types";
+import type { EnrichedEvent, Futures, Insight, MatchMeta, Narration, OverlayCue, PhysicalAlert, Profile, TrackingFrame } from "./types";
 
 export type TeamView = {
   club_id: string;
@@ -34,6 +34,7 @@ export type Dynamics = {
   tempo_z: number | null;
   tempo_baseline: number | null;
   stoppage_share: number;
+  futures?: Futures | null; // the latest futures run (engine interpret/futures.py), on state messages only
 };
 
 export type StateSnapshot = {

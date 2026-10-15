@@ -28,6 +28,7 @@ class InsightType(StrEnum):
     FATIGUE_ALERT = "fatigue_alert"
     DUEL = "duel"
     CARD = "card"
+    FUTURES_SWING = "futures_swing"
 
 
 class Evidence(Model):

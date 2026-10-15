@@ -3,12 +3,18 @@
 Remaining goals for each side follow independent Poisson distributions. The scoring rate blends the
 pre-match expectation with the live xG rate (the live rate earns more weight as the match goes on).
 Red cards scale rates (x0.7 for the short-handed side, x1.2 for their opponents per dismissal).
+
+`win_probability` runs in the Rust core when it is loaded (`pitchlens_core.win_probability`, a line-for-line
+port that agrees to within one rounding step, ~1e-16; see engine/core/kernel/src/win_prob.rs) and here
+otherwise (`win_probability_py`, the reference).
 """
 
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+
+from pitchlens import core
 
 MAX_GOALS = 10
 LIVE_WEIGHT_AT_FULL_TIME = 0.5
@@ -50,6 +56,32 @@ def remaining_minutes(clock_minute: float, period: int, added_minutes: float | N
 
 
 def win_probability(
+    home_goals: int,
+    away_goals: int,
+    *,
+    home_rate_90: float,
+    away_rate_90: float,
+    minutes_left: float,
+    home_reds: int = 0,
+    away_reds: int = 0,
+) -> WinProbability:
+    native = getattr(core.native, "win_probability", None)  # None without the core, or an older build
+    if native is not None:
+        return WinProbability(
+            *native(home_goals, away_goals, home_rate_90, away_rate_90, minutes_left, home_reds, away_reds)
+        )
+    return win_probability_py(
+        home_goals,
+        away_goals,
+        home_rate_90=home_rate_90,
+        away_rate_90=away_rate_90,
+        minutes_left=minutes_left,
+        home_reds=home_reds,
+        away_reds=away_reds,
+    )
+
+
+def win_probability_py(
     home_goals: int,
     away_goals: int,
     *,
