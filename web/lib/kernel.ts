@@ -50,3 +50,23 @@ export const kernelVersion = () => call<string>("version");
 
 /** Build a match's 5 Hz tracking from its packed input (`GET /matches/{id}/tracking-input`). */
 export const buildTracking = (input: unknown) => call<BuiltTracking>("buildTracking", input);
+
+/** What the kernel's futures model returns (the same fields the engine's Python binding returns). */
+export type FuturesRaw = {
+  paths: number;
+  home: number;
+  draw: number;
+  away: number;
+  scores: [number, number, number][];
+  other: number;
+  comeback: ["home" | "away", number, number] | null;
+  next_goal: [number, number, number, number | null];
+  goals_left: [number, number];
+};
+
+/** Run the futures model on a `FuturesInput` (`GET /matches/{id}/futures/input`), in the browser. */
+export const simulateFutures = (input: unknown) => call<{ raw: FuturesRaw; ms: number }>("simulateFutures", input);
+
+/** Minutes left including expected added time, as the engine estimates them for a what-if minute. */
+export const remainingMinutes = (clockMinute: number, period: number) =>
+  call<number>("remainingMinutes", [clockMinute, period]);

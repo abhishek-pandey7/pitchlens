@@ -178,6 +178,23 @@ async def futures(
     return await _futures(session, futures_input(session.state, paths=paths))
 
 
+@router.get("/{match_id}/futures/input")
+async def futures_input_now(match_id: str, hub: Hub = Depends(get_hub)) -> dict[str, Any]:
+    """The futures model's input for the match as it stands, and the moment it describes: the what-if
+    sandbox applies a fan's changes to it and runs the model in the browser (the Rust kernel compiled to
+    WebAssembly). Same input, seed and paths give exactly the engine's futures."""
+    session = session_or_404(hub, match_id)
+    state = session.state
+    return {
+        "input": futures_input(state).model_dump(mode="json"),
+        "match_id": state.match_id,
+        "team_ids": [state.home_id, state.away_id],
+        "match_ms": state.match_ms,
+        "clock_ms": state.clock_ms,
+        "period": state.period,
+    }
+
+
 @router.get("/{match_id}/futures/history")
 async def futures_history(match_id: str, hub: Hub = Depends(get_hub)) -> list[dict[str, Any]]:
     """Every futures run of the live session so far (result split, comeback odds, top score)."""

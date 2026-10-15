@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { LineChart, type ChartMarker } from "@/components/charts/LineChart";
 import { FuturesPanel } from "@/components/FuturesPanel";
+import { WhatIfSandbox } from "@/components/WhatIfSandbox";
 import { cardKind } from "@/components/InsightFeed";
 import { MatchLauncher } from "@/components/MatchLauncher";
 import { ReplayControls } from "@/components/ReplayControls";
@@ -63,6 +64,7 @@ export function AnalystClient() {
             <FuturesPanel futures={futures} meta={view.meta} lang="en" scores={5} />
             <FuturesChart history={history} feed={view.feed} home={home} away={away} highlight={selected ? minute(selected.insight.match_ms) : null} />
           </div>
+          <WhatIfSandbox matchId={matchId} meta={view.meta} lang="en" />
           <Charts rows={rows} feed={view.feed} home={home} away={away} highlight={selected ? minute(selected.insight.match_ms) : null} />
         </section>
         <section className="min-w-0" aria-label="Evidence inspector">

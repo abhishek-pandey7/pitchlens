@@ -269,3 +269,34 @@ const SCRUB: Record<Lang, ScrubStrings> = {
 export function scrubStrings(lang: string | null | undefined): ScrubStrings {
   return SCRUB[isLang(lang) ? lang : "en"];
 }
+
+type WhatIfStrings = {
+  open: string;
+  title: string;
+  score: string;
+  minute: string;
+  reds: string;
+  momentum: string;
+  onTop: (team: string) => string;
+  level: string;
+  more: (what: string) => string;
+  fewer: (what: string) => string;
+  hypothetical: string;
+  inBrowser: (paths: string, ms: string) => string;
+  fromEngine: string;
+  back: string;
+  reset: string;
+};
+
+const WHATIF: Record<Lang, WhatIfStrings> = {
+  en: { open: "What if…", title: "What if", score: "Score", minute: "Minute", reds: "Red cards", momentum: "Momentum", onTop: (t) => `${t} on top`, level: "Even", more: (w) => `One more: ${w}`, fewer: (w) => `One fewer: ${w}`, hypothetical: "A what-if, not the match.", inBrowser: (n, ms) => `${n} futures simulated in your browser by the Rust kernel in ${ms} ms.`, fromEngine: "Simulated by the engine.", back: "Back to the match", reset: "Reset to now" },
+  es: { open: "¿Y si…?", title: "¿Y si…?", score: "Marcador", minute: "Minuto", reds: "Rojas", momentum: "Dominio", onTop: (t) => `Domina ${t}`, level: "Igualado", more: (w) => `Uno más: ${w}`, fewer: (w) => `Uno menos: ${w}`, hypothetical: "Una hipótesis, no el partido.", inBrowser: (n, ms) => `${n} finales simulados en tu navegador por el núcleo en Rust en ${ms} ms.`, fromEngine: "Simulado por el motor.", back: "Volver al partido", reset: "Volver a ahora" },
+  fr: { open: "Et si…", title: "Et si…", score: "Score", minute: "Minute", reds: "Cartons rouges", momentum: "Dynamique", onTop: (t) => `${t} domine`, level: "Équilibré", more: (w) => `Un de plus : ${w}`, fewer: (w) => `Un de moins : ${w}`, hypothetical: "Une hypothèse, pas le match.", inBrowser: (n, ms) => `${n} fins simulées dans votre navigateur par le noyau Rust en ${ms} ms.`, fromEngine: "Simulé par le moteur.", back: "Retour au match", reset: "Revenir à maintenant" },
+  pt: { open: "E se…", title: "E se…", score: "Placar", minute: "Minuto", reds: "Vermelhos", momentum: "Domínio", onTop: (t) => `${t} por cima`, level: "Equilibrado", more: (w) => `Mais um: ${w}`, fewer: (w) => `Menos um: ${w}`, hypothetical: "Uma hipótese, não a partida.", inBrowser: (n, ms) => `${n} finais simulados no seu navegador pelo núcleo em Rust em ${ms} ms.`, fromEngine: "Simulado pelo motor.", back: "Voltar à partida", reset: "Voltar ao agora" },
+  ar: { open: "ماذا لو…", title: "ماذا لو", score: "النتيجة", minute: "الدقيقة", reds: "البطاقات الحمراء", momentum: "الأفضلية", onTop: (t) => `الأفضلية لـ${t}`, level: "متكافئ", more: (w) => `واحد أكثر: ${w}`, fewer: (w) => `واحد أقل: ${w}`, hypothetical: "افتراض، وليس المباراة.", inBrowser: (n, ms) => `${n} نهاية محاكاة في متصفحك بنواة Rust في ${ms} مللي ثانية.`, fromEngine: "محاكاة من المحرك.", back: "العودة إلى المباراة", reset: "العودة إلى الآن" },
+  hi: { open: "अगर ऐसा होता…", title: "अगर ऐसा होता", score: "स्कोर", minute: "मिनट", reds: "रेड कार्ड", momentum: "मोमेंटम", onTop: (t) => `${t} हावी`, level: "बराबरी", more: (w) => `एक और: ${w}`, fewer: (w) => `एक कम: ${w}`, hypothetical: "यह एक अनुमान है, असली मैच नहीं।", inBrowser: (n, ms) => `Rust कर्नेल ने आपके ब्राउज़र में ${ms} ms में ${n} संभावित अंत सिम्युलेट किए।`, fromEngine: "इंजन ने सिम्युलेट किया।", back: "मैच पर लौटें", reset: "अभी पर लौटें" },
+};
+
+export function whatIfStrings(lang: string | null | undefined): WhatIfStrings {
+  return WHATIF[isLang(lang) ? lang : "en"];
+}
